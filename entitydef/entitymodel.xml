@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<entitymodel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="https://ofbiz.apache.org/dtds/entitymodel.xsd">
+    <title>eFinance Component Entity Model</title>
+    <description>
+        Customer-facing portal entities for the eFinance plugin.
+        Covers member accounts, corporate accounts, tokens, OTP, consent and audit log.
+    </description>
+    <version>1.0</version>
+
+    <!-- ========================================================= -->
+    <!-- Member                                                    -->
+    <!-- ========================================================= -->
+    <entity entity-name="EfMember" package-name="org.apache.ofbiz.efinance.account"
+            title="eFinance portal member">
+        <field name="partyId" type="id"><description>FK to Party</description></field>
+        <field name="userLoginId" type="id-vlong"><description>FK to UserLogin</description></field>
+        <field name="memberTypeEnumId" type="id"><description>EFMBR_TYPE: PERSONAL, CORPORATE_USER</description></field>
+        <field name="statusId" type="id"><description>EFMBR_STATUS</description></field>
+        <field name="emailVerifiedDate" type="date-time"/>
+        <field name="phoneVerifiedDate" type="date-time"/>
+        <field name="mfaMethodEnumId" type="id"><description>EFMFA_METHOD: EMAIL, SMS, NONE</description></field>
+        <field name="lastLoginDate" type="date-time"/>
+        <field name="createdDate" type="date-time"/>
+        <field name="lastModifiedDate" type="date-time"/>
+        <prim-key field="partyId"/>
+        <relation type="one" fk-name="EFMBR_PARTY" rel-entity-name="Party">
+            <key-map field-name="partyId"/>
+        </relation>
+        <relation type="one" fk-name="EFMBR_UL" rel-entity-name="UserLogin">
+            <key-map field-name="userLoginId"/>
+        </relation>
+        <relation type="one" fk-name="EFMBR_STS" rel-entity-name="StatusItem">
+            <key-map field-name="statusId"/>
+        </relation>
+        <index name="EFMBR_UL_IDX">
+            <index-field name="userLoginId"/>
+        </index>
+        <index name="EFMBR_STS_IDX">
+            <index-field name="statusId"/>
+        </index>
+    </entity>
+
+    <!-- ========================================================= -->
+    <!-- Corporate account                                         -->
+    <!-- ========================================================= -->
+    <entity entity-name="EfCorporateAccount" package-name="org.apache.ofbiz.efinance.account"
+            title="eFinance corporate account">
+        <field name="corporatePartyId" type="id"><description>FK to Party (PARTY_GROUP)</description></field>
+        <field name="adminMemberId" type="id"><description>FK to EfMember (partyId)</description></field>
+        <field name="statusId" type="id"><description>EFCORP_STATUS</description></field>
+        <field name="createdDate" type="date-time"/>
+        <prim-key field="corporatePartyId"/>
+        <relation type="one" fk-name="EFCORP_PARTY" rel-entity-name="Party">
+            <key-map field-name="corporatePartyId"/>
+        </relation>
+        <relation type="one" fk-name="EFCORP_STS" rel-entity-name="StatusItem">
+            <key-map field-name="statusId"/>
+        </relation>
+    </entity>
+
+    <!-- ========================================================= -->
+    <!-- Corporate user (member ↔ corporate account)              -->
+    <!-- ========================================================= -->
+    <entity entity-name="EfCorporateUser" package-name="org.apache.ofbiz.efinance.account"
+            title="eFinance corporate user role">
+        <field name="corporatePartyId" type="id"><description>FK to EfCorporateAccount</description></field>
+        <field name="memberPartyId" type="id"><description>FK to EfMember</description></field>
+        <field name="roleApply" type="indicator"><description>Y/N can submit applications</description></field>
+        <field name="roleView" type="indicator"><description>Y/N can view contracts</description></field>
+        <field name="rolePayment" type="indicator"><description>Y/N can manage payments</description></field>
+        <field name="roleAdmin" type="indicator"><description>Y/N is corporate admin</description></field>
+        <field name="fromDate" type="date-time"/>
+        <field name="thruDate" type="date-time"/>
+        <prim-key field="corporatePartyId"/>
+        <prim-key field="memberPartyId"/>
+        <prim-key field="fromDate"/>
+        <relation type="one" fk-name="EFCORPU_CORP" rel-entity-name="EfCorporateAccount">
+            <key-map field-name="corporatePartyId"/>
+        </relation>
+        <relation type="one" fk-name="EFCORPU_MBR" rel-entity-name="Party">
+            <key-map field-name="memberPartyId" rel-field-name="partyId"/>
+        </relation>
+    </entity>
+
+    <!-- ========================================================= -->
+    <!-- One-time code (OTP)                                       -->
+    <!-- ========================================================= -->
+    <entity entity-name="EfOneTimeCode" package-name="org.apache.ofbiz.efinance.auth"
+            title="eFinance one-time code / OTP" never-cache="true">
+        <field name="otpId" type="id"><description>sequenced PK</description></field>
+        <field name="partyId" type="id"><description>FK to Party</description></field>
+        <field name="codeHash" type="value"><description>SHA-256 hash of the plain OTP</description></field>
+        <field name="purposeEnumId" type="id"><description>EFOTP_PURPOSE</description></field>
+        <field name="expiresAt" type="date-time"/>
+        <field name="attemptCount" type="numeric"/>
+        <field name="usedDate" type="date-time"/>
+        <field name="createdDate" type="date-time"/>
+        <prim-key field="otpId"/>
+        <relation type="one" fk-name="EFOTP_PARTY" rel-entity-name="Party">
+            <key-map field-name="partyId"/>
+        </relation>
+        <index name="EFOTP_PARTY_PURPOSE_IDX">
+            <index-field name="partyId"/>
+            <index-field name="purposeEnumId"/>
+        </index>
+    </entity>
+
+    <!-- ========================================================= -->
+    <!-- Access token                                              -->
+    <!-- ========================================================= -->
+    <entity entity-name="EfToken" package-name="org.apache.ofbiz.efinance.auth"
+            title="eFinance access token" never-cache="true">
+        <field name="tokenId" type="id"><description>sequenced PK</description></field>
+        <field name="tokenHash" type="value"><description>SHA-256 of the raw access token</description></field>
+        <field name="partyId" type="id"><description>FK to Party</description></field>
+        <field name="userLoginId" type="id-vlong"/>
+        <field name="deviceId" type="short-varchar"/>
+        <field name="ipAddress" type="short-varchar"/>
+        <field name="issuedAt" type="date-time"/>
+        <field name="expiresAt" type="date-time"/>
+        <field name="revokedDate" type="date-time"/>
+        <field name="detail" type="short-varchar"><description>e.g. MFA_TEMP flag</description></field>
+        <prim-key field="tokenId"/>
+        <relation type="one" fk-name="EFTKN_PARTY" rel-entity-name="Party">
+            <key-map field-name="partyId"/>
+        </relation>
+        <index name="EFTKN_PARTY_IDX">
+            <index-field name="partyId"/>
+        </index>
+        <index name="EFTKN_EXPIRES_IDX">
+            <index-field name="expiresAt"/>
+        </index>
+        <index name="EFTKN_HASH_IDX" unique="true">
+            <index-field name="tokenHash"/>
+        </index>
+    </entity>
+
+    <!-- ========================================================= -->
+    <!-- Refresh token                                             -->
+    <!-- ========================================================= -->
+    <entity entity-name="EfRefreshToken" package-name="org.apache.ofbiz.efinance.auth"
+            title="eFinance refresh token" never-cache="true">
+        <field name="refreshTokenId" type="id"><description>sequenced PK</description></field>
+        <field name="tokenHash" type="value"><description>SHA-256 of the raw refresh token</description></field>
+        <field name="partyId" type="id"><description>FK to Party</description></field>
+        <field name="userLoginId" type="id-vlong"/>
+        <field name="deviceId" type="short-varchar"/>
+        <field name="issuedAt" type="date-time"/>
+        <field name="expiresAt" type="date-time"/>
+        <field name="revokedDate" type="date-time"/>
+        <field name="replacedByTokenId" type="id"><description>FK to EfRefreshToken for rotation chain</description></field>
+        <prim-key field="refreshTokenId"/>
+        <relation type="one" fk-name="EFRFTKN_PARTY" rel-entity-name="Party">
+            <key-map field-name="partyId"/>
+        </relation>
+        <index name="EFRFTKN_PARTY_IDX">
+            <index-field name="partyId"/>
+        </index>
+        <index name="EFRFTKN_HASH_IDX" unique="true">
+            <index-field name="tokenHash"/>
+        </index>
+    </entity>
+
+    <!-- ========================================================= -->
+    <!-- Consent document                                          -->
+    <!-- ========================================================= -->
+    <entity entity-name="EfConsentDocument" package-name="org.apache.ofbiz.efinance.consent"
+            title="eFinance consent document version">
+        <field name="documentId" type="id"><description>sequenced PK</description></field>
+        <field name="documentTypeEnumId" type="id"><description>EFCONSENT_TYPE</description></field>
+        <field name="version" type="short-varchar"/>
+        <field name="language" type="short-varchar"/>
+        <field name="contentId" type="id"><description>FK to Content</description></field>
+        <field name="effectiveDate" type="date-time"/>
+        <field name="expiresDate" type="date-time"/>
+        <prim-key field="documentId"/>
+        <relation type="one" fk-name="EFCDOC_CTN" rel-entity-name="Content">
+            <key-map field-name="contentId"/>
+        </relation>
+        <index name="EFCDOC_TYPE_VER_IDX">
+            <index-field name="documentTypeEnumId"/>
+            <index-field name="version"/>
+        </index>
+    </entity>
+
+    <!-- ========================================================= -->
+    <!-- Consent record                                            -->
+    <!-- ========================================================= -->
+    <entity entity-name="EfConsent" package-name="org.apache.ofbiz.efinance.consent"
+            title="eFinance consent record">
+        <field name="consentId" type="id"><description>sequenced PK</description></field>
+        <field name="partyId" type="id"><description>FK to Party</description></field>
+        <field name="documentId" type="id"><description>FK to EfConsentDocument</description></field>
+        <field name="consentDate" type="date-time"/>
+        <field name="ipAddress" type="short-varchar"/>
+        <field name="deviceId" type="short-varchar"/>
+        <field name="revokedDate" type="date-time"/>
+        <prim-key field="consentId"/>
+        <relation type="one" fk-name="EFCNS_PARTY" rel-entity-name="Party">
+            <key-map field-name="partyId"/>
+        </relation>
+        <relation type="one" fk-name="EFCNS_DOC" rel-entity-name="EfConsentDocument">
+            <key-map field-name="documentId"/>
+        </relation>
+        <index name="EFCNS_PARTY_IDX">
+            <index-field name="partyId"/>
+        </index>
+    </entity>
+
+    <!-- ========================================================= -->
+    <!-- Audit log                                                 -->
+    <!-- ========================================================= -->
+    <entity entity-name="EfAuditLog" package-name="org.apache.ofbiz.efinance.audit"
+            title="eFinance audit log" never-cache="true">
+        <field name="auditLogId" type="id"><description>sequenced PK</description></field>
+        <field name="partyId" type="id"><description>FK to Party (nullable)</description></field>
+        <field name="actionEnumId" type="id"><description>EFAUDIT_ACTION</description></field>
+        <field name="targetEntityName" type="short-varchar"/>
+        <field name="targetEntityId" type="id"/>
+        <field name="resultEnumId" type="id"><description>EFAUDIT_RESULT</description></field>
+        <field name="ipAddress" type="short-varchar"/>
+        <field name="deviceId" type="short-varchar"/>
+        <field name="actionDate" type="date-time"/>
+        <field name="detail" type="short-varchar"/>
+        <prim-key field="auditLogId"/>
+        <relation type="one-nofk" fk-name="EFAUD_PARTY" rel-entity-name="Party">
+            <key-map field-name="partyId"/>
+        </relation>
+        <index name="EFAUD_PARTY_IDX">
+            <index-field name="partyId"/>
+        </index>
+        <index name="EFAUD_DATE_IDX">
+            <index-field name="actionDate"/>
+        </index>
+    </entity>
+
+</entitymodel>

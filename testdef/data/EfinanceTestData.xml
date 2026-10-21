@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<entity-engine-xml>
+    <!-- Test member party -->
+    <Party partyId="TEST_EF_CUST" partyTypeId="PERSON"/>
+    <Person partyId="TEST_EF_CUST" firstName="Test" lastName="Customer"/>
+
+    <!-- Test member email contact -->
+    <ContactMech contactMechId="TST_EF_EMAIL" contactMechTypeId="EMAIL_ADDRESS" infoString="test-ef@example.com"/>
+    <PartyContactMech partyId="TEST_EF_CUST" contactMechId="TST_EF_EMAIL" fromDate="2026-10-21 00:00:00.0"/>
+    <PartyContactMechPurpose partyId="TEST_EF_CUST" contactMechId="TST_EF_EMAIL"
+                             contactMechPurposeTypeId="PRIMARY_EMAIL" fromDate="2026-10-21 00:00:00.0"/>
+
+    <!-- Test member login (password: ofbiz) -->
+    <UserLogin userLoginId="test-ef-customer" partyId="TEST_EF_CUST"
+               currentPassword="{SHA}47b56994cbc2b6d10aa1be30f70165adb305a41a"
+               enabled="Y" hasLoggedOut="N"/>
+    <UserLoginSecurityGroup userLoginId="test-ef-customer" groupId="EF_CUSTOMER_GROUP"
+                            fromDate="2026-10-21 00:00:00.0"/>
+
+    <!-- Test EfMember (pre-activated for functional tests) -->
+    <EfMember partyId="TEST_EF_CUST" userLoginId="test-ef-customer"
+              memberTypeEnumId="EFMBR_PERSONAL" statusId="EFMBR_ACTIVE"
+              mfaMethodEnumId="EFMFA_NONE" createdDate="2026-10-21 00:00:00.0"
+              emailVerifiedDate="2026-10-21 00:00:00.0"/>
+</entity-engine-xml>

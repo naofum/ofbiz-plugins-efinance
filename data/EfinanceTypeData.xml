@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<entity-engine-xml>
+
+    <!-- ========================================================= -->
+    <!-- Member status                                             -->
+    <!-- ========================================================= -->
+    <StatusType statusTypeId="EFMBR_STATUS" description="eFinance member status" hasTable="N"/>
+    <StatusItem statusId="EFMBR_PENDING" statusTypeId="EFMBR_STATUS" statusCode="PENDING" sequenceId="01" description="Pending email verification"/>
+    <StatusItem statusId="EFMBR_ACTIVE" statusTypeId="EFMBR_STATUS" statusCode="ACTIVE" sequenceId="02" description="Active"/>
+    <StatusItem statusId="EFMBR_LOCKED" statusTypeId="EFMBR_STATUS" statusCode="LOCKED" sequenceId="03" description="Locked"/>
+    <StatusItem statusId="EFMBR_CLOSED" statusTypeId="EFMBR_STATUS" statusCode="CLOSED" sequenceId="04" description="Closed"/>
+
+    <StatusValidChange statusId="EFMBR_PENDING" statusIdTo="EFMBR_ACTIVE" transitionName="Activate"/>
+    <StatusValidChange statusId="EFMBR_ACTIVE" statusIdTo="EFMBR_LOCKED" transitionName="Lock"/>
+    <StatusValidChange statusId="EFMBR_ACTIVE" statusIdTo="EFMBR_CLOSED" transitionName="Close"/>
+    <StatusValidChange statusId="EFMBR_LOCKED" statusIdTo="EFMBR_ACTIVE" transitionName="Unlock"/>
+    <StatusValidChange statusId="EFMBR_LOCKED" statusIdTo="EFMBR_CLOSED" transitionName="Close"/>
+
+    <!-- ========================================================= -->
+    <!-- Corporate account status                                  -->
+    <!-- ========================================================= -->
+    <StatusType statusTypeId="EFCORP_STATUS" description="eFinance corporate account status" hasTable="N"/>
+    <StatusItem statusId="EFCORP_ACTIVE" statusTypeId="EFCORP_STATUS" statusCode="ACTIVE" sequenceId="01" description="Active"/>
+    <StatusItem statusId="EFCORP_CLOSED" statusTypeId="EFCORP_STATUS" statusCode="CLOSED" sequenceId="02" description="Closed"/>
+
+    <!-- ========================================================= -->
+    <!-- Enumerations                                              -->
+    <!-- ========================================================= -->
+    <EnumerationType enumTypeId="EFMBR_TYPE" description="eFinance member type"/>
+    <Enumeration enumId="EFMBR_PERSONAL" enumTypeId="EFMBR_TYPE" enumCode="PERSONAL" sequenceId="01" description="Personal"/>
+    <Enumeration enumId="EFMBR_CORP_USER" enumTypeId="EFMBR_TYPE" enumCode="CORPORATE_USER" sequenceId="02" description="Corporate user"/>
+
+    <EnumerationType enumTypeId="EFMFA_METHOD" description="eFinance MFA method"/>
+    <Enumeration enumId="EFMFA_EMAIL" enumTypeId="EFMFA_METHOD" enumCode="EMAIL" sequenceId="01" description="Email OTP"/>
+    <Enumeration enumId="EFMFA_SMS" enumTypeId="EFMFA_METHOD" enumCode="SMS" sequenceId="02" description="SMS OTP"/>
+    <Enumeration enumId="EFMFA_NONE" enumTypeId="EFMFA_METHOD" enumCode="NONE" sequenceId="03" description="No MFA"/>
+
+    <EnumerationType enumTypeId="EFOTP_PURPOSE" description="eFinance OTP purpose"/>
+    <Enumeration enumId="EFOTP_EMAIL_VERIFY" enumTypeId="EFOTP_PURPOSE" enumCode="EMAIL_VERIFY" sequenceId="01" description="Email verification"/>
+    <Enumeration enumId="EFOTP_MFA" enumTypeId="EFOTP_PURPOSE" enumCode="MFA" sequenceId="02" description="Multi-factor authentication"/>
+    <Enumeration enumId="EFOTP_PWD_RESET" enumTypeId="EFOTP_PURPOSE" enumCode="PASSWORD_RESET" sequenceId="03" description="Password reset"/>
+
+    <EnumerationType enumTypeId="EFCONSENT_TYPE" description="eFinance consent document type"/>
+    <Enumeration enumId="EFCONS_TERMS" enumTypeId="EFCONSENT_TYPE" enumCode="TERMS" sequenceId="01" description="Terms of service"/>
+    <Enumeration enumId="EFCONS_PRIVACY" enumTypeId="EFCONSENT_TYPE" enumCode="PRIVACY" sequenceId="02" description="Privacy policy"/>
+    <Enumeration enumId="EFCONS_CREDIT" enumTypeId="EFCONSENT_TYPE" enumCode="CREDIT_INFO" sequenceId="03" description="Credit information consent"/>
+    <Enumeration enumId="EFCONS_ELEC_DEL" enumTypeId="EFCONSENT_TYPE" enumCode="ELECTRONIC_DELIVERY" sequenceId="04" description="Electronic delivery"/>
+    <Enumeration enumId="EFCONS_ELEC_CTR" enumTypeId="EFCONSENT_TYPE" enumCode="ELECTRONIC_CONTRACT" sequenceId="05" description="Electronic contract"/>
+
+    <EnumerationType enumTypeId="EFAUDIT_ACTION" description="eFinance audit action"/>
+    <Enumeration enumId="EFAUD_REGISTER" enumTypeId="EFAUDIT_ACTION" enumCode="REGISTER" sequenceId="01" description="Register"/>
+    <Enumeration enumId="EFAUD_EMAIL_VFY" enumTypeId="EFAUDIT_ACTION" enumCode="EMAIL_VERIFY" sequenceId="02" description="Email verify"/>
+    <Enumeration enumId="EFAUD_LOGIN" enumTypeId="EFAUDIT_ACTION" enumCode="LOGIN" sequenceId="03" description="Login"/>
+    <Enumeration enumId="EFAUD_LOGIN_FAIL" enumTypeId="EFAUDIT_ACTION" enumCode="LOGIN_FAIL" sequenceId="04" description="Login failure"/>
+    <Enumeration enumId="EFAUD_MFA_VFY" enumTypeId="EFAUDIT_ACTION" enumCode="MFA_VERIFY" sequenceId="05" description="MFA verify"/>
+    <Enumeration enumId="EFAUD_LOGOUT" enumTypeId="EFAUDIT_ACTION" enumCode="LOGOUT" sequenceId="06" description="Logout"/>
+    <Enumeration enumId="EFAUD_PWD_RESET" enumTypeId="EFAUDIT_ACTION" enumCode="PASSWORD_RESET" sequenceId="07" description="Password reset"/>
+    <Enumeration enumId="EFAUD_PROF_UPD" enumTypeId="EFAUDIT_ACTION" enumCode="PROFILE_UPDATE" sequenceId="08" description="Profile update"/>
+    <Enumeration enumId="EFAUD_TKN_ISSUE" enumTypeId="EFAUDIT_ACTION" enumCode="TOKEN_ISSUE" sequenceId="09" description="Token issue"/>
+    <Enumeration enumId="EFAUD_TKN_REVOKE" enumTypeId="EFAUDIT_ACTION" enumCode="TOKEN_REVOKE" sequenceId="10" description="Token revoke"/>
+    <Enumeration enumId="EFAUD_CONSENT" enumTypeId="EFAUDIT_ACTION" enumCode="CONSENT" sequenceId="11" description="Consent"/>
+
+    <EnumerationType enumTypeId="EFAUDIT_RESULT" description="eFinance audit result"/>
+    <Enumeration enumId="EFAUDRES_SUCCESS" enumTypeId="EFAUDIT_RESULT" enumCode="SUCCESS" sequenceId="01" description="Success"/>
+    <Enumeration enumId="EFAUDRES_FAILURE" enumTypeId="EFAUDIT_RESULT" enumCode="FAILURE" sequenceId="02" description="Failure"/>
+    <Enumeration enumId="EFAUDRES_BLOCKED" enumTypeId="EFAUDIT_RESULT" enumCode="BLOCKED" sequenceId="03" description="Blocked"/>
+
+    <!-- ========================================================= -->
+    <!-- Permissions and groups                                    -->
+    <!-- ========================================================= -->
+    <SecurityPermission permissionId="EFINANCE_ADMIN" description="Administer the eFinance portal"/>
+    <SecurityPermission permissionId="EFINANCE_CUSTOMER" description="Customer operations in the eFinance portal"/>
+
+    <SecurityGroup groupId="EF_ADMIN_GROUP" groupName="eFinance Admin" description="eFinance administrator group"/>
+    <SecurityGroup groupId="EF_CUSTOMER_GROUP" groupName="eFinance Customer" description="eFinance customer group"/>
+
+    <SecurityGroupPermission groupId="EF_ADMIN_GROUP" permissionId="EFINANCE_ADMIN" fromDate="2026-10-21 00:00:00.0"/>
+    <SecurityGroupPermission groupId="EF_CUSTOMER_GROUP" permissionId="EFINANCE_CUSTOMER" fromDate="2026-10-21 00:00:00.0"/>
+    <SecurityGroupPermission groupId="SUPER" permissionId="EFINANCE_ADMIN" fromDate="2026-10-21 00:00:00.0"/>
+
+    <!-- ========================================================= -->
+    <!-- System user for internal dispatcher calls                 -->
+    <!-- ========================================================= -->
+    <Party partyId="EFINANCE_SYSTEM" partyTypeId="PERSON"/>
+    <Person partyId="EFINANCE_SYSTEM" firstName="eFinance" lastName="System"/>
+    <UserLogin userLoginId="efinance-system" partyId="EFINANCE_SYSTEM"
+               currentPassword="{SHA2}47bce5c74f589f4867dbe55c2e62e9af1b95de32fa1f0ee8f4299cb69ed81e63"
+               enabled="Y" hasLoggedOut="N"/>
+    <UserLoginSecurityGroup userLoginId="efinance-system" groupId="SUPER" fromDate="2026-10-21 00:00:00.0"/>
+
+</entity-engine-xml>

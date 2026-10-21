@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="https://ofbiz.apache.org/dtds/services.xsd">
+
+    <description>eFinance W0 service definitions</description>
+
+    <!-- ========================================================= -->
+    <!-- Permission                                                -->
+    <!-- ========================================================= -->
+    <service name="efinanceAdminPermission" engine="simple" auth="true" export="false"
+             location="component://efinance/minilang/EfinancePermissionServices.xml"
+             invoke="efinanceAdminPermission">
+        <description>Check whether the current user has EFINANCE_ADMIN permission</description>
+        <attribute name="hasPermission" type="Boolean" mode="OUT" optional="false"/>
+        <attribute name="failMessage" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <!-- ========================================================= -->
+    <!-- Member registration and authentication                    -->
+    <!-- ========================================================= -->
+    <service name="efRegisterMember" engine="java" auth="false" export="true"
+             location="org.apache.ofbiz.efinance.account.EfMemberServices"
+             invoke="efRegisterMember">
+        <description>Register a new portal member. Creates Party, UserLogin and EfMember.</description>
+        <attribute name="email" type="String" mode="IN" optional="false"/>
+        <attribute name="password" type="String" mode="IN" optional="false"/>
+        <attribute name="firstName" type="String" mode="IN" optional="false"/>
+        <attribute name="lastName" type="String" mode="IN" optional="true"/>
+        <attribute name="phone" type="String" mode="IN" optional="true"/>
+        <attribute name="memberType" type="String" mode="IN" optional="true"/>
+        <attribute name="partyId" type="String" mode="OUT" optional="true"/>
+        <attribute name="userLoginId" type="String" mode="OUT" optional="true"/>
+        <attribute name="verificationToken" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efVerifyEmail" engine="java" auth="false" export="true"
+             location="org.apache.ofbiz.efinance.account.EfMemberServices"
+             invoke="efVerifyEmail">
+        <description>Verify the member's email address with the OTP token.</description>
+        <attribute name="token" type="String" mode="IN" optional="false"/>
+        <attribute name="success" type="Boolean" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efLogin" engine="java" auth="false" export="true"
+             location="org.apache.ofbiz.efinance.account.EfMemberServices"
+             invoke="efLogin">
+        <description>Authenticate a portal member. Returns JWT access token and refresh token, or MFA challenge.</description>
+        <attribute name="userLoginId" type="String" mode="IN" optional="false"/>
+        <attribute name="password" type="String" mode="IN" optional="false"/>
+        <attribute name="deviceId" type="String" mode="IN" optional="true"/>
+        <attribute name="ipAddress" type="String" mode="IN" optional="true"/>
+        <attribute name="accessToken" type="String" mode="OUT" optional="true"/>
+        <attribute name="refreshToken" type="String" mode="OUT" optional="true"/>
+        <attribute name="mfaRequired" type="Boolean" mode="OUT" optional="true"/>
+        <attribute name="mfaTempToken" type="String" mode="OUT" optional="true"/>
+        <attribute name="memberStatus" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efVerifyMfa" engine="java" auth="false" export="true"
+             location="org.apache.ofbiz.efinance.account.EfMemberServices"
+             invoke="efVerifyMfa">
+        <description>Complete MFA verification and obtain tokens.</description>
+        <attribute name="tempToken" type="String" mode="IN" optional="false"/>
+        <attribute name="otpCode" type="String" mode="IN" optional="false"/>
+        <attribute name="deviceId" type="String" mode="IN" optional="true"/>
+        <attribute name="ipAddress" type="String" mode="IN" optional="true"/>
+        <attribute name="accessToken" type="String" mode="OUT" optional="true"/>
+        <attribute name="refreshToken" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efRefreshToken" engine="java" auth="false" export="true"
+             location="org.apache.ofbiz.efinance.account.EfMemberServices"
+             invoke="efRefreshToken">
+        <description>Rotate the refresh token and issue a new access token.</description>
+        <attribute name="refreshToken" type="String" mode="IN" optional="false"/>
+        <attribute name="deviceId" type="String" mode="IN" optional="true"/>
+        <attribute name="accessToken" type="String" mode="OUT" optional="true"/>
+        <attribute name="refreshToken" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efLogout" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.account.EfMemberServices"
+             invoke="efLogout">
+        <description>Revoke the specified refresh token (logout from current device).</description>
+        <attribute name="refreshToken" type="String" mode="IN" optional="true"/>
+    </service>
+
+    <service name="efLogoutAll" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.account.EfMemberServices"
+             invoke="efLogoutAll">
+        <description>Revoke all active tokens for the authenticated member (logout from all devices).</description>
+    </service>
+
+    <service name="efRequestPasswordReset" engine="java" auth="false" export="true"
+             location="org.apache.ofbiz.efinance.account.EfMemberServices"
+             invoke="efRequestPasswordReset">
+        <description>Generate a password-reset OTP and send it (stub: stored in DB).</description>
+        <attribute name="email" type="String" mode="IN" optional="false"/>
+    </service>
+
+    <service name="efResetPassword" engine="java" auth="false" export="true"
+             location="org.apache.ofbiz.efinance.account.EfMemberServices"
+             invoke="efResetPassword">
+        <description>Validate password-reset OTP and update the password.</description>
+        <attribute name="token" type="String" mode="IN" optional="false"/>
+        <attribute name="newPassword" type="String" mode="IN" optional="false"/>
+    </service>
+
+    <service name="efGetProfile" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.account.EfMemberServices"
+             invoke="efGetProfile">
+        <description>Return the authenticated member's profile.</description>
+        <attribute name="member" type="java.util.Map" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efAcceptConsent" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.account.EfMemberServices"
+             invoke="efAcceptConsent">
+        <description>Record the member's consent to a consent document.</description>
+        <attribute name="documentId" type="String" mode="IN" optional="false"/>
+        <attribute name="ipAddress" type="String" mode="IN" optional="true"/>
+        <attribute name="deviceId" type="String" mode="IN" optional="true"/>
+    </service>
+
+    <service name="efListConsents" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.account.EfMemberServices"
+             invoke="efListConsents">
+        <description>List consents recorded for the authenticated member.</description>
+        <attribute name="consents" type="java.util.List" mode="OUT" optional="true"/>
+    </service>
+
+</services>

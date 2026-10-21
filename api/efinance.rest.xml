@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<api name="efinance" displayName="eFinance Customer API"
+     description="eFinance customer portal REST API"
+     publish="true"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:noNamespaceSchemaLocation="https://ofbiz.apache.org/dtds/ofbiz-rest.xsd">
+
+    <!-- Authentication -->
+    <resource name="register" path="/ef/auth/register" auth="false">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efRegisterMember"/>
+        </operation>
+    </resource>
+
+    <resource name="verifyEmail" path="/ef/auth/verify-email" auth="false">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efVerifyEmail"/>
+        </operation>
+    </resource>
+
+    <resource name="login" path="/ef/auth/login" auth="false">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efLogin"/>
+        </operation>
+    </resource>
+
+    <resource name="verifyMfa" path="/ef/auth/verify-mfa" auth="false">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efVerifyMfa"/>
+        </operation>
+    </resource>
+
+    <resource name="refreshToken" path="/ef/auth/refresh" auth="false">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efRefreshToken"/>
+        </operation>
+    </resource>
+
+    <resource name="logout" path="/ef/auth/logout" auth="true">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efLogout"/>
+        </operation>
+    </resource>
+
+    <resource name="logoutAll" path="/ef/auth/logout-all" auth="true">
+        <operation verb="post" produces="application/json">
+            <service name="efLogoutAll"/>
+        </operation>
+    </resource>
+
+    <resource name="passwordResetRequest" path="/ef/auth/password-reset" auth="false">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efRequestPasswordReset"/>
+        </operation>
+    </resource>
+
+    <resource name="passwordReset" path="/ef/auth/password-reset/confirm" auth="false">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efResetPassword"/>
+        </operation>
+    </resource>
+
+    <!-- Profile -->
+    <resource name="profile" path="/ef/me" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efGetProfile"/>
+        </operation>
+    </resource>
+
+    <!-- Consents -->
+    <resource name="consents" path="/ef/consents" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efListConsents"/>
+        </operation>
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efAcceptConsent"/>
+        </operation>
+    </resource>
+
+</api>
