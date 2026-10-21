@@ -41,4 +41,13 @@ under the License.
               memberTypeEnumId="EFMBR_PERSONAL" statusId="EFMBR_ACTIVE"
               mfaMethodEnumId="EFMFA_NONE" createdDate="2026-10-21 00:00:00.0"
               emailVerifiedDate="2026-10-21 00:00:00.0"/>
+
+    <!-- Verified KYC and electronic-contract consent for contract tests -->
+    <EfKycCheck kycCheckId="TEST_EF_KYC_VERIFIED" memberPartyId="TEST_EF_CUST"
+                kycSubjectPartyId="TEST_EF_CUST" kycMethodEnumId="EFKYC_M_IMAGE_FACE"
+                statusId="EFKYC_VERIFIED" confirmedDate="2026-10-21 00:00:00.0"
+                confirmerNote="Test fixture" createdDate="2026-10-21 00:00:00.0"
+                expiresDate="2033-10-21 00:00:00.0"/>
+    <EfConsent consentId="TEST_EF_CONSENT_EC" partyId="TEST_EF_CUST"
+               documentId="EFCDOC_ELEC_CTR_V1" consentDate="2026-10-21 00:00:00.0"/>
 </entity-engine-xml>

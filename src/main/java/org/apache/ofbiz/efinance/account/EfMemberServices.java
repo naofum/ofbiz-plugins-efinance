@@ -175,8 +175,11 @@ public final class EfMemberServices {
                     UtilProperties.getMessage(RESOURCE, "EfinanceMemberRegistered", locale));
             result.put("partyId", partyId);
             result.put("userLoginId", email);
-            // Plain OTP returned for testing/email sending; in production send via email
-            result.put("verificationToken", otp[0]);
+            // Never expose the OTP through the public API. It is returned only when
+            // the caller is the internal system user (unit tests / operational tooling).
+            if (isSystemUser(context)) {
+                result.put("verificationToken", otp[0]);
+            }
             return result;
 
         } catch (GenericEntityException e) {
@@ -484,6 +487,7 @@ public final class EfMemberServices {
     public static Map<String, Object> efLogout(DispatchContext dctx, Map<String, Object> context) {
         Delegator delegator = dctx.getDelegator();
         String refreshTokenRaw = (String) context.get("refreshToken");
+        String accessTokenRaw = (String) context.get("accessToken");
         String partyId = getPartyIdFromContext(context);
 
         try {
@@ -497,7 +501,15 @@ public final class EfMemberServices {
                     delegator.store(token);
                 }
             }
-            logAudit(delegator, partyId, ACTION_LOGOUT, "EfRefreshToken", partyId, RESULT_SUCCESS, null, null, null);
+            if (UtilValidate.isNotEmpty(accessTokenRaw)) {
+                GenericValue token = EntityQuery.use(delegator).from("EfToken")
+                        .where("tokenHash", sha256(accessTokenRaw)).queryOne();
+                if (token != null && token.getTimestamp("revokedDate") == null) {
+                    token.set("revokedDate", now);
+                    delegator.store(token);
+                }
+            }
+            logAudit(delegator, partyId, ACTION_LOGOUT, "EfToken", partyId, RESULT_SUCCESS, null, null, null);
             return ServiceUtil.returnSuccess();
 
         } catch (GenericEntityException e) {
@@ -578,8 +590,11 @@ public final class EfMemberServices {
 
             Map<String, Object> result = ServiceUtil.returnSuccess(
                     UtilProperties.getMessage(RESOURCE, "EfinancePasswordResetSent", locale));
-            // Plain token returned for testing; production would send via email
-            result.put("resetToken", otp[0]);
+            // Never expose the reset token through the public API. It is returned only
+            // to the internal system user for tests / operational tooling.
+            if (isSystemUser(context)) {
+                result.put("resetToken", otp[0]);
+            }
             return result;
 
         } catch (GenericEntityException e) {
@@ -716,6 +731,39 @@ public final class EfMemberServices {
         }
     }
 
+    public static Map<String, Object> efListConsentDocuments(DispatchContext dctx, Map<String, Object> context) {
+        Delegator delegator = dctx.getDelegator();
+        try {
+            Timestamp now = UtilDateTime.nowTimestamp();
+            List<GenericValue> rawDocs = EntityQuery.use(delegator).from("EfConsentDocument")
+                    .where(EntityCondition.makeCondition(EntityOperator.AND,
+                            EntityCondition.makeCondition("effectiveDate", EntityOperator.LESS_THAN_EQUAL_TO, now),
+                            EntityCondition.makeCondition(EntityOperator.OR,
+                                    EntityCondition.makeCondition("expiresDate", EntityOperator.EQUALS, null),
+                                    EntityCondition.makeCondition("expiresDate",
+                                            EntityOperator.GREATER_THAN_EQUAL_TO, now))))
+                    .orderBy("documentTypeEnumId", "-effectiveDate")
+                    .queryList();
+            List<Map<String, Object>> documents = new ArrayList<>();
+            for (GenericValue doc : rawDocs) {
+                Map<String, Object> entry = new LinkedHashMap<>();
+                entry.put("documentId", doc.getString("documentId"));
+                entry.put("documentTypeEnumId", doc.getString("documentTypeEnumId"));
+                entry.put("version", doc.getString("version"));
+                entry.put("language", doc.getString("language"));
+                entry.put("effectiveDate", doc.getTimestamp("effectiveDate"));
+                entry.put("expiresDate", doc.getTimestamp("expiresDate"));
+                documents.add(entry);
+            }
+            Map<String, Object> result = ServiceUtil.returnSuccess();
+            result.put("documents", documents);
+            return result;
+        } catch (GenericEntityException e) {
+            Debug.logError(e, "efListConsentDocuments failed", MODULE);
+            return ServiceUtil.returnError(e.getMessage());
+        }
+    }
+
     public static Map<String, Object> efListConsents(DispatchContext dctx, Map<String, Object> context) {
         Delegator delegator = dctx.getDelegator();
         String partyId = getPartyIdFromContext(context);
@@ -765,6 +813,12 @@ public final class EfMemberServices {
         return userLogin.getString("partyId");
     }
 
+    /** True only for the internal system user; used to avoid exposing OTPs in public API responses. */
+    private static boolean isSystemUser(Map<String, Object> context) {
+        GenericValue userLogin = (GenericValue) context.get("userLogin");
+        return userLogin != null && "system".equals(userLogin.getString("userLoginId"));
+    }
+
     /** Issue a new (accessToken, refreshToken) pair and persist them. Returns a map with accessToken, refreshToken, refreshTokenId. */
     private static Map<String, String> issueTokens(Delegator delegator, String partyId, String userLoginId,
             String deviceId, String ipAddress, Timestamp now) throws GenericEntityException {
@@ -776,16 +830,16 @@ public final class EfMemberServices {
                 UtilProperties.getPropertyValue("efinance", "efinance.refresh.expire.days",
                         String.valueOf(DEFAULT_REFRESH_EXPIRE_DAYS)));
 
-        // Access token: create JWT
+        // Access token: create JWT with a jti claim so the issued token can be
+        // looked up and revoked later. The hash of the actual JWT is stored.
+        String tokenId = delegator.getNextSeqId("EfToken");
         Map<String, String> claims = new HashMap<>();
         claims.put("userLoginId", userLoginId);
         claims.put("partyId", partyId);
+        claims.put("jti", tokenId);
         String accessJwt = JWTManager.createJwt(delegator, claims, expireMinutes * 60);
 
-        // Store hash of the JWT in EfToken
-        String rawAccessRef = generateSecureToken();
-        String accessHash = sha256(rawAccessRef);
-        String tokenId = delegator.getNextSeqId("EfToken");
+        String accessHash = sha256(accessJwt);
         Timestamp accessExpiry = new Timestamp(now.getTime() + (long) expireMinutes * 60 * 1000);
         GenericValue accessToken = delegator.makeValue("EfToken");
         accessToken.set("tokenId", tokenId);
@@ -796,6 +850,7 @@ public final class EfMemberServices {
         accessToken.set("ipAddress", ipAddress);
         accessToken.set("issuedAt", now);
         accessToken.set("expiresAt", accessExpiry);
+        accessToken.set("detail", "ACCESS");
         delegator.create(accessToken);
 
         // Refresh token

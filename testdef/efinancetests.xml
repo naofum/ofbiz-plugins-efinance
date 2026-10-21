@@ -54,4 +54,8 @@ under the License.
         <junit-test-suite class-name="org.apache.ofbiz.efinance.test.EfMyPageTests"/>
     </test-case>
 
+    <test-case case-name="ef-support-tests">
+        <junit-test-suite class-name="org.apache.ofbiz.efinance.test.EfSupportTests"/>
+    </test-case>
+
 </test-suite>

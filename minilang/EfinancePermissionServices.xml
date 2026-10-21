@@ -21,6 +21,25 @@ under the License.
 <simple-methods xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="https://ofbiz.apache.org/dtds/simple-methods.xsd">
 
+    <simple-method method-name="efinanceCustomerPermission" short-description="eFinance customer permission check">
+        <if-has-permission permission="EFINANCE" action="_ADMIN">
+            <set field="hasPermission" type="Boolean" value="true"/>
+            <field-to-result field="hasPermission"/>
+            <else>
+                <if-has-permission permission="EFINANCE" action="_CUSTOMER">
+                    <set field="hasPermission" type="Boolean" value="true"/>
+                    <field-to-result field="hasPermission"/>
+                    <else>
+                        <property-to-field resource="EfinanceUiLabels" property="EfinancePermissionError" field="failMessage"/>
+                        <set field="hasPermission" type="Boolean" value="false"/>
+                        <field-to-result field="hasPermission"/>
+                        <field-to-result field="failMessage"/>
+                    </else>
+                </if-has-permission>
+            </else>
+        </if-has-permission>
+    </simple-method>
+
     <simple-method method-name="efinanceAdminPermission" short-description="eFinance admin permission check">
         <if-has-permission permission="EFINANCE" action="_ADMIN">
             <set field="hasPermission" type="Boolean" value="true"/>

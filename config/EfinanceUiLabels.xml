@@ -266,6 +266,18 @@ under the License.
         <value xml:lang="en">A signing session is already in progress for this application.</value>
         <value xml:lang="ja">この申込の署名手続きがすでに進行中です。</value>
     </property>
+    <property key="EfinanceKycRequiredForContract">
+        <value xml:lang="en">Identity verification must be completed before signing the contract.</value>
+        <value xml:lang="ja">契約締結の前に本人確認を完了してください。</value>
+    </property>
+    <property key="EfinanceConsentRequired">
+        <value xml:lang="en">Consent to the electronic contract terms is required before signing.</value>
+        <value xml:lang="ja">契約締結の前に電子契約に関する同意が必要です。</value>
+    </property>
+    <property key="EfinanceSupportOperationFailed">
+        <value xml:lang="en">The support operation could not be completed. Please try again or contact support.</value>
+        <value xml:lang="ja">サポート操作を完了できませんでした。再試行するか、サポートにお問い合わせください。</value>
+    </property>
 
     <!-- W6: MyPage labels -->
     <property key="EfinanceContractNotFound">

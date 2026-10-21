@@ -2,288 +2,1142 @@
 
 `REQUIREMENTS_EFINANCE.md` の要件に対する設計。各 STEP の実装後に「実装」「テスト」「検証」を追記する。
 
-> **状態：W0〜W6 実装済み（2026-10-21）**。2026-10-17 作成。法令（本人確認・書面の電子交付・広告の表示・同意）の要件は、法務の確認を前提とする。
+> **状態：W0〜W6 の API・DB は実装済み（2026-10-22 更新）**。support 顧客 API ブリッジ、全顧客サービスの権限チェック、JWT の `jti` 対応、OTP 非公開、同意文書 seed、KYC・同意ゲートを追加した。残る主な未実装は、リクエスト単位の `EfAuthFilter`、法人アカウント、管理画面、顧客サンプル画面、PDF 生成、通知・段階イベントである。各 STEP の「既知のギャップ」を参照。法令（本人確認・書面の電子交付・広告の表示・同意）の要件は、法務の確認を前提とする。
 
 ## 進捗
 
 | STEP | 内容 | 状態 |
 |------|------|------|
-| W0 | 基盤（2 章） | 実装済み（2026-10-21） |
+| W0 | 基盤（2 章） | API/DB 実装済み（2026-10-22）。法人・リクエスト単位の認証フィルタは未完 |
 | W1 | 商品の紹介とシミュレーション（3 章） | 実装済み（2026-10-21） |
-| W2 | Web での申込（4 章） | 実装済み（2026-10-21） |
-| W3 | 本人確認と同意（5 章） | 実装済み（2026-10-21） |
-| W4 | 仮審査と進み具合（6 章） | 実装済み（2026-10-21） |
-| W5 | 電子契約と電子交付（7 章） | 実装済み（2026-10-21） |
-| W6 | マイページ（8 章） | 実装済み（2026-10-21） |
+| W2 | Web での申込（4 章） | 実装済み（2026-10-21）。フォーム定義・スキャンは未完 |
+| W3 | 本人確認と同意（5 章） | API 実装済み（2026-10-22）。同意文書 seed・一覧 API を追加。U6 連携は未完 |
+| W4 | 仮審査と進み具合（6 章） | API 実装済み（2026-10-21）。段階イベント・通知は未完 |
+| W5 | 電子契約と電子交付（7 章） | API 実装済み（2026-10-22）。KYC・同意ゲートを追加。PDF・再認証は未完 |
+| W6 | マイページ（8 章） | API 実装済み（2026-10-22）。support ブリッジを追加。タスク・管理画面は未完 |
 | W7 | 支払（9 章） | 設計（未着手） |
 | W8 | 販売店のポータル（10 章） | 設計（未着手） |
 | W9 | 組込み・チャット（10 章） | 設計（未着手） |
+
+### 実装・テスト・検証（2026-10-21）
+
+| STEP | 実装した主なもの | テスト |
+|------|------------------|--------|
+| W0 | 23 entity のうち会員・法人・OTP・トークン・同意・監査の 9 entity、14 サービス（同意文書一覧を含む）、REST 認証、権限サービス、管理画面の会員一覧・詳細 | `EfMemberTests` |
+| W1 | `EfProductPublication`、商品一覧・詳細、ローン・リースシミュレーション、REST 4 本 | `EfCatalogTests` |
+| W2 | `EfApplicationDraft` / `EfDraftDocument` / `EfApplicationLink` / `EfFraudCheck`、下書き CRUD、書類、申込送信、REST 6 本 | `EfApplicationTests` |
+| W3 | `EfKycCheck` / `EfKycImage`、KYC 開始・画像・提出・審査・確認判定、REST 4 本 | `EfKycTests` |
+| W4 | `EfPreScreenResult` / `EfStageEvent` / `EfDocumentRequest`、仮審査、進捗、書類要請、REST 4 本 | `EfPreScreenTests` |
+| W5 | `EfSigningSession` / `EfDeliveredDocument`、見積受理、署名、契約作成、交付書類、REST 6 本 | `EfContractTests` |
+| W6 | `EfServiceRequest` / `EfNotificationSetting`、申込・契約照会、繰上返済、手続き、メッセージ、通知設定、REST 10 本、support 顧客 API ブリッジ 8 サービス | `EfMyPageTests` / `EfSupportTests` |
+
+- 全体：**66 サービス**（`auth=true` 54、`auth=false` 12）、**23 entity**、**8 テストクラス / 51 テスト**。
+- 実行：`.\gradlew.bat compileJava compileGroovy` 成功。`.\gradlew.bat "ofbiz --test component=efinance"` は **51 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
+- seed/demo：`data/EfinanceTypeData.xml`（状態・列挙・権限・`efinance-system`・同意文書）、`data/EfinanceDemoData.xml`（公開商品）、`testdef/data/EfinanceTestData.xml`（テスト会員・KYC/同意フィクスチャ）。
+- **未実施**：REST 経由の結合テスト、法人アカウントのテスト、リクエスト単位のトークン失効テスト、再認証テスト、finance・support の全体回帰テスト。
+
+### 既知のギャップ（重要度順）
+
+| # | 重要度 | 内容 | 影響 | 対応先 |
+|---|:---:|------|------|--------|
+| 1 | P0 | 法人アカウントのサービス・画面・所有確認がない | 法人の申込・契約の権限管理ができない | W0 追加 |
+| 2 | P1 | `EfAuthFilter` によるリクエスト単位のトークン失効検証がない | 失効済みアクセストークンが期限まで使える | W0 追加 |
+| 3 | P1 | `EfStageEvent` を作成していない | 進捗通知ができない | W4 追加 |
+| 4 | P1 | 監査ログの適用が一部サービスに限られる | 操作証跡が不足 | 全 STEP |
+| 5 | P1 | 管理画面が会員・KYC 一覧のみ | 運用手続きができない | W6 追加 |
+| 6 | P1 | `/portal` は仮ページのみ | 顧客サンプル画面の要件を満たさない | W6 追加 |
+| 7 | P1 | 契約 PDF・交付書類の `contentId` が常に null | 電子交付が実運用できない | W5 追加 |
+| 8 | P2 | `EfFormField` が未実装でフォーム定義が Java 固定 | 商品別の項目定義ができない | W2 追加 |
+| 9 | P2 | ファイルスキャン Adapter がない | アップロードの安全性が保証できない | W2 追加 |
+| 10 | P2 | 重複下書き・冪等性・レート制限が不十分 | 二重申込・乱用のリスク | W2/W3 |
+| 11 | P2 | ローン残高が返済表の最終行の簡易計算 | finance の入金消込と一致しない場合がある | W6 修正 |
+| 12 | P2 | REST 結合テストがない | API 契約・CORS・エラーの検証が不十分 | W6 テスト |
+
+**2026-10-22 に解消した項目**
+
+- support 顧客 API ブリッジ（8 サービス・テスト付き）を追加した。
+- 全顧客向けサービスに `efinanceCustomerPermission` を適用した（`permission-service` 52 件）。
+- `EfToken` に JWT の `jti` を保存し、JWT の SHA-256 を `tokenHash` に保存するよう修正した。`efLogout` はアクセストークンも失効できる。
+- `efRegisterMember` / `efRequestPasswordReset` の OTP・リセットトークンは system ユーザーにだけ返すよう修正した。
+- 同意文書の seed と `efListConsentDocuments` を追加した。
+- `efCompleteSigning` に KYC 確認と電子契約同意のゲートを追加した。
+- `EfAccessGuard` の共通ヘルパーを追加した（所有確認・トークン確認）。
 
 ---
 
 ## 1. 構成
 
-### 1.1 プラグイン
+### 1.1 ディレクトリ構成
 
-| 項目 | 内容 |
-|------|------|
-| プラグイン | `plugins/efinance`（コンポーネント名 `efinance`）。webapp は 2 つ：`/efinanceadmin`（担当者向けの管理画面、権限 `OFBTOOLS,EFINANCE_ADMIN`）と `/portal`（顧客向けのサンプル画面。フロントエンドの置き換えが前提）。詳細は 2.4 章 |
-| API | OFBiz の rest-api プラグインが、`plugins/efinance/api/efinance.rest.xml` のリソースと、`export="true"` のサービスを `/rest` で公開する。認証は rest-api の JWT（`Authorization: Bearer`）。OpenAPI の文書は `/docs` |
-| パッケージ | `org.apache.ofbiz.efinance.account`（会員・認証・法人アカウント）、`org.apache.ofbiz.efinance.catalog`（商品・シミュレーション）、`org.apache.ofbiz.efinance.application`（申込の下書き・送信）、`org.apache.ofbiz.efinance.kyc`（本人確認・同意）、`org.apache.ofbiz.efinance.contract`（電子契約・交付）、`org.apache.ofbiz.efinance.mypage`（照会・手続き・メッセージ）、`org.apache.ofbiz.efinance.payment`（口座振替）、`org.apache.ofbiz.efinance.adapter`（外部サービスの口）、`org.apache.ofbiz.efinance.security`（権限・不正の検知・記録） |
-| 依存 | efinance → finance（公開サービスを `dispatcher.runSync` で呼ぶ。finance の Java のクラスは、共通層の公開の部品（計算・状態の照会）に限って参照する）、OFBiz core、rest-api。ecommerce には依存しない |
-| データ | `data/EfinanceTypeData.xml`（seed：状態・同意の種類・通知の種類・顧客向けの段階・権限）、`data/EfinanceDemoData.xml`（demo：公開の商品の設定・文面の版・テスト用の Adapter の設定）、`testdef/data/EfinanceTestData.xml` |
-
-### 1.2 API の層
-
-```mermaid
-flowchart TB
-    C[フロントエンド] -->|HTTPS + JWT| R[rest-api<br/>認証・CORS・JSON]
-    R --> S[efinance のサービス（export=true）]
-    S --> G[ガード<br/>本人の確認・再認証・レート制限・入力の検証]
-    G --> F[finance のサービス（export=false）]
-    G --> A[Adapter（eKYC・署名・通知・口座振替）]
-    S --> V[応答の整形<br/>顧客に見せてよい項目だけ]
+```text
+plugins/efinance/
+  ofbiz-component.xml
+  build.gradle
+  api/efinance.rest.xml
+  config/
+    efinance.properties
+    EfinanceUiLabels.xml
+  data/
+    EfinanceTypeData.xml       # seed
+    EfinanceDemoData.xml       # demo
+  entitydef/entitymodel.xml
+  minilang/EfinancePermissionServices.xml
+  servicedef/services.xml
+  src/main/java/org/apache/ofbiz/efinance/
+    account/      EfMemberServices.java
+    application/  EfApplicationServices.java, EfPreScreenServices.java
+    catalog/      EfCatalogServices.java
+    contract/     EfContractServices.java
+    kyc/          EfKycServices.java
+    mypage/       EfMyPageServices.java
+  src/main/groovy/org/apache/ofbiz/efinance/test/
+  testdef/
+    efinancetests.xml
+    data/EfinanceTestData.xml
+  webapp/
+    efinanceadmin/   # 担当者向け管理画面
+    portal/          # 顧客向けサンプル画面
+  widget/
+    EfinanceAdminScreens.xml
+    EfinanceAdminForms.xml
 ```
 
-- efinance のサービスは、すべて次の順に処理する：①認証の確認（会員・有効・ロックなし）②本人の確認（対象の申込・契約が会員のものか、`EfAccessGuard`）③必要なら再認証の確認 ④入力の検証 ⑤finance のサービスの呼出し（**システムの実行ユーザー** `efinance-system` で呼ぶ。顧客の `UserLogin` に finance の権限は付けない）⑥応答の整形 ⑦操作の記録。
-- 顧客の `UserLogin` は efinance の権限（`EFINANCE_CUSTOMER`）だけを持つ。
+### 1.2 `ofbiz-component.xml`
 
-### 1.3 エラーの形
+- `depends-on`：`finance`、`support`
+- entity：`entitydef/entitymodel.xml`
+- seed：`data/EfinanceTypeData.xml`
+- demo：`data/EfinanceDemoData.xml`
+- service：`servicedef/services.xml`
+- test：`testdef/efinancetests.xml`
+- webapp：
+  - `efinanceadmin`：`/efinanceadmin`、`base-permission="OFBTOOLS,EFINANCE_ADMIN"`
+  - `portal`：`/portal`（サンプル。認証は API 側で行う）
 
-rest-api の応答の形（`statusCode`・`statusDescription`・`errorMessage`）に従い、顧客に見せるメッセージ（多言語のラベル）と、内部の理由のコード（`errorCode`）を分ける。finance のエラーの文面をそのまま顧客に返さない。
+### 1.3 依存関係
+
+```mermaid
+flowchart LR
+    EF[efinance] -->|公開サービス| FIN[finance]
+    EF -->|顧客 API| SUP[support]
+    EF --> CORE[OFBiz core<br/>Party / UserLogin / Content / CommunicationEvent]
+    EF --> REST[rest-api]
+    FIN -.->|参照しない| EF
+    SUP -.->|参照しない| EF
+```
+
+- efinance は finance の公開サービスを `dispatcher.runSync` で呼ぶ。
+- efinance は finance の計算・照会クラス（`FinanceInterestCalculator`、`LeaseCalculator`、`LeaseInquiryHelper` 等）を参照する。
+- finance は efinance を参照しない。support も efinance を参照しない。
+- efinance は ecommerce に依存しない。
+
+### 1.4 設定（`config/efinance.properties`）
+
+| キー | 既定 | 内容 |
+|------|------|------|
+| `efinance.token.expire.minutes` | 15 | アクセストークンの有効期間（分） |
+| `efinance.refresh.expire.days` | 30 | 更新トークンの有効期間（日） |
+| `efinance.otp.expire.minutes` | 10 | MFA OTP の有効期間 |
+| `efinance.max.login.attempts` | 5 | ログイン失敗の上限 |
+| `efinance.email.verify.expire.hours` | 24 | メール確認 OTP の有効期間 |
+| `efinance.mfa.default` | NONE | 新規会員の既定 MFA 方式 |
+| `efinance.system.userlogin` | efinance-system | 内部呼出しのシステムユーザー |
+| `efinance.draft.expire.days` | 30 | 下書きの有効期間 |
+| `efinance.upload.max.bytes` | 10485760 | アップロード上限（10MB） |
+| `efinance.kyc.retention.years` | 7 | 本人確認記録の保存期間 |
+
+### 1.5 seed / demo / test データ
+
+| ファイル | 用途 | 内容 |
+|----------|------|------|
+| `data/EfinanceTypeData.xml` | seed | 会員・法人・KYC・下書き・書類・署名・手続きの状態、列挙、権限、`efinance-system` |
+| `data/EfinanceDemoData.xml` | demo | `EFPUB1`（`DEMO_LOANPROD1`）、`EFPUB2`（`DEMO_LEASEPROD1`）の公開設定 |
+| `testdef/data/EfinanceTestData.xml` | test | テスト会員 `TEST_EF_CUST` / `test-ef-customer`（パスワード `ofbiz`） |
+
+- `efinance-system` は `SUPER` グループに所属し、finance・support の内部サービスを呼ぶ。
+- システムユーザーのパスワードハッシュは seed に固定されている。本番では資格情報をローテーションする。
+
+### 1.6 サービスの規約
+
+すべての顧客向けサービスは、次の順に処理する。
+
+1. 認証：JWT の `userLogin` が有効で、会員が `EFMBR_ACTIVE` であること。
+2. 権限：`efinanceCustomerPermission` で `EFINANCE_CUSTOMER`（または管理者）を検査する。法人の権限は未実装。
+3. 所有確認：対象の下書き・申込・契約・KYC・書類がログイン会員（または法人）のものか確認する。
+4. 再認証：重要操作では再認証トークンを検査する（**未実装**）。
+5. 入力検証：必須・型・範囲・状態を検証する。
+6. 業務呼出し：finance・support のサービスを `efinance-system` で呼ぶ。
+7. 応答整形：顧客に見せてよい項目だけを返す。
+8. 監査：`EfAuditLog` に記録する。
+
+| サービス種別 | auth | permission-service | 例 |
+|--------------|:---:|:---:|----|
+| 公開（商品・シミュレーション・登録・ログイン） | false | なし | `efListProducts`、`efSimulateLoan`、`efLogin` |
+| 顧客（要ログイン） | true | `efinanceCustomerPermission` | `efCreateDraft`、`efStartKyc`、`efGetContract` |
+| 管理者 | true | `efinanceAdminPermission` | `reviewEfKycCheck`、`efCreateDocumentRequest` |
+| 内部バッチ | true | なし（システム） | 将来の段階判定・通知 |
+
+- 2026-10-22 時点で、顧客向け・support ブリッジのサービスに `efinanceCustomerPermission` を適用済み（`permission-service` 52 件）。`efAuthFilter` によるリクエスト単位のトークン失効検証は未実装。
+
+### 1.7 エラーの形
+
+rest-api の応答形式（`statusCode`・`statusDescription`・`errorMessage`）に従う。顧客向けメッセージは `EfinanceUiLabels` の多言語ラベルを使い、内部の `errorCode` と分ける。
+
+| HTTP | 用途 | 例 |
+|------|------|----|
+| 400 | 入力エラー・状態不正 | `EfinanceValidationFailed`、`EfinanceDraftNotEditable` |
+| 401 | 未認証・トークン失効 | `EfinanceTokenInvalid` |
+| 403 | 権限・所有権エラー | `EfinanceDraftNotOwned`、`EfinanceKycNotOwned` |
+| 404 | 対象なし | `EfinanceDraftNotFound`、`EfinanceContractNotFound` |
+| 409 | 競合・重複 | `EfinanceDuplicateDraft`、`EfinanceSigningAlreadyActive` |
+| 500 | 内部エラー | 汎用メッセージのみ。内部例外を返さない |
+
+- finance・support のエラー文面をそのまま返さない。
+- OTP・口座番号・個人情報をエラーに含めない。
 
 ---
 
-## 2. STEP W0 — 基盤
+## 2. データモデル
 
-### 2.1 エンティティ
+### 2.1 エンティティ一覧（23）
+
+| エンティティ | パッケージ | 主キー | 主な項目 |
+|--------------|-----------|--------|----------|
+| `EfMember` | account | `partyId` | `userLoginId`、`memberTypeEnumId`、`statusId`、`emailVerifiedDate`、`phoneVerifiedDate`、`mfaMethodEnumId`、`lastLoginDate` |
+| `EfCorporateAccount` | account | `corporatePartyId` | `adminMemberId`、`statusId`、`createdDate` |
+| `EfCorporateUser` | account | `corporatePartyId` + `memberPartyId` + `fromDate` | `roleApply`、`roleView`、`rolePayment`、`roleAdmin`、`thruDate` |
+| `EfOneTimeCode` | auth | `otpId` | `partyId`、`codeHash`、`purposeEnumId`、`expiresAt`、`attemptCount`、`usedDate` |
+| `EfToken` | auth | `tokenId` | `tokenHash`、`partyId`、`userLoginId`、`deviceId`、`ipAddress`、`issuedAt`、`expiresAt`、`revokedDate`、`detail` |
+| `EfRefreshToken` | auth | `refreshTokenId` | `tokenHash`、`partyId`、`userLoginId`、`deviceId`、`issuedAt`、`expiresAt`、`revokedDate`、`replacedByTokenId` |
+| `EfConsentDocument` | consent | `documentId` | `documentTypeEnumId`、`version`、`language`、`contentId`、`effectiveDate`、`expiresDate` |
+| `EfConsent` | consent | `consentId` | `partyId`、`documentId`、`consentDate`、`ipAddress`、`deviceId`、`revokedDate` |
+| `EfProductPublication` | catalog | `publicationId` | `productId`、`fromDate`、`thruDate`、`displayOrder`、`targetEnumId`、`active` |
+| `EfApplicationDraft` | application | `draftId` | `memberPartyId`、`corporatePartyId`、`productId`、`applicationTypeId`、`currentStep`、`totalSteps`、`draftJson`、`statusId`、`sourceEnumId`、`submittedApplicationId`、`submittedApplicationTypeId`、`expiresAt` |
+| `EfDraftDocument` | application | `draftDocumentId` | `draftId`、`contentId`、`documentTypeEnumId`、`fileName`、`mimeTypeId`、`fileSizeBytes`、`scanStatus`、`uploadedDate` |
+| `EfApplicationLink` | application | `linkId` | `draftId`、`memberPartyId`、`corporatePartyId`、`financeApplicationId`、`financeApplicationTypeId`、`linkedDate` |
+| `EfFraudCheck` | application | `fraudCheckId` | `draftId`、`memberPartyId`、`checkDate`、`resultEnumId`、`triggeredRules`、`ipAddress`、`deviceId` |
+| `EfKycCheck` | kyc | `kycCheckId` | `memberPartyId`、`kycSubjectPartyId`、`draftId`、`kycMethodEnumId`、`statusId`、`confirmerPartyId`、`confirmedDate`、`confirmerNote`、`adapterResultCode`、`adapterExternalId`、`expiresDate` |
+| `EfKycImage` | kyc | `kycImageId` | `kycCheckId`、`contentId`、`imageTypeEnumId`、`uploadedDate` |
+| `EfPreScreenResult` | application | `preScreenId` | `draftId`、`memberPartyId`、`preScreenDate`、`resultEnumId`、`triggeredRules`、`inputSummary` |
+| `EfStageEvent` | application | `stageEventId` | `draftId`、`memberPartyId`、`fromStageEnumId`、`toStageEnumId`、`eventDate`、`notified` |
+| `EfDocumentRequest` | application | `docRequestId` | `draftId`、`memberPartyId`、`documentTypeEnumId`、`reason`、`dueDate`、`statusId`、`requestedByPartyId`、`requestedDate`、`submittedContentId`、`submittedDate` |
+| `EfSigningSession` | contract | `signingSessionId` | `draftId`、`memberPartyId`、`quoteId`、`quoteTypeId`、`statusId`、`consentIpAddress`、`consentDeviceId`、`consentDate`、`signedContentId`、`agreementId`、`agreementTypeId`、`expiresAt` |
+| `EfDeliveredDocument` | contract | `deliveredDocId` | `draftId`、`memberPartyId`、`documentTypeEnumId`、`contentId`、`deliveredDate`、`consentId`、`viewedDate` |
+| `EfServiceRequest` | mypage | `serviceRequestId` | `memberPartyId`、`draftId`、`agreementId`、`agreementTypeId`、`requestTypeEnumId`、`statusId`、`subject`、`content`、`requestData`、`requestedByPartyId`、`assignedToPartyId`、`requestedDate`、`completedDate`、`staffNotes` |
+| `EfNotificationSetting` | mypage | `memberPartyId` + `notificationTypeEnumId` | `emailEnabled`、`smsEnabled`、`pushEnabled`、`lastModifiedDate` |
+| `EfAuditLog` | audit | `auditLogId` | `partyId`、`actionEnumId`、`targetEntityName`、`targetEntityId`、`resultEnumId`、`ipAddress`、`deviceId`、`actionDate`、`detail` |
+
+### 2.2 ER 図（主要な関係）
+
+```mermaid
+erDiagram
+    Party ||--|| EfMember : "1:1"
+    Party ||--o{ EfCorporateUser : "member"
+    EfCorporateAccount ||--o{ EfCorporateUser : "has"
+    Party ||--o{ EfToken : "issues"
+    Party ||--o{ EfRefreshToken : "issues"
+    Party ||--o{ EfConsent : "accepts"
+    EfConsentDocument ||--o{ EfConsent : "version"
+    FinancialProduct ||--o{ EfProductPublication : "published"
+    Party ||--o{ EfApplicationDraft : "owns"
+    EfApplicationDraft ||--o{ EfDraftDocument : "attaches"
+    EfApplicationDraft ||--o{ EfKycCheck : "kyc"
+    EfApplicationDraft ||--o{ EfPreScreenResult : "prescreen"
+    EfApplicationDraft ||--o{ EfStageEvent : "stage"
+    EfApplicationDraft ||--o{ EfDocumentRequest : "requests"
+    EfApplicationDraft ||--o{ EfSigningSession : "signs"
+    EfApplicationDraft ||--o{ EfDeliveredDocument : "delivers"
+    EfApplicationDraft ||--o| EfApplicationLink : "submitted"
+    EfKycCheck ||--o{ EfKycImage : "images"
+    Party ||--o{ EfServiceRequest : "requests"
+```
+
+### 2.3 状態遷移
+
+#### 会員（`EfMember.statusId`）
+
+```text
+EFMBR_PENDING --メール確認--> EFMBR_ACTIVE
+EFMBR_ACTIVE  --失敗上限/管理者--> EFMBR_LOCKED
+EFMBR_ACTIVE  --退会--> EFMBR_CLOSED
+EFMBR_LOCKED  --管理者解除--> EFMBR_ACTIVE
+EFMBR_LOCKED  --退会--> EFMBR_CLOSED
+```
+
+#### 申込下書き（`EfApplicationDraft.statusId`）
+
+```text
+EFDRF_EDITING --送信--> EFDRF_SUBMITTED
+EFDRF_EDITING --撤回--> EFDRF_WITHDRAWN
+EFDRF_EDITING --期限切れ--> EFDRF_EXPIRED
+```
+
+#### 本人確認（`EfKycCheck.statusId`）
+
+```text
+EFKYC_PENDING --提出--> EFKYC_SUBMITTED
+EFKYC_SUBMITTED --確認済み--> EFKYC_VERIFIED
+EFKYC_SUBMITTED --再提出依頼--> EFKYC_RESUBMIT
+EFKYC_SUBMITTED --不可--> EFKYC_REJECTED
+EFKYC_RESUBMIT --再提出--> EFKYC_SUBMITTED
+```
+
+#### 追加書類（`EfDocumentRequest.statusId`）
+
+```text
+EFDOCREQ_PENDING --提出--> EFDOCREQ_SUBMITTED
+EFDOCREQ_SUBMITTED --受理--> EFDOCREQ_ACCEPTED
+EFDOCREQ_SUBMITTED --差戻し--> EFDOCREQ_REJECTED
+EFDOCREQ_REJECTED --再提出--> EFDOCREQ_SUBMITTED
+```
+
+#### 署名（`EfSigningSession.statusId`）
+
+```text
+EFSIG_PENDING --署名--> EFSIG_SIGNED
+EFSIG_PENDING --辞退--> EFSIG_DECLINED
+EFSIG_PENDING --期限切れ--> EFSIG_EXPIRED
+```
+
+#### 手続き依頼（`EfServiceRequest.statusId`）
+
+```text
+EFSVCREQ_RECEIVED --対応開始--> EFSVCREQ_IN_PROG
+EFSVCREQ_RECEIVED --却下--> EFSVCREQ_REJECTED
+EFSVCREQ_IN_PROG --完了--> EFSVCREQ_COMPLETE
+EFSVCREQ_IN_PROG --却下--> EFSVCREQ_REJECTED
+```
+
+### 2.4 監査ログと保存
+
+`EfAuditLog` の `actionEnumId` は主に次を使う。
+
+| 区分 | 例 |
+|------|----|
+| 認証 | `REGISTER`、`EMAIL_VERIFY`、`LOGIN`、`LOGIN_FAIL`、`MFA_VERIFY`、`LOGOUT`、`PASSWORD_RESET`、`TOKEN_ISSUE`、`TOKEN_REVOKE` |
+| 同意 | `CONSENT` |
+| 申込 | `DRAFT_CREATE`、`DRAFT_SAVE`、`DRAFT_SUBMIT`、`DRAFT_WITHDRAW`、`DOC_UPLOAD`、`DOC_DELETE` |
+| KYC | `KYC_START`、`KYC_SUBMIT`、`KYC_REVIEW` |
+| 仮審査・段階 | `PRESCREEN`、`STAGE_CHANGE`、`DOC_REQ_CREATE`、`DOC_REQ_SUBMIT` |
+| 契約 | `OFFER_ACCEPT`、`SIGN_START`、`SIGN_COMPLETE`、`DOC_DELIVER` |
+| マイページ | `SVCREQ_CREATE`、`MSG_SEND` |
+
+- 監査ログにはメッセージ本文・OTP・口座番号を保存しない。
+- 監査ログの保存期間は 7 年（設計値）。削除・匿名化のバッチは未実装。
+- 監査ログの閲覧は `EFINANCE_ADMIN` のみ（管理画面は未実装）。
+
+---
+
+## 3. 認証・認可
+
+### 3.1 登録とメール確認
+
+```mermaid
+sequenceDiagram
+    participant C as 顧客
+    participant E as efinance
+    participant D as DB
+    C->>E: efRegisterMember(email, password, firstName)
+    E->>D: Party / Person / UserLogin / EfMember(PENDING)
+    E->>D: EfOneTimeCode(EMAIL_VERIFY)
+    E-->>C: partyId, userLoginId（本番はトークンを返さない）
+    C->>E: efVerifyEmail(token)
+    E->>D: EfOneTimeCode 検証、EfMember -> ACTIVE
+    E-->>C: success
+```
+
+- 現状はテスト用に `verificationToken` を返す。本番では `NotificationAdapter` でメール送信し、API 応答から削除する。
+- パスワードは `HashCrypt`（SHA）で保存する。将来は PBKDF2 へ移行する。
+
+### 3.2 ログインと MFA
+
+```mermaid
+sequenceDiagram
+    participant C as 顧客
+    participant E as efinance
+    participant D as DB
+    C->>E: efLogin(userLoginId, password)
+    E->>D: UserLogin 照合、EfMember 状態、失敗回数
+    alt MFA 必要
+        E->>D: EfOneTimeCode(MFA) + EfToken(detail=MFA_TEMP)
+        E-->>C: mfaRequired=true, mfaTempToken
+        C->>E: efVerifyMfa(tempToken, otpCode)
+        E->>D: OTP 検証、temp token 失効
+    end
+    E->>D: EfToken(JWT) + EfRefreshToken
+    E-->>C: accessToken(JWT), refreshToken
+```
+
+### 3.3 トークンのライフサイクル
+
+| 項目 | 現状（2026-10-22） | 目標 |
+|------|------|------|
+| アクセストークン | `JWTManager.createJwt` に `jti` を追加し、JWT の SHA-256 を `EfToken.tokenHash` に保存する | リクエスト時に `EfToken` を照合して失効を検証する |
+| 更新トークン | ランダム文字列の SHA-256 を `EfRefreshToken` に保存。更新時にローテーション | 端末単位の失効・再利用検知を追加 |
+| 失効 | `efLogout` は更新トークンと、指定されたアクセストークンを失効できる。`efLogoutAll` は全トークンを失効する | 全リクエストで `EfToken` の失効・有効期限を検証 |
+| 会員ロック | ログイン時に状態を確認 | API 呼出し時にも確認 |
+| 再認証 | 未実装 | 重要操作の前に短命の再認証トークンを要求 |
+
+### 3.4 `EfAuthFilter`（未実装） / `EfAccessGuard`（共通ヘルパー実装済み）
+
+**`EfAccessGuard`（サービス層）**
+
+`org.apache.ofbiz.efinance.security.EfAccessGuard` に次の共通判定を実装した。
+
+- `isActiveMember(Delegator, GenericValue userLogin)`
+- `isAccessTokenActive(Delegator, String jwt)`
+- `isDraftOwned(Delegator, String draftId, GenericValue userLogin)`
+- `isContractOwned(Delegator, String agreementId, String agreementTypeId, GenericValue userLogin)`
+- `isKycOwned(...)`、`isServiceRequestOwned(...)`、`isDeliveredDocumentOwned(...)`
+- `isDocumentRequestOwned(...)`
+- `sha256(String)`
+
+既存サービスは所有確認を個別に実装しているため、すべてがこのクラスを経由しているわけではない。法人の `EfCorporateUser` ロール判定は未実装。
+
+**`EfAuthFilter`（Web 層）**
+
+- `/portal/...` は efinance の webapp 内で JWT を検証できる。
+- `/rest/...` は rest-api の webapp が所有するため、efinance の webapp から直接フィルタできない。実装方法は次のいずれか。
+  1. rest-api の JAX-RS フィルターを拡張し、`EfToken` の失効を検証する（core/rest-api 変更）。
+  2. すべての efinance サービス先頭で `EfAccessGuard` を呼び、JWT の期限切れに加えて `EfToken` を検証する（追加変更なし）。
+  3. efinance 専用の REST webapp を持ち、そこでフィルタする。
+- 現状は `EfAccessGuard` の共通判定を用意した段階で、REST の全リクエストで `EfToken` の失効・会員ロックを検証するフィルターは未実装。サービス側の所有確認は各サービスに残っている。
+
+### 3.5 再認証
+
+| 操作 | 再認証 |
+|------|:---:|
+| 契約の締結 | 必須 |
+| 口座振替の登録（W7） | 必須 |
+| 繰上返済の申込 | 必須 |
+| 住所・連絡先の変更 | 必須 |
+| パスワード変更・リセット | 必須（現在のパスワードまたは OTP） |
+| 通常の参照・下書き保存 | 不要 |
+
+- 再認証は MFA OTP またはパスワードで行い、短命（5 分）の再認証トークンを発行する。
+- 現在は未実装。`efCompleteSigning` / `efRequestPrepayment` / `efRequestProfileChange` は再認証なしで実行できる。
+
+### 3.6 ロックとレート制限
+
+- ログイン失敗が `efinance.max.login.attempts`（5）を超えると `EFMBR_LOCKED`。管理者が解除する。
+- 仮審査は同一下書き 1 時間 5 回まで。超過時は `EFPRE_CONSULT`。
+- 登録・ログイン・パスワード再設定・仮審査に IP レート制限を追加する（未実装）。
+
+### 3.7 法人の権限
+
+| ロール | 説明 |
+|--------|------|
+| `EFCORP_APPLY`（`roleApply=Y`） | 法人の申込を作成・送信できる |
+| `EFCORP_VIEW`（`roleView=Y`） | 法人の申込・契約を参照できる |
+| `EFCORP_PAYMENT`（`rolePayment=Y`） | 支払・口座振替・繰上返済を申し込める |
+| `EFCORP_ADMIN`（`roleAdmin=Y`） | 法人の担当者・権限を管理できる |
+
+- 現在は entity のみ。サービス・画面・所有確認は未実装。
+
+### 3.8 個人情報・マスキング
+
+- 顧客 API は、担当者連絡先・内部メモ・SLA 内部値・審査スコアを返さない。
+- 口座番号は下 4 桁だけ表示する（W7）。
+- 監査ログ・エラーメッセージに PII を出さない。
+- 本人確認画像は管理者だけが閲覧できる（管理画面は未実装）。
+- 保存期間は、本人確認 7 年、監査 7 年、下書き 30 日を既定とする。
+
+---
+
+## 4. STEP W0 — 基盤
+
+### 4.1 エンティティ（詳細）
+
+| エンティティ | 主な項目 | 関係・制約 |
+|--------------|----------|------------|
+| `EfMember` | `partyId`、`userLoginId`、`memberTypeEnumId`、`statusId`、`emailVerifiedDate`、`phoneVerifiedDate`、`mfaMethodEnumId`、`lastLoginDate`、`createdDate`、`lastModifiedDate` | Party 1:1、UserLogin 1:1、StatusItem |
+| `EfCorporateAccount` | `corporatePartyId`、`adminMemberId`、`statusId`、`createdDate` | Party（PARTY_GROUP）、StatusItem |
+| `EfCorporateUser` | `corporatePartyId`、`memberPartyId`、`roleApply`、`roleView`、`rolePayment`、`roleAdmin`、`fromDate`、`thruDate` | EfCorporateAccount、Party |
+| `EfOneTimeCode` | `otpId`、`partyId`、`codeHash`、`purposeEnumId`、`expiresAt`、`attemptCount`、`usedDate`、`createdDate` | Party |
+| `EfToken` | `tokenId`、`tokenHash`、`partyId`、`userLoginId`、`deviceId`、`ipAddress`、`issuedAt`、`expiresAt`、`revokedDate`、`detail` | Party |
+| `EfRefreshToken` | `refreshTokenId`、`tokenHash`、`partyId`、`userLoginId`、`deviceId`、`issuedAt`、`expiresAt`、`revokedDate`、`replacedByTokenId` | Party、自己参照 |
+| `EfConsentDocument` | `documentId`、`documentTypeEnumId`、`version`、`language`、`contentId`、`effectiveDate`、`expiresDate` | Content |
+| `EfConsent` | `consentId`、`partyId`、`documentId`、`consentDate`、`ipAddress`、`deviceId`、`revokedDate` | Party、EfConsentDocument |
+| `EfAuditLog` | `auditLogId`、`partyId`、`actionEnumId`、`targetEntityName`、`targetEntityId`、`resultEnumId`、`ipAddress`、`deviceId`、`actionDate`、`detail` | Party |
+
+### 4.2 サービス（14）
+
+| サービス | auth | 主な IN / OUT | 内容 |
+|----------|:---:|---------------|------|
+| `efRegisterMember` | false | IN: email, password, firstName, lastName, phone, memberType / OUT: partyId, userLoginId, verificationToken（system のみ） | 会員登録。Party・Person・UserLogin・EfMember(PENDING)・OTP 作成 |
+| `efVerifyEmail` | false | IN: token / OUT: success | OTP 検証、EfMember を ACTIVE に |
+| `efLogin` | false | IN: userLoginId, password, deviceId, ipAddress / OUT: accessToken, refreshToken, mfaRequired, mfaTempToken, memberStatus | パスワード検証、MFA 判定、トークン発行 |
+| `efVerifyMfa` | false | IN: tempToken, otpCode, deviceId, ipAddress / OUT: accessToken, refreshToken | MFA 検証、トークン発行 |
+| `efRefreshToken` | false | IN: refreshToken, deviceId / OUT: accessToken, refreshToken | 更新トークンのローテーション |
+| `efLogout` | true | IN: refreshToken, accessToken | 更新・アクセストークン失効 |
+| `efLogoutAll` | true | – | 会員の全トークン失効 |
+| `efRequestPasswordReset` | false | IN: email / OUT: resetToken（system のみ） | 再設定 OTP 発行 |
+| `efResetPassword` | false | IN: token, newPassword | パスワード更新、全トークン失効 |
+| `efGetProfile` | true | OUT: member | 会員プロフィール |
+| `efAcceptConsent` | true | IN: documentId, ipAddress, deviceId | 同意記録 |
+| `efListConsents` | true | OUT: consents | 同意一覧 |
+| `efListConsentDocuments` | true | OUT: documents | 有効な同意文書一覧 |
+| `efinanceAdminPermission` | true | OUT: hasPermission, failMessage | 管理者権限チェック |
+
+### 4.3 REST
+
+| メソッド | パス | サービス | auth |
+|----------|------|----------|:---:|
+| POST | `/ef/auth/register` | `efRegisterMember` | false |
+| POST | `/ef/auth/verify-email` | `efVerifyEmail` | false |
+| POST | `/ef/auth/login` | `efLogin` | false |
+| POST | `/ef/auth/verify-mfa` | `efVerifyMfa` | false |
+| POST | `/ef/auth/refresh` | `efRefreshToken` | false |
+| POST | `/ef/auth/logout` | `efLogout` | true |
+| POST | `/ef/auth/logout-all` | `efLogoutAll` | true |
+| POST | `/ef/auth/password-reset` | `efRequestPasswordReset` | false |
+| POST | `/ef/auth/password-reset/confirm` | `efResetPassword` | false |
+| GET | `/ef/me` | `efGetProfile` | true |
+| GET/POST | `/ef/consents` | `efListConsents` / `efAcceptConsent` | true |
+| GET | `/ef/consent-documents` | `efListConsentDocuments` | true |
+
+### 4.4 画面
+
+- `/efinanceadmin`：`FindEfMember`（会員一覧）、`ViewEfMember`（会員詳細）。
+- `/portal`：`PortalHome`（仮ページ）。
+- 会員ロック解除、法人管理、監査ログ閲覧の画面は未実装。
+
+### 4.5 テスト
+
+- `EfMemberTests`：登録→メール確認→ログイン、誤パスワード、画面パース。
+- **未テスト**：MFA、更新トークン、失効、ロック、同意、法人。
+
+### 4.6 既知のギャップ
+
+- 法人アカウントのサービス・画面・所有確認がない。
+- `EfAuthFilter` によるリクエスト単位のトークン失効検証がない（`EfAccessGuard` の共通判定は実装済み）。
+- 再認証が未実装。
+- 同意文書の版検証（申込送信時の必須同意チェック）が未実装。
+- 会員ロック解除・監査ログ閲覧の画面がない。
+
+---
+
+## 5. STEP W1 — 商品の紹介とシミュレーション
+
+### 5.1 エンティティ
 
 | エンティティ | 主な項目 |
 |--------------|----------|
-| `EfMember` | `partyId`（顧客の `Party`。個人は PERSON、法人の担当者は PERSON で法人に属する）、`userLoginId`、`memberTypeEnumId`（PERSONAL / CORPORATE_USER）、`statusId`（`EFMBR_PENDING`（メールの確認待ち）→ `EFMBR_ACTIVE` → `EFMBR_LOCKED` / `EFMBR_CLOSED`）、メール・電話の確認日、多要素認証の方式、最終ログイン |
-| `EfCorporateAccount` | 法人（`Party`、PARTY_GROUP）、管理者の会員、状態 |
-| `EfCorporateUser` | 法人 × 会員 × 権限（`EFCORP_APPLY`・`EFCORP_VIEW`・`EFCORP_PAYMENT`・`EFCORP_ADMIN`）× 有効期間 |
-| `EfOneTimeCode` | 多要素認証・メールの確認・パスワードの再設定のコード（ハッシュ）、用途、有効期限、試行の回数 |
-| `EfToken` | アクセストークン：`tokenHash`（SHA-256）、`partyId`、`userLoginId`、`deviceId`、`ipAddress`、`issuedAt`、`expiresAt`、`issuedRefreshTokenId`。`JWTManager` が発行する JWT と 1:1 で対応し、失効・監査に使う |
-| `EfRefreshToken` | 更新トークン（ハッシュ）、端末、発行・失効の日時 |
-| `EfConsentDocument` / `EfConsent` | 同意の文面（種類・版・言語・有効期間・`Content`）と、会員 × 文面の版の同意（日時・IP・端末・取消） |
-| `EfAuditLog` | 操作の記録（会員・操作・対象・結果・IP・端末・日時） |
+| `EfProductPublication` | `publicationId`、`productId`、`fromDate`、`thruDate`、`displayOrder`、`targetEnumId`（ALL / PERSONAL / CORPORATE）、`active` |
 
-### 2.2 サービス（API）
+### 5.2 サービス
 
-| API（サービス） | 認証 | 内容 |
-|-----------------|------|------|
-| `efRegisterMember` | 不要 | 登録（メールの確認のコードを送る）。パスワードの規則は OFBiz の設定（`security.properties`）を使う |
-| `efVerifyEmail` | 不要 | メールの確認 |
-| `efLogin` | 不要 | ログイン（パスワード → 多要素認証が要れば `mfaRequired` を返す）。rest-api の認証（`/rest/auth/token`）を使う場合との関係は 2.3 |
-| `efVerifyMfa` | 一時トークン | ワンタイムパスワードの確認 → アクセストークン・更新トークン |
-| `efRefreshToken` / `efLogout` / `efLogoutAll` | 更新トークン | トークンの更新・失効 |
-| `efRequestPasswordReset` / `efResetPassword` | 不要 | パスワードの再設定 |
-| `efGetProfile` / `efUpdateProfile` | 要 | 会員の情報（変更は再認証。氏名・住所等の契約に関わる変更は W6 の手続きに回す） |
-| `efInviteCorporateUser` / `efUpdateCorporateUser` | 要（法人の管理者） | 法人の担当者の招待・権限 |
-| `efAcceptConsent` / `efListConsents` | 要 | 同意 |
+| サービス | auth | 主な IN / OUT | 内容 |
+|----------|:---:|---------------|------|
+| `efListProducts` | false | IN: targetEnumId / OUT: products | 公開中の商品一覧 |
+| `efGetProduct` | false | IN: productId / OUT: product | 商品詳細（ローン・リース項目） |
+| `efSimulateLoan` | false | IN: productId, principalAmount, termMonths, repaymentMethod, annualInterestRate / OUT: monthlyPayment, totalPayment, totalInterest, effectiveAnnualRate, schedule | 元利均等・元金均等の返済予定。保存しない |
+| `efSimulateLease` | false | IN: productId, acquisitionCost, termMonths, taxRate / OUT: monthlyLeaseAmount, totalLeaseAmount, totalTax, calcInterestRate, schedule | `LeaseCalculator` によるリース料。保存しない |
 
-### 2.3 認証の方式
+### 5.3 計算と検証
 
-- rest-api は OFBiz の `UserLogin` の認証で JWT を発行する（`/rest/auth/token`）。efinance は、多要素認証と会員の状態を確かめるため、自分のログインの API（`efLogin`・`efVerifyMfa`）で認証し、OFBiz の `JWTManager` で同じ形式の JWT を発行する（rest-api の認証のフィルターでそのまま検証できる）。発行した JWT のメタデータは `EfToken`（アクセストークン）に保存し、失効・監査に使う。更新トークンは `EfRefreshToken` に保存する。rest-api の `/rest/auth/token` は、顧客の `UserLogin`（`EFINANCE_CUSTOMER` 権限のみ）からのアクセスを `EfAuthFilter`（サーブレットフィルター）で拒否する（多要素認証を迂回させない）。
-- アクセストークンの有効期間は短く（例：15 分）、更新トークンで延長する。
+- ローン：`FinancialProduct.defaultAnnualInterestRate` を既定に、入力レートを優先。`principalAmount` と `termMonths` の範囲を検証。通貨の端数処理は `FinanceInterestCalculator.resolveScale` / `resolveRoundingMode` を使う。
+- リース：`FinancialProductLease.defaultMonthlyRateFactor` または `defaultCalcInterestRate` を使う。`residualValueRate`、`paymentTimingEnumId`、`taxRate` を反映。
+- 結果には `EfinanceSimulationDisclaimer` を付ける。
+- レート制限は未実装。
 
----
+### 5.4 REST
 
-## 2.4 プラグイン構成
+| メソッド | パス | サービス |
+|----------|------|----------|
+| GET | `/ef/products` | `efListProducts` |
+| GET | `/ef/products/{productId}` | `efGetProduct` |
+| POST | `/ef/simulate/loan` | `efSimulateLoan` |
+| POST | `/ef/simulate/lease` | `efSimulateLease` |
 
-### webapp 一覧
+### 5.5 テスト
 
-| webapp | マウントポイント | 権限 | 用途 |
-|--------|----------------|------|------|
-| `efinanceadmin` | `/efinanceadmin` | `OFBTOOLS,EFINANCE_ADMIN` | 担当者向けの管理画面（本人確認の確認、手続きの依頼、会員の照会 等）|
-| `portal` | `/portal` | なし（`EfAuthFilter` が JWT を検証） | 顧客向けのサンプル画面（フロントエンドの置き換えが前提）|
+- `EfCatalogTests`：商品一覧、存在しない商品、ローン基本、範囲外、リース基本。
 
-### support との連携
+### 5.6 既知のギャップ
 
-efinance は support の顧客 API サービス（`createSupportCaseForCustomer`・`listSupportCasesForCustomer` 等）を dispatcher 経由で呼ぶ。support の `api/support.rest.xml` は `publish="false"` のまま維持する。efinance が `/rest/support/...` のエンドポイントを統合窓口として提供する。
-
-### 認証フィルター（`EfAuthFilter`）
-
-`/portal/...` および `/rest/...`（efinance の REST リソース）へのリクエストは、`EfAuthFilter`（サーブレットフィルター）が JWT を検証する。フィルターは `EfToken` の失効状態・会員のロック・有効期限を確かめ、問題があれば 401 を返す。rest-api の `/rest/auth/token` には顧客の `UserLogin`（`EFINANCE_CUSTOMER` 権限のみ）からのアクセスを拒否する。
+- IP レート制限なし。
+- 公開商品の管理画面なし。
+- 実質年率は簡易表示で、手数料を含む APR 計算は未実装。
+- 商品の広告表示項目（金利幅・返済例）は未実装。
 
 ---
 
-## 3. STEP W1 — 商品の紹介とシミュレーション
+## 6. STEP W2 — Web での申込
 
-| 種類 | 内容 |
-|------|------|
-| `EfProductPublication` | 商品（finance の `FinancialProduct`）× 公開の期間 × 表示の順 × 説明（`Content`、多言語）× 対象（個人・法人）× 表示の項目（金利・料率の幅、返済の例、必要な書類、広告の表示の項目） |
-| `efListProducts` / `efGetProduct` | 公開の商品（認証不要） |
-| `efSimulateLoan` | 金額・期間・返済方法 → 返済予定・総支払額・利息・実質年率（finance の見積の計算の部品 `FinanceInterestCalculator` を使う。保存しない） |
-| `efSimulateLease` | 物件の金額・期間 → リース料・総額・消費税（finance の `LeaseCalculator` を使う。商品の料率または利率。保存しない） |
-
-- シミュレーションの結果には「目安であり、審査の結果で変わる」旨の表示の文面（ラベル）を付ける。
-- レート制限（IP ごと）をかける。
-
-> finance の計算の部品（`LeaseCalculator` はリース層）を使うため、efinance は finance のローン層・リース層の計算クラスを参照する。finance の層の規則（ローン層とリース層は互いを参照しない）は efinance には適用しないが、efinance からは計算・照会の部品だけを参照し、業務の状態を変える処理は必ずサービスで呼ぶ。
-
----
-
-## 4. STEP W2 — Web での申込
-
-### 4.1 エンティティ
+### 6.1 エンティティ
 
 | エンティティ | 主な項目 |
 |--------------|----------|
-| `EfApplicationDraft` | 下書き：会員、法人（法人の申込）、商品、申込の種類（LOAN / LEASE）、段階、入力の値（`draftJson`、項目の定義に沿って検証）、状態（`EFDRF_EDITING` → `EFDRF_SUBMITTED` / `EFDRF_EXPIRED` / `EFDRF_WITHDRAWN`）、送信した申込の ID、有効期限、流入元（直接・提携先） |
-| `EfDraftDocument` | アップロードした書類（`Content`）、書類の種類、AI の読み取りの依頼（審査 `FinUwAiRequest`）との紐付け |
-| `EfApplicationLink` | 送信後の申込（finance の申込 ID・種類）× 会員 × 法人（行単位の権限の判定に使う） |
+| `EfApplicationDraft` | `draftId`、`memberPartyId`、`corporatePartyId`、`productId`、`applicationTypeId`、`currentStep`、`totalSteps`、`draftJson`、`statusId`、`sourceEnumId`、`submittedApplicationId`、`submittedApplicationTypeId`、`expiresAt`、`createdDate`、`lastModifiedDate` |
+| `EfDraftDocument` | `draftDocumentId`、`draftId`、`contentId`、`documentTypeEnumId`、`fileName`、`mimeTypeId`、`fileSizeBytes`、`scanStatus`、`uploadedDate` |
+| `EfApplicationLink` | `linkId`、`draftId`、`memberPartyId`、`corporatePartyId`、`financeApplicationId`、`financeApplicationTypeId`、`linkedDate` |
+| `EfFraudCheck` | `fraudCheckId`、`draftId`、`memberPartyId`、`checkDate`、`resultEnumId`、`triggeredRules`、`ipAddress`、`deviceId` |
 
-### 4.2 項目の定義
+### 6.2 入力ステップ
 
-申込の項目は、商品の種類（個人ローン・法人ローン・個人リース・法人リース）ごとに、段階・項目・型・必須・検証の規則・審査の項目（審査 U1 の `FinCustomerProfile` 等）への対応を seed（`EfFormField`）で持つ。フロントエンドは項目の定義を API（`efGetApplicationForm`）で受け取り、画面を組み立てる。
+| 種別 | ステップ | 主な項目 |
+|------|----------|----------|
+| LOAN | 1. product | productId、principalAmount、termMonths、repaymentMethod |
+| LOAN | 2. applicant | firstName、lastName、birthDate、postalCode、prefecture、city、address1、employerName、annualIncome、residenceType |
+| LOAN | 3. agreement | confirmTerms、confirmPrivacy |
+| LEASE | 1. product | productId、termMonths |
+| LEASE | 2. asset | assetName、fixedAssetTypeId、estimatedAcquisitionCost、supplierName |
+| LEASE | 3. applicant | companyName、representativeName、代表者生年月日、会社情報 |
+| LEASE | 4. agreement | confirmTerms、confirmPrivacy |
 
-### 4.3 サービス（API）
+- 現在は `EfApplicationServices` の Java 固定定義。`EfFormField` の seed 定義は未実装。
+- `draftJson` はステップ番号をキーにした JSON。Jackson で読み書きする。
 
-| API | 内容 |
-|-----|------|
-| `efCreateDraft` / `efSaveDraft` / `efGetDraft` / `efListDrafts` / `efWithdrawDraft` | 下書き（段階ごとに保存。保存のたびに検証の結果を返す） |
-| `efUploadDocument` / `efDeleteDocument` | 書類（種類・大きさの制限、ウイルスの検査の口 `FileScanAdapter`。簡単な実装は検査なし） |
-| `efExtractDocument` | 書類から項目を読み取る（審査 U8 の AI。候補の値を返し、顧客が確認して下書きに入れる） |
-| `efLookupAddress` / `efLookupCorporation` | 入力の補助（Adapter） |
-| `efSubmitApplication` | 送信：①下書きの全段階の検証 ②同意の確認（必要な同意がすべて最新の版で済んでいるか）③不正の検知（4.4）④finance の申込の作成（`createLoanApplication` / `createLeaseApplication`、希望物件）⑤審査の情報の受渡し（審査 U1 の顧客の情報・決算書・他社の借入の申告・書類）⑥ `EfApplicationLink` ⑦仮審査（W4）⑧通知 |
+### 6.3 サービス
 
-- 個人の会員の申込者は会員の `Party`。法人の申込者は法人の `Party`（申込の担当者は会員）。
-- finance の申込の状態は `LOANAPP_RECEIVED` / `LEASEAPP_RECEIVED` で作られる。提出（`SUBMITTED`）への変更は、担当者が書類を確認してから finance の画面で行う（自動で提出にするかは商品の設定、既定は手動）。
+| サービス | auth | 主な IN / OUT | 内容 |
+|----------|:---:|---------------|------|
+| `efGetApplicationForm` | false | IN: productId, applicationTypeId / OUT: steps, totalSteps | ステップ定義 |
+| `efCreateDraft` | true | IN: productId, applicationTypeId, sourceEnumId / OUT: draftId, expiresAt | 下書き作成 |
+| `efSaveDraft` | true | IN: draftId, step, stepData / OUT: stepValid, validationErrors | ステップ保存・検証 |
+| `efGetDraft` | true | IN: draftId / OUT: draft | 下書き＋書類 |
+| `efListDrafts` | true | OUT: drafts | 自分の編集中下書き |
+| `efWithdrawDraft` | true | IN: draftId | 撤回 |
+| `efUploadDraftDocument` | true | IN: draftId, documentTypeEnumId, fileName, contentType, uploadedFile / OUT: draftDocumentId | `createContentFromUploadedFile` |
+| `efDeleteDraftDocument` | true | IN: draftDocumentId | 書類削除 |
+| `efSubmitApplication` | true | IN: draftId, ipAddress, deviceId / OUT: financeApplicationId, financeApplicationTypeId, fraudResult | 全検証→不正検知→finance 申込作成→リンク |
 
-### 4.4 不正の検知（`EfFraudCheck`）
+### 6.4 送信フロー
 
-- 規則：同じ端末・IP・電話・住所・口座からの、一定期間の申込の数、仮審査の繰返し、登録から申込までの時間が短すぎる、入力の不整合（郵便番号と住所）など。結果（問題なし・要確認・停止）と当たった規則を記録し、要確認は審査の規則（U3）の確認事項に渡す。
-- 端末の識別（フロントエンドが送る端末の ID・User-Agent）と IP を、申込・ログインの記録に残す。
+```mermaid
+sequenceDiagram
+    participant C as 顧客
+    participant E as efinance
+    participant F as finance
+    C->>E: efSubmitApplication(draftId)
+    E->>E: 全ステップ検証・同意確認
+    E->>E: EfFraudCheck（24h 3 件超で BLOCK）
+    E->>F: createLoanApplication / createLeaseApplication
+    E->>F: createLeaseApplicationAsset（リース）
+    E->>E: EfApplicationLink 作成、draft=SUBMITTED
+    E-->>C: financeApplicationId
+```
+
+- finance の申込は `LOANAPP_RECEIVED` / `LEASEAPP_RECEIVED` で作成する。
+- 提出（SUBMITTED）への変更は担当者が finance 画面で行う（既定は手動）。
+- 重複下書きチェックは未実装。
+- 申込送信の冪等性は未実装。
+
+### 6.5 不正検知
+
+- 現在は 24 時間の `EfApplicationLink` 件数が 3 件超で `EFFRAUD_BLOCK`。
+- 端末・IP・電話・住所・口座・入力不整合の規則は未実装。
+- 仮審査の繰返しは W4 のレート制限で一部対応。
+
+### 6.6 REST
+
+| メソッド | パス | サービス |
+|----------|------|----------|
+| GET | `/ef/applications/form` | `efGetApplicationForm` |
+| GET/POST | `/ef/applications/drafts` | `efListDrafts` / `efCreateDraft` |
+| GET/PUT/DELETE | `/ef/applications/drafts/{draftId}` | `efGetDraft` / `efSaveDraft` / `efWithdrawDraft` |
+| POST | `/ef/applications/drafts/{draftId}/documents` | `efUploadDraftDocument` |
+| DELETE | `/ef/applications/drafts/{draftId}/documents/{draftDocumentId}` | `efDeleteDraftDocument` |
+| POST | `/ef/applications/drafts/{draftId}/submit` | `efSubmitApplication` |
+
+### 6.7 テスト
+
+- `EfApplicationTests`：フォーム、下書き作成・保存、撤回、送信（ローン）、一覧。
+
+### 6.8 既知のギャップ
+
+- `EfFormField` 未実装。
+- ファイルスキャン Adapter 未実装（`scanStatus` は常に PENDING）。
+- 住所・法人番号の照会 Adapter 未実装。
+- AI 書類読取（U8）未実装。
+- 重複下書き・冪等性・レート制限未実装。
+- 法人申込の所有確認未実装。
 
 ---
 
-## 5. STEP W3 — 本人確認と同意
+## 7. STEP W3 — 本人確認と同意
+
+### 7.1 エンティティ
+
+| エンティティ | 主な項目 |
+|--------------|----------|
+| `EfKycCheck` | `kycCheckId`、`memberPartyId`、`kycSubjectPartyId`、`draftId`、`kycMethodEnumId`、`statusId`、`confirmerPartyId`、`confirmedDate`、`confirmerNote`、`adapterResultCode`、`adapterExternalId`、`expiresDate`、`createdDate`、`lastModifiedDate` |
+| `EfKycImage` | `kycImageId`、`kycCheckId`、`contentId`、`imageTypeEnumId`、`uploadedDate` |
+| `EfConsentDocument` | `documentId`、`documentTypeEnumId`、`version`、`language`、`contentId`、`effectiveDate`、`expiresDate` |
+| `EfConsent` | `consentId`、`partyId`、`documentId`、`consentDate`、`ipAddress`、`deviceId`、`revokedDate` |
+
+### 7.2 KYC サービス
+
+| サービス | auth | 主な IN / OUT | 内容 |
+|----------|:---:|---------------|------|
+| `efStartKyc` | true | IN: draftId, kycMethodEnumId / OUT: kycCheckId | PENDING 作成、保存期限設定 |
+| `efUploadKycImage` | true | IN: kycCheckId, imageTypeEnumId, fileName, contentType, uploadedFile / OUT: kycImageId | 画像アップロード |
+| `efSubmitKyc` | true | IN: kycCheckId | PENDING→SUBMITTED |
+| `efGetKycStatus` | true | IN: kycCheckId / draftId / OUT: kycCheck, images | 状態・画像一覧 |
+| `reviewEfKycCheck` | true | IN: kycCheckId, statusId, confirmerNote | 管理者審査（VERIFIED/RESUBMIT/REJECTED） |
+| `efIsKycVerified` | true | IN: subjectPartyId / draftId / OUT: verified, kycCheckId | 契約前の確認 |
+
+### 7.3 同意
+
+- 同意文書は `EfConsentDocument`（種類・版・言語・Content・有効期間）で管理する。
+- `efAcceptConsent` は documentId を受け取り、`EfConsent` に日時・IP・端末を記録する。
+- 必要な同意：利用規約、個人情報、信用情報照会、電子交付、電子契約。
+- **現状（2026-10-22）**：`EfConsentDocument` の seed（利用規約・個人情報・信用情報・電子交付・電子契約の version 1.0）と `efListConsentDocuments` を追加した。`efCompleteSigning` は電子契約同意の有無を確認する。申込送信時の必須同意チェックと版の一致検証は未実装。
+- 追加予定：`efGetConsentDocument`、`efValidateConsents`、同意撤回 API。
+
+### 7.4 審査との連携
+
+- 本来は KYC 確認済みを finance の `FinUwExternalInfo`（U6、`infoTypeId=IDENTITY`）に記録し、契約時に `FINUWCND_KYC` を満たすことを確認する。
+- **現状**：`recordKycToUnderwriting` は TODO スタブ。`efCompleteSigning` は `EfKycCheck` の VERIFIED を確認し、未確認なら契約を作成しない（2026-10-22 追加）。
+- 本人確認記録の保存期間は 7 年（既定）。画像閲覧は管理者のみ（画面未実装）。
+
+### 7.5 REST
+
+| メソッド | パス | サービス |
+|----------|------|----------|
+| POST | `/ef/kyc` | `efStartKyc` |
+| GET | `/ef/kyc/{kycCheckId}` | `efGetKycStatus` |
+| POST | `/ef/kyc/{kycCheckId}/images` | `efUploadKycImage` |
+| POST | `/ef/kyc/{kycCheckId}/submit` | `efSubmitKyc` |
+
+### 7.6 テスト
+
+- `EfKycTests`：開始・提出、スタッフ確認（VERIFIED）、再提出、未確認判定。
+
+### 7.7 既知のギャップ
+
+- 申込送信時の必須同意チェック・同意文書の版一致検証。
+- `FinUwExternalInfo`（U6）連携。
+- KYC 審査画面・画像閲覧権限。
+- 再認証（契約締結前）。
+
+---
+
+## 8. STEP W4 — 仮審査と進み具合
+
+### 8.1 エンティティ
+
+| エンティティ | 主な項目 |
+|--------------|----------|
+| `EfPreScreenResult` | `preScreenId`、`draftId`、`memberPartyId`、`preScreenDate`、`resultEnumId`、`triggeredRules`、`inputSummary` |
+| `EfStageEvent` | `stageEventId`、`draftId`、`memberPartyId`、`fromStageEnumId`、`toStageEnumId`、`eventDate`、`notified` |
+| `EfDocumentRequest` | `docRequestId`、`draftId`、`memberPartyId`、`documentTypeEnumId`、`reason`、`dueDate`、`statusId`、`requestedByPartyId`、`requestedDate`、`submittedContentId`、`submittedDate` |
+
+### 8.2 仮審査ルール（現行）
+
+| ルール | 条件 | 結果 |
+|--------|------|------|
+| `RULE_AMOUNT_RANGE` | 金額が商品の min/max 外 | UNLIKELY |
+| `RULE_TERM_RANGE` | 期間が商品の min/max 外 | UNLIKELY |
+| `RULE_INCOME_LOW` | 年収 < 申込額 × 0.2 | UNLIKELY |
+| `RULE_INCOME_MODERATE` | 年収 < 申込額 × 0.4 | CONSULT |
+| レート制限 | 同一下書き 1 時間 5 回超 | CONSULT |
+
+- 顧客に返すのは `LIKELY` / `CONSULT` / `UNLIKELY` と案内文だけ。`triggeredRules`・スコアは返さない。
+- finance U3/U4 のルールエンジンは未実装のため、efinance 独自の簡易ルールで代替している。
+
+### 8.3 進捗段階（現行）
+
+| `EF_STAGE` | 意味 | 判定 |
+|------------|------|------|
+| `EF_STAGE_RECEIVED` | 受付 | 下書き未送信、または申込 RECEIVED |
+| `EF_STAGE_DOC_REQUEST` | 追加の書類のお願い | `EfDocumentRequest` が PENDING |
+| `EF_STAGE_REVIEWING` | 審査中 | 申込 SUBMITTED、審査 IN_REVIEW |
+| `EF_STAGE_RESULT` | 結果のご連絡 | 審査 APPROVED / REJECTED |
+| `EF_STAGE_OFFER` | ご契約の手続き | 見積 PRESENTED |
+| `EF_STAGE_CONTRACTED` | ご契約済み | 契約 CONTRACTED / ACTIVE |
+
+- 設計時の `EF_STAGE_UNDER_REVIEW` は 20 文字制限のため `EF_STAGE_REVIEWING` に変更した。
+- `EfStageEvent` は entity のみで、作成処理は未実装。
+- 通知（`NotificationAdapter`）・ECA・バッチは未実装。
+
+### 8.4 サービス
+
+| サービス | auth | 主な IN / OUT | 内容 |
+|----------|:---:|---------------|------|
+| `efPreScreen` | true | IN: draftId / OUT: result, guidance, disclaimer | 簡易仮審査 |
+| `efGetApplicationStatus` | true | IN: draftId / OUT: stageEnumId, stageDescription, nextAction, applicationStatus | finance 状態→段階 |
+| `efCreateDocumentRequest` | true | IN: draftId, documentTypeEnumId, reason, dueDate / OUT: docRequestId | 管理者が書類要請 |
+| `efListDocumentRequests` | true | IN: draftId / OUT: docRequests | 要請一覧 |
+| `efSubmitRequestedDocument` | true | IN: docRequestId, fileName, contentType, uploadedFile | 顧客が提出 |
+
+### 8.5 REST
+
+| メソッド | パス | サービス |
+|----------|------|----------|
+| POST | `/ef/applications/drafts/{draftId}/prescreen` | `efPreScreen` |
+| GET | `/ef/applications/drafts/{draftId}/status` | `efGetApplicationStatus` |
+| GET | `/ef/applications/drafts/{draftId}/document-requests` | `efListDocumentRequests` |
+| POST | `/ef/applications/drafts/{draftId}/document-requests/{docRequestId}/submit` | `efSubmitRequestedDocument` |
+
+### 8.6 テスト
+
+- `EfPreScreenTests`：LIKELY / CONSULT / UNLIKELY、下書き段階、送信後段階、書類要請の作成・一覧・提出。
+
+### 8.7 既知のギャップ
+
+- `EfStageEvent` の作成、`NotificationAdapter`、ECA・バッチ。
+- 総量規制（U7）の目安。
+- 書類要請の管理者画面。
+- 段階の期限・次アクションの高度化。
+
+---
+
+## 9. STEP W5 — 電子契約と電子交付
+
+### 9.1 エンティティ
+
+| エンティティ | 主な項目 |
+|--------------|----------|
+| `EfSigningSession` | `signingSessionId`、`draftId`、`memberPartyId`、`quoteId`、`quoteTypeId`、`statusId`、`consentIpAddress`、`consentDeviceId`、`consentDate`、`signedContentId`、`agreementId`、`agreementTypeId`、`expiresAt`、`createdDate` |
+| `EfDeliveredDocument` | `deliveredDocId`、`draftId`、`memberPartyId`、`documentTypeEnumId`、`contentId`、`deliveredDate`、`consentId`、`viewedDate` |
+
+### 9.2 フロー
+
+```mermaid
+sequenceDiagram
+    participant C as 顧客
+    participant E as efinance
+    participant F as finance
+    C->>E: efGetOffer(draftId)
+    E-->>C: 提示中の見積
+    C->>E: efAcceptOffer(quoteId)
+    E->>F: setLoanQuoteStatus / setLeaseQuoteStatus(ACCEPTED)
+    C->>E: efStartSigning(quoteId)
+    E-->>C: signingSessionId, 契約内容
+    C->>E: efCompleteSigning(sessionId, confirm=true, ip, device)
+    E->>F: createLoanAgreement / createLeaseAgreement
+    E->>E: EfSigningSession=SIGNED、EfDeliveredDocument 作成
+    E-->>C: agreementId
+```
+
+### 9.3 サービス
+
+| サービス | auth | 主な IN / OUT | 内容 |
+|----------|:---:|---------------|------|
+| `efGetOffer` | true | IN: draftId / OUT: offer, quoteId, quoteTypeId | 提示中の見積 |
+| `efAcceptOffer` | true | IN: draftId, quoteId, quoteTypeId / OUT: acceptedQuoteId | 見積受理 |
+| `efStartSigning` | true | IN: draftId, quoteId, quoteTypeId / OUT: signingSessionId, contractSummary | 署名セッション作成 |
+| `efCompleteSigning` | true | IN: signingSessionId, confirmContent, ipAddress, deviceId / OUT: agreementId, agreementTypeId | 同意記録→契約作成 |
+| `efListDocuments` | true | IN: draftId / OUT: documents | 交付書類一覧 |
+| `efDownloadDocument` | true | IN: deliveredDocId / OUT: document, mimeTypeId, fileName, textData | 交付書類取得 |
+
+### 9.4 状態と失敗時
+
+- `EFSIG_PENDING` → `EFSIG_SIGNED` / `EFSIG_DECLINED` / `EFSIG_EXPIRED`。
+- 署名セッションは 24 時間で失効。
+- `confirmContent=true` でなければ署名できない。
+- finance の契約作成が失敗した場合、セッションは `EFSIG_PENDING` のままにし、顧客に定型の案内を返す（担当者確認に回す）。
+- **現状（2026-10-22）**：`efCompleteSigning` は KYC の VERIFIED と電子契約同意を確認し、未確認なら契約を作成しない。再認証は未実装。`contentId` は null で、PDF は生成しない。`ESignatureAdapter` の抽象化はなく、サービス内で直接契約を作成する。
+
+### 9.5 REST
+
+| メソッド | パス | サービス |
+|----------|------|----------|
+| GET | `/ef/applications/drafts/{draftId}/offer` | `efGetOffer` |
+| POST | `/ef/applications/drafts/{draftId}/offer/accept` | `efAcceptOffer` |
+| POST | `/ef/applications/drafts/{draftId}/signing` | `efStartSigning` |
+| POST | `/ef/signing/{signingSessionId}/complete` | `efCompleteSigning` |
+| GET | `/ef/applications/drafts/{draftId}/documents` | `efListDocuments` |
+| GET | `/ef/documents/{deliveredDocId}` | `efDownloadDocument` |
+
+### 9.6 テスト
+
+- `EfContractTests`：見積なし、書類なし、ダウンロードなし、同意必須、契約フロー（手動で PRESENTED 見積を作成）。
+
+### 9.7 既知のギャップ
+
+- 契約書 PDF・交付書類の Content 生成。
+- `ESignatureAdapter` / `ClickWrapSignatureAdapter` の抽象化。
+- 再認証（KYC・電子契約同意のゲートは実装済み）。
+- L21 承認ワークフロー連携。
+- 電子交付の承諾がない場合の郵送タスク。
+
+---
+
+## 10. STEP W6 — マイページ
+
+### 10.1 エンティティ
+
+| エンティティ | 主な項目 |
+|--------------|----------|
+| `EfServiceRequest` | `serviceRequestId`、`memberPartyId`、`draftId`、`agreementId`、`agreementTypeId`、`requestTypeEnumId`、`statusId`、`subject`、`content`、`requestData`、`requestedByPartyId`、`assignedToPartyId`、`requestedDate`、`completedDate`、`staffNotes` |
+| `EfNotificationSetting` | `memberPartyId`、`notificationTypeEnumId`、`emailEnabled`、`smsEnabled`、`pushEnabled`、`lastModifiedDate` |
+
+### 10.2 サービス
+
+| サービス | auth | 主な IN / OUT | 内容 |
+|----------|:---:|---------------|------|
+| `efListApplications` | true | OUT: applications | `EfApplicationLink` から申込一覧 |
+| `efListContracts` | true | OUT: contracts | ローン・リース契約一覧 |
+| `efGetContract` | true | IN: agreementId, agreementTypeId / OUT: contract, schedule, balance | 契約詳細・返済表・残高 |
+| `efSimulatePrepayment` | true | IN: agreementId, prepaymentAmount, prepaymentTypeEnumId / OUT: penaltyRate, penaltyAmount, totalSettlementAmount, outstandingPrincipal | 繰上返済シミュレーション（ローン） |
+| `efRequestPrepayment` | true | IN: agreementId, prepaymentAmount, prepaymentTypeEnumId / OUT: serviceRequestId | 手続き依頼 |
+| `efRequestModification` | true | IN: agreementId, agreementTypeId, requestContent / OUT: serviceRequestId | 条件変更の相談 |
+| `efRequestExpiryOption` | true | IN: agreementId, expiryOptionEnumId / OUT: serviceRequestId | 満了時の希望 |
+| `efRequestProfileChange` | true | IN: changeType, changeData / OUT: serviceRequestId | 住所・連絡先変更 |
+| `efRequestCertificate` | true | IN: agreementId, agreementTypeId, certificateTypeEnumId / OUT: serviceRequestId | 証明書依頼 |
+| `efListMessages` | true | IN: draftId / OUT: messages | `CommunicationEvent` 一覧 |
+| `efSendMessage` | true | IN: draftId, subject, content / OUT: communicationEventId | メッセージ送信 |
+| `efGetNotificationSettings` | true | OUT: settings | 通知設定 |
+| `efUpdateNotificationSettings` | true | IN: notificationTypeEnumId, emailEnabled, smsEnabled, pushEnabled | 通知設定更新 |
+| `efListSupportCases` / `efCreateSupportCase` | true | support 顧客 API の一覧・作成 | support ブリッジ |
+| `efGetSupportCase` / `efReplySupportCase` / `efCloseSupportCase` / `efRateSupportCase` | true | support 顧客 API の参照・返信・クローズ・評価 | support ブリッジ |
+| `efGetSupportFormOptions` / `efUploadSupportAttachment` | true | support の選択肢・添付 | support ブリッジ |
+
+### 10.3 契約・残高
+
+- ローン：`LoanAgreementRepaymentSchedule` の現在の revision を返す。残高は最終行の `remainingBalance` を使う簡易計算。
+- リース：`getLeaseAgreementBalance` を `efinance-system` で呼び、`outstandingPrincipal` 等を返す。
+- **現状の制約**：ローンの残高は finance の「有効な PaymentApplication を正本とする残高」と一致しない場合がある。正確な残高照会は W6 の追加修正で対応する。
+- 支払履歴・延滞・保証金・物件情報は未実装。
+
+### 10.4 手続き依頼
+
+- `EfServiceRequest` に種類・対象・内容・`requestData`（JSON）・状態・担当者を記録する。
+- 担当者の処理は finance の `FINWE_OTHER` タスクとして起票する設計だが、**現状は WorkEffort を作成していない**。
+- 管理画面の一覧・担当・完了・却下は未実装。
+- 顧客の操作で finance の状態を直接変えない。すべて担当者の確認を経る。
+
+### 10.5 メッセージ・通知
+
+- `efSendMessage` は `CommunicationEvent`（`WEB_SITE_COMMUNICATI`）を作成する。
+- support ケース連携は `/ef/support/...` のブリッジ（8 サービス）として実装済み。`efSendMessage` は引き続き `CommunicationEvent` を作成するだけで、support ケースへの自動紐付けは未実装。
+- `efListMessages` は会員の `CommunicationEvent` を返す。
+- 通知設定は `EfNotificationSetting` に保存するが、実際のメール・SMS 送信は未実装。
+
+### 10.6 REST
+
+| メソッド | パス | サービス |
+|----------|------|----------|
+| GET | `/ef/me/applications` | `efListApplications` |
+| GET | `/ef/me/contracts` | `efListContracts` |
+| GET | `/ef/me/contracts/{agreementId}` | `efGetContract` |
+| POST | `/ef/me/contracts/{agreementId}/prepayment/simulate` | `efSimulatePrepayment` |
+| POST | `/ef/me/contracts/{agreementId}/prepayment` | `efRequestPrepayment` |
+| POST | `/ef/me/contracts/{agreementId}/modification` | `efRequestModification` |
+| POST | `/ef/me/contracts/{agreementId}/expiry-option` | `efRequestExpiryOption` |
+| POST | `/ef/me/profile-change` | `efRequestProfileChange` |
+| POST | `/ef/me/contracts/{agreementId}/certificate` | `efRequestCertificate` |
+| GET/POST | `/ef/me/messages` | `efListMessages` / `efSendMessage` |
+| GET/PUT | `/ef/me/notification-settings` | `efGetNotificationSettings` / `efUpdateNotificationSettings` |
+
+### 10.7 テスト
+
+- `EfMyPageTests`：申込・契約一覧、契約なし、繰上返済なし、メッセージ、通知設定、手続き依頼（テスト用に契約を直接作成）。
+- `EfSupportTests`：support ケースの作成・一覧・詳細・返信・クローズ・選択肢。
+
+### 10.8 既知のギャップ
+
+- `FINWE_OTHER` タスク作成。
+- 手続き依頼の管理画面。
+- `efSendMessage` と support ケースの自動連携。
+- 正確なローン残高・支払履歴・延滞・保証金・物件情報。
+- 証明書 PDF。
+- 通知送信。
+
+---
+
+## 11. STEP W7 — 支払（設計）
 
 | エンティティ・API | 内容 |
 |-------------------|------|
-| `EfKycCheck` | 本人確認：会員（個人）または法人の代表者・取引の担当者、方式（`EFKYC_METHOD`：画像と容貌・IC チップ・書類の郵送 等、犯罪収益移転防止法の方式に対応づける）、提出の画像（`Content`）、状態（`EFKYC_SUBMITTED` → `EFKYC_VERIFIED` / `EFKYC_RESUBMIT` / `EFKYC_REJECTED`）、確認者・確認日、Adapter の結果（外部の ID・判定） |
-| `efStartKyc` / `efUploadKycImage` / `efSubmitKyc` / `efGetKycStatus` | 顧客の操作 |
-| `reviewEfKycCheck`（担当者、efinance の管理画面） | 手動の確認の結果の記録（簡単な実装の `ManualEkycAdapter`） |
-| 審査との連携 | 確認済みになったら審査の外部の情報（U6、`ANTISOCIAL` とは別の種類 `IDENTITY`）に記録する。契約の作成の前に、finance の審査の条件として「本人確認済み」を確かめる（審査 U5 の条件 `FINUWCND_KYC`） |
+| `EfDirectDebitMandate` | 口座振替の依頼：会員・契約、金融機関・支店・口座種別・番号（暗号化、表示は下 4 桁）・名義、状態（`EFDD_REQUESTED` → `EFDD_REGISTERED` / `EFDD_REJECTED`）、Adapter の結果、開始予定日 |
+| `efRequestDirectDebit` / `efGetDirectDebit` | 顧客の操作（再認証）。`ManualDirectDebitAdapter` で担当者が登録 |
+| `efGetPaymentInstructions` | 振込先・契約番号・期日・金額 |
+| 入金 | finance の `receiveLoanPayment` / `receiveLeasePayment`。口座振替結果ファイルの取込みは将来 |
 
-- 本人確認の記録の保存期間は法令に従う（要確認）。画像の閲覧は担当者の権限で制限する。
-
----
-
-## 6. STEP W4 — 仮審査と進み具合
-
-### 6.1 仮審査
-
-- `efPreScreen`（送信のとき、または ②の入力の後に任意で）：審査の規則（U3）とスコア（U4）を、下書きの値で評価する（審査の評価の計算クラスを、保存しない形で呼ぶ）。
-- 顧客に返すのは目安の区分だけ（`EFPRE_LIKELY` お申込みいただけます／`EFPRE_CONSULT` ご相談ください／`EFPRE_UNLIKELY` お受けできません）と、案内の文面。スコア・当たった規則は返さず、記録だけ残す（`EfPreScreenResult`）。
-- 個人の貸付で総量規制（審査 U7）の目安を、申告の値で確かめ、超える場合は「ご相談ください」以下にする（本審査で信用情報の照会により確定する）。
-
-### 6.2 進み具合
-
-| 顧客向けの段階（`EF_STAGE`） | 決め方（finance の状態） |
-|------------------------------|--------------------------|
-| 受付 | 申込 RECEIVED、書類の不足なし |
-| 追加の書類のお願い | 担当者の依頼（`EfDocumentRequest`）が未提出 |
-| 審査中 | 申込 SUBMITTED、審査 IN_REVIEW |
-| 結果のご連絡 | 審査 APPROVED / REJECTED（否決の理由は返さない。定型の文面） |
-| ご契約の手続き | 見積 PRESENTED |
-| ご契約済み | 契約 CONTRACTED / ACTIVE |
-
-- `efGetApplicationStatus`：段階・次にしてほしいこと・期限。段階の変化は `EfStageEvent` に記録し、`NotificationAdapter` で知らせる。
-- 段階の判定は efinance のバッチ（数分ごと）と、finance のサービスの後の ECA（申込・審査・見積・契約の状態の変化の後に efinance の通知のサービスを呼ぶ）で行う。ECA は efinance の側に定義する（finance は efinance を参照しない）。
-
-### 6.3 追加の書類のお願い
-
-`EfDocumentRequest`（申込・書類の種類・理由・期限・状態）を担当者が efinance の管理画面から作る。顧客は `efListDocumentRequests` / `efSubmitRequestedDocument` で提出する。
+- 口座番号は `EntityCrypto` の `encrypt="true"` を利用する（要確認）。
+- W7 は未実装。
 
 ---
 
-## 7. STEP W5 — 電子契約と電子交付
+## 12. support 連携
 
-| エンティティ・API | 内容 |
-|-------------------|------|
-| `efGetOffer` | 提示中の見積（金額・期間・返済予定・総支払額・実質年率・手数料・重要事項）と、契約前の書面（PDF） |
-| `efAcceptOffer` | 再認証 → 見積の受理（finance `setLoanQuoteStatus` / `setLeaseQuoteStatus` → ACCEPTED） |
-| `EfSigningSession` | 署名の手続き：契約書の PDF（finance の帳票）とそのハッシュ、Adapter、状態（`EFSIG_PENDING` → `EFSIG_SIGNED` / `EFSIG_DECLINED` / `EFSIG_EXPIRED`）、署名の日時・IP・端末、署名済みの PDF（`Content`）、タイムスタンプ（将来） |
-| `efStartSigning` / `efCompleteSigning` | 再認証 → 署名（簡単な実装 `ClickWrapSignatureAdapter`：内容の確認の表示と同意のチェック、記録）→ 契約の作成（finance `createLoanAgreement` / `createLeaseAgreement`）。L21 の承認が必要な商品は `requestFinanceApproval` で依頼する |
-| `EfDeliveredDocument` | 交付した書類（種類：契約前の書面・契約書・重要事項・取引の書面 等、PDF、交付の日時、電子交付の承諾の ID、閲覧の日時）。承諾がない場合は郵送のタスク（finance の作業管理） |
-| `efListDocuments` / `efDownloadDocument` | マイページの書類 |
+### 12.1 原則
 
-- 契約の作成が失敗した場合（審査の条件・与信枠・見積の状態）は、署名を `EFSIG_PENDING` に戻さず「担当者の確認」にし、顧客には定型の案内を返す。
+- support の `api/support.rest.xml` は `publish="false"` のまま維持する。
+- efinance が `/ef/support/...` の統合窓口を提供し、内部で support の顧客 API を `dispatcher.runSync` で呼ぶ。
+- `customerPartyId` は efinance の JWT（`EfMember`）から決定する。クライアントが指定した `customerPartyId` は受け付けない、または一致を検証する。
+- efinance の所有確認と support の所有確認を二重に行う。
+- support の内部メモ・担当者連絡先・SLA 内部値・監査情報は返さない。
+- efinance と support の監査ログは独立して記録する。
 
----
+### 12.2 サービス対応
 
-## 8. STEP W6 — マイページ
+| efinance API | support サービス | 入力の注意 |
+|--------------------------|------------------|------------|
+| `GET /ef/support/cases` | `listSupportCasesForCustomer` | `customerPartyId` は JWT から |
+| `POST /ef/support/cases` | `createSupportCaseForCustomer` | `externalId` で冪等化。`customerPartyId` を偽装不可 |
+| `GET /ef/support/cases/{supportCaseId}` | `getSupportCaseForCustomer` | 所有確認。内部メモを除外 |
+| `POST /ef/support/cases/{supportCaseId}/messages` | `replySupportCaseFromCustomer` | 内部メモを返さない |
+| `POST /ef/support/cases/{supportCaseId}/close` | `closeSupportCaseByCustomer` | 状態遷移は support が実施 |
+| `POST /ef/support/cases/{supportCaseId}/rating` | `rateSupportCase` | 解決済みのみ |
+| `GET /ef/support/form-options` | `getSupportCaseFormOptions` | 契約・商品の選択肢 |
+| `POST /ef/support/attachments` | `uploadSupportAttachment` | 可視メッセージのみ |
 
-| API | 内容 |
-|-----|------|
-| `efListApplications` / `efListContracts` | 自分（法人の権限）の申込・契約 |
-| `efGetContract` | 契約の詳細（finance の回収状況 `getLeaseAgreementBalance`・ローンの残高の照会から、顧客に見せる項目だけ）、返済予定・リース料の予定（確定表の現在の revision）、支払の履歴、未払・延滞 |
-| `efSimulatePrepayment` / `efRequestPrepayment` | 繰上返済（ローン）：finance の計算の照会でシミュレーション、申込は `EfServiceRequest` として記録し、担当者が確認して finance の繰上返済のサービスを実行する |
-| `efRequestModification` | 条件変更の相談（`EfServiceRequest`、担当者が対応） |
-| `efRequestExpiryOption` | 満了時の希望（返還・再リース・買取り。リース）。担当者が finance の満了の手続きを行う。満了の 3 か月前に通知 |
-| `efRequestProfileChange` | 住所・連絡先・勤務先の変更（再認証、`EfServiceRequest`、担当者の確認の後に `Party` の連絡先へ反映） |
-| `efRequestCertificate` | 残高の証明書・支払の証明書（finance の帳票の PDF） |
-| `efListMessages` / `efSendMessage` | メッセージ（`CommunicationEvent`、申込・契約に紐付け） |
-| `efGetNotificationSettings` / `efUpdateNotificationSettings` | 通知の設定 |
+### 12.3 連携フロー
 
-- `EfServiceRequest`：手続きの依頼（種類・対象・内容・状態（受付・対応中・完了・却下）・担当者・結果）。担当者の対応は finance の作業管理のタスクにする（`FINWE_OTHER`）。
-- 顧客の操作で finance の業務の状態を直接変える手続きは、最初は作らない（すべて担当者の確認を経る）。将来、自動で実行してよい手続き（例：少額の繰上返済）を商品の設定で許す。
+```mermaid
+sequenceDiagram
+    participant C as 顧客
+    participant E as efinance
+    participant G as EfAccessGuard
+    participant S as support
+    C->>E: /ef/support/cases
+    E->>E: JWT 検証、EfMember、customerPartyId 決定
+    E->>G: 所有確認・権限
+    E->>S: createSupportCaseForCustomer(customerPartyId)
+    S->>S: 所有確認・ケース作成・監査
+    S-->>E: supportCaseId
+    E-->>C: supportCaseId
+```
 
----
+### 12.4 現状（2026-10-22）
 
-## 9. STEP W7 — 支払
-
-| エンティティ・API | 内容 |
-|-------------------|------|
-| `EfDirectDebitMandate` | 口座振替の依頼：会員・契約（または顧客）、金融機関・支店・口座の種類・番号（暗号化、表示は下 4 桁）・名義、状態（`EFDD_REQUESTED` → `EFDD_REGISTERED` / `EFDD_REJECTED`）、Adapter の結果、開始の予定日 |
-| `efRequestDirectDebit` / `efGetDirectDebit` | 顧客の操作（再認証）。簡単な実装 `ManualDirectDebitAdapter`：担当者が金融機関の手続きを行って結果を記録する |
-| `efGetPaymentInstructions` | 振込の案内（振込先、契約番号、期日、金額） |
-| 入金 | 入金の消込は finance（`receiveLoanPayment` / `receiveLeasePayment`）。口座振替の結果のファイルの取込みは将来（finance の入金のサービスを呼ぶ形で作る） |
-
-- 口座番号の暗号化の方式と鍵の管理は、OFBiz の暗号化の仕組み（`EntityCrypto`、`encrypt="true"` の項目）を使う（要確認）。
-
----
-
-## 10. STEP W8・W9（概要）
-
-| STEP | 設計の要点 |
-|------|------------|
-| W8 販売店のポータル | 販売店の会員（`memberTypeEnumId` = DEALER_USER）と販売店の `Party`。顧客の代わりの申込は、顧客の同意（メールのリンクで顧客が同意・本人確認する）を必須にする。販売店は自分が扱った申込の段階だけを見られる |
-| W9 組込み | 提携先（`EfPartner`：API の鍵（ハッシュ）・許可する出所（CORS）・利用の範囲・流入元のコード）、流入元の記録（`EfApplicationDraft.sourceEnumId`・`partnerId`）、紹介の手数料の集計 |
-| W9 チャット | よくある質問（`Content`）、AI の回答（`AiAssistAdapter`、審査 U8 と同じ記録）、本人の確認の後の状態の照会、担当者への引継ぎ（メッセージ） |
+- `/ef/support/...` の 8 サービスを実装した。`EfSupportServices` が `efinance-system` で support の顧客 API を呼び、`customerPartyId` は JWT の `partyId` から決定する。
+- `EfSupportTests` で作成・一覧・詳細・返信・クローズ・選択肢を確認済み。
+- `efSendMessage` は `CommunicationEvent` のみで、support ケースへの自動紐付けは未実装。
+- support の管理画面・ケース処理は support 側の責務のまま。efinance の管理画面には未統合。
+- 監査ログは独立しており、support 側の `SupportAuditLog` は efinance から参照しない。
 
 ---
 
-## 11. 担当者向けの画面
+## 13. 担当者向け管理画面
 
-本人確認の確認、追加の書類のお願い、手続きの依頼（`EfServiceRequest`）の一覧と対応、口座振替の登録の記録、不正の検知の要確認の一覧、会員の照会とロックの解除。
+### 13.1 現在の画面
 
-- 画面の定義（`widget/`・コントローラー）は **efinance のプラグインの中** に置き、担当者向けの小さな Web アプリ（例：`/efinanceadmin`、権限 `OFBTOOLS,EFINANCE_ADMIN`）として作る。finance の画面・コードは変えない（finance は efinance を参照しない）。
-- 契約・申込の詳細は finance の画面へのリンクで開く。
+| request-map | view | 内容 |
+|-------------|------|------|
+| `main` | `FindEfMember` | 会員一覧 |
+| `ViewEfMember` | `ViewEfMember` | 会員詳細 |
+| `FindEfKycCheck` | `FindEfKycCheck` | KYC 一覧 |
+| `PortalHome` | `PortalHome` | ポータル仮ページ |
+
+- 画面定義は `widget/EfinanceAdminScreens.xml` / `EfinanceAdminForms.xml`。
+- 権限は `OFBTOOLS,EFINANCE_ADMIN`。
+- 会員ロック解除、KYC 審査フォーム、書類要請、手続き依頼、申込・契約照会、不正検知、口座振替の画面は未実装。
+
+### 13.2 追加予定
+
+| 画面 | 内容 | 追加 STEP |
+|------|------|-----------|
+| `ReviewEfKycCheck` | 画像閲覧、VERIFIED/RESUBMIT/REJECTED、コメント | W3 追加 |
+| `FindEfDocumentRequest` / `EditEfDocumentRequest` | 書類要請の作成・一覧・期限 | W4 追加 |
+| `FindEfServiceRequest` / `EditEfServiceRequest` | 手続き依頼の一覧・担当・完了・却下 | W6 追加 |
+| `FindEfApplication` / `ViewEfApplication` | 申込の検索、finance 画面へのリンク | W6 追加 |
+| `FindEfContract` / `ViewEfContract` | 契約の検索、finance 画面へのリンク | W6 追加 |
+| `FindEfFraudCheck` | 要確認一覧、対応記録 | W4 追加 |
+| `FindEfDirectDebit` | 口座振替の登録結果 | W7 |
+
+- 管理画面の操作は `EfAuditLog` に記録する。
+- 個人情報・口座番号・本人確認画像は権限ある担当者だけが閲覧できる。
 
 ---
 
-## 12. テストの方針
+## 14. 顧客サンプル画面（`/portal`）
 
-| 種類 | 内容 |
+### 14.1 現状
+
+- `PortalHome.ftl` は「Under construction」の仮ページ。
+- 認証・API 呼出し・画面遷移は未実装。
+
+### 14.2 追加予定
+
+| 画面 | 内容 |
 |------|------|
-| サービスの単体テスト | 会員の登録・確認・ログイン・多要素認証・ロック、下書きの保存と検証、送信で finance の申込ができること、本人の確認（他人の申込・契約は見えない・操作できない）、同意の版 |
-| 結合テスト（REST） | rest-api 経由の JWT の取得と API の呼出し（OFBiz のテストから HTTP で呼ぶ）、CORS、エラーの形 |
-| 流れのテスト | 個人ローン・法人リースで、申込 → 本人確認（手動）→ 仮審査 → 審査の承認（担当者）→ 見積の提示 → 受理 → 署名 → 契約の作成 → マイページの照会 |
-| Adapter | 各口のテスト用の実装（決めた結果を返す） |
-| 不正の検知 | 規則ごとの判定 |
-| finance への影響 | finance の全体テストがそのまま通ること（efinance は finance を変えない） |
+| ホーム | 商品紹介、ログイン、新規登録 |
+| 商品一覧・詳細 | 公開商品、シミュレーション |
+| 申込 | 段階入力、下書き保存、書類アップロード |
+| 本人確認 | 画像アップロード、進捗 |
+| 見積・契約 | 見積確認、同意、署名 |
+| マイページ | 申込・契約・返済・手続き・メッセージ |
+| support | ケース一覧・作成・返信・クローズ・評価 |
+
+- サンプル画面は API の動作確認とフロントエンドの参考実装を目的とする。
+- 本番画面は別リポジトリで置き換える。
+- アクセシビリティ（JIS X 8341-3 / WCAG 2.1 AA）を目標とする。
 
 ---
 
-## 13. 要確認・制約
+## 15. テスト・検証
 
-- **法令**：犯罪収益移転防止法の本人確認の方法と記録の保存、貸金業法・割賦販売法の書面の電子交付の承諾の方法と広告の表示、電子署名法の電子署名の要件（クリックの同意で足りるか）、電子帳簿保存法、個人情報保護法の同意と委託、特定商取引法の適用。法務の確認が必要。
-- **rest-api の認証**：顧客の `UserLogin` で rest-api の標準のトークンの発行を使えないようにする方法（設定・フィルター）を、実装の前に rest-api のコードで確かめる。
-- **finance の照会の項目**：顧客に見せる残高・予定の項目と、finance の照会サービスの出力の対応を、実装時に確定する（内部の項目を出さない）。
-- **口座番号の暗号化と鍵の管理**、アップロードの書類のウイルスの検査の方式。
-- **性能・可用性**：顧客向けは常時の稼働が求められる。OFBiz の構成（複数台・セッションを持たない JWT）と、バッチ（段階の判定・通知）の負荷を確認する。
-- **フロントエンド**：別のリポジトリで作る。アクセシビリティ・多言語・端末の対応は、フロントエンドの要件として別に定める。
+### 15.1 テストスイート
+
+| スイート | 内容 |
+|----------|------|
+| `EfMemberTests` | 登録・メール確認・ログイン・誤パスワード・画面 |
+| `EfCatalogTests` | 商品一覧・商品詳細・ローン/リースシミュレーション |
+| `EfApplicationTests` | フォーム・下書き・保存・撤回・送信・一覧 |
+| `EfKycTests` | KYC 開始・提出・審査・再提出・確認判定 |
+| `EfPreScreenTests` | 仮審査・進捗・書類要請 |
+| `EfContractTests` | 見積・受理・署名・交付書類 |
+| `EfMyPageTests` | 申込・契約・繰上返済・手続き・メッセージ・通知設定 |
+| `EfSupportTests` | support ケースの作成・一覧・詳細・返信・クローズ・選択肢 |
+
+### 15.2 実行結果
+
+```powershell
+.\gradlew.bat compileJava compileGroovy
+.\gradlew.bat "ofbiz --test component=efinance"
+```
+
+- 2026-10-22：**51 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
+- ただし、以下のテストは未実装。
+  - REST 経由の JWT 取得・Authorization・CORS・エラー形式
+  - 法人アカウント・法人権限
+  - リクエスト単位のトークン失効・会員ロック・再認証
+  - 同意文書の版一致・申込送信時の必須同意
+  - finance・support の全体回帰
+
+### 15.3 受入シナリオ
+
+1. 個人ローン：登録 → 申込 → KYC → 仮審査 → 審査 → 見積 → 受理 → 署名 → 契約 → マイページ照会。
+2. 法人リース：法人アカウント → 担当者招待 → 申込 → KYC → 審査 → 契約 → 支払案内。
+3. 権限：他人の下書き・契約・KYC・書類を参照・操作できない。
+4. セキュリティ：失効トークン・ロック会員・未確認 KYC で契約できない。OTP が API に出ない。
+5. support：ケース作成 → 返信 → クローズ → 評価。内部メモが見えない。
+6. 運用：管理画面で KYC 審査・書類要請・手続き依頼・会員ロック解除ができる。
+
+---
+
+## 16. core / finance / support への影響
+
+| 対象 | 変更 | 内容 |
+|------|------|------|
+| core | なし | `JWTManager`・`Party`・`UserLogin`・`Content`・`CommunicationEvent` を利用 |
+| finance | なし | 公開サービスを呼ぶ。状態遷移は finance のサービスだけが行う |
+| support | なし | 顧客 API を呼ぶ。support の REST は `publish="false"` のまま |
+| rest-api | 場合により拡張 | `EfToken` 失効を全リクエストで検証するなら、JAX-RS フィルターの拡張が必要 |
+
+- efinance は finance・support を参照するが、finance・support は efinance を参照しない。
+- core 変更が必要な場合は、理由・影響・代替・検証を本書に追記する。
+
+---
+
+## 17. 未決事項
+
+| # | 事項 | 現状 |
+|---|------|------|
+| 1 | `EfToken` と JWT の対応方式 | `jti` を保存し、JWT の SHA-256 を `EfToken.tokenHash` に保存する方式を実装済み。リクエスト単位の検証フィルターは未実装 |
+| 2 | `EfAuthFilter` の実装場所 | `/portal` は自 webapp、`/rest` は rest-api 拡張またはサービス先頭の `EfAccessGuard`。未実装 |
+| 3 | 法人アカウントの実装範囲 | Entity のみ。サービス・画面は未着手 |
+| 4 | 同意文書の版管理 | seed・一覧 API は実装済み。申込送信時の版一致・必須同意チェックは未実装 |
+| 5 | 本人確認の保存期間 | 既定 7 年。法務確認が必要 |
+| 6 | 電子署名の方式 | クリック同意。電子署名法の電子署名ではない |
+| 7 | PDF 生成 | finance の帳票／jasperreports を利用予定。未実装 |
+| 8 | support 連携 | 顧客 API の 8 サービスを実装済み。`efSendMessage` のケース紐付け・管理画面は未実装 |
+| 9 | 口座番号の暗号化 | W7 で決定 |
+| 10 | 監査ログの統合 | 各プラグイン独立（決定済み） |
+
+---
+
+## 18. 変更履歴
+
+| 日付 | 内容 |
+|------|------|
+| 2026-10-17 | 初版（全体方針・STEP 計画） |
+| 2026-10-21 | W0〜W6 を実装。API・entity・REST・テストを追加 |
+| 2026-10-21 | support との整合性レビューを反映。実装記録、既知ギャップ、データモデル、認証・認可、support 連携、管理画面、テスト、core 影響、未決事項を追記 |
+| 2026-10-22 | セキュリティ強化。顧客サービスの権限チェック、JWT `jti` と `EfToken` の対応、OTP 非公開、同意文書 seed・一覧 API、KYC・同意ゲート、support 顧客 API ブリッジ、`EfAccessGuard` を追加。51 テスト成功 |

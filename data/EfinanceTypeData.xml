@@ -66,6 +66,19 @@ under the License.
     <Enumeration enumId="EFCONS_ELEC_DEL" enumTypeId="EFCONSENT_TYPE" enumCode="ELECTRONIC_DELIVERY" sequenceId="04" description="Electronic delivery"/>
     <Enumeration enumId="EFCONS_ELEC_CTR" enumTypeId="EFCONSENT_TYPE" enumCode="ELECTRONIC_CONTRACT" sequenceId="05" description="Electronic contract"/>
 
+    <!-- Consent document versions (contentId is intentionally empty in seed;
+         production content is managed by the content team). -->
+    <EfConsentDocument documentId="EFCDOC_TERMS_V1" documentTypeEnumId="EFCONS_TERMS"
+                       version="1.0" language="ja" effectiveDate="2026-01-01 00:00:00.0"/>
+    <EfConsentDocument documentId="EFCDOC_PRIVACY_V1" documentTypeEnumId="EFCONS_PRIVACY"
+                       version="1.0" language="ja" effectiveDate="2026-01-01 00:00:00.0"/>
+    <EfConsentDocument documentId="EFCDOC_CREDIT_V1" documentTypeEnumId="EFCONS_CREDIT"
+                       version="1.0" language="ja" effectiveDate="2026-01-01 00:00:00.0"/>
+    <EfConsentDocument documentId="EFCDOC_ELEC_DEL_V1" documentTypeEnumId="EFCONS_ELEC_DEL"
+                       version="1.0" language="ja" effectiveDate="2026-01-01 00:00:00.0"/>
+    <EfConsentDocument documentId="EFCDOC_ELEC_CTR_V1" documentTypeEnumId="EFCONS_ELEC_CTR"
+                       version="1.0" language="ja" effectiveDate="2026-01-01 00:00:00.0"/>
+
     <EnumerationType enumTypeId="EFAUDIT_ACTION" description="eFinance audit action"/>
     <Enumeration enumId="EFAUD_REGISTER" enumTypeId="EFAUDIT_ACTION" enumCode="REGISTER" sequenceId="01" description="Register"/>
     <Enumeration enumId="EFAUD_EMAIL_VFY" enumTypeId="EFAUDIT_ACTION" enumCode="EMAIL_VERIFY" sequenceId="02" description="Email verify"/>

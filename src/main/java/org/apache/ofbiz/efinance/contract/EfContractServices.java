@@ -346,6 +346,16 @@ public final class EfContractServices {
                         UtilProperties.getMessage(RESOURCE, "EfinanceSigningNotConfirmed", locale));
             }
 
+            // Contract prerequisites: verified KYC and electronic-contract consent.
+            if (!isKycVerified(delegator, partyId)) {
+                return ServiceUtil.returnError(
+                        UtilProperties.getMessage(RESOURCE, "EfinanceKycRequiredForContract", locale));
+            }
+            if (!hasElectronicContractConsent(delegator, partyId)) {
+                return ServiceUtil.returnError(
+                        UtilProperties.getMessage(RESOURCE, "EfinanceConsentRequired", locale));
+            }
+
             String quoteId = session.getString("quoteId");
             String quoteTypeId = session.getString("quoteTypeId");
             String draftId = session.getString("draftId");
@@ -593,6 +603,37 @@ public final class EfContractServices {
     private static boolean ownsDraft(GenericValue draft, String partyId) {
         if (partyId == null) return false;
         return partyId.equals(draft.getString("memberPartyId"));
+    }
+
+    private static boolean isKycVerified(Delegator delegator, String partyId) throws GenericEntityException {
+        if (UtilValidate.isEmpty(partyId)) {
+            return false;
+        }
+        return EntityQuery.use(delegator).from("EfKycCheck")
+                .where(EntityCondition.makeCondition(EntityOperator.AND,
+                        EntityCondition.makeCondition("memberPartyId", partyId),
+                        EntityCondition.makeCondition("statusId", "EFKYC_VERIFIED")))
+                .queryFirst() != null;
+    }
+
+    private static boolean hasElectronicContractConsent(Delegator delegator, String partyId)
+            throws GenericEntityException {
+        if (UtilValidate.isEmpty(partyId)) {
+            return false;
+        }
+        GenericValue document = EntityQuery.use(delegator).from("EfConsentDocument")
+                .where("documentTypeEnumId", "EFCONS_ELEC_CTR")
+                .orderBy("-effectiveDate")
+                .queryFirst();
+        if (document == null) {
+            return false;
+        }
+        return EntityQuery.use(delegator).from("EfConsent")
+                .where(EntityCondition.makeCondition(EntityOperator.AND,
+                        EntityCondition.makeCondition("partyId", partyId),
+                        EntityCondition.makeCondition("documentId", document.getString("documentId")),
+                        EntityCondition.makeCondition("revokedDate", EntityOperator.EQUALS, null)))
+                .queryFirst() != null;
     }
 
     private static GenericValue getSystemUser(Delegator delegator) throws GenericEntityException {

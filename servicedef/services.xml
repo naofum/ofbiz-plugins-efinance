@@ -34,6 +34,14 @@ under the License.
         <attribute name="failMessage" type="String" mode="OUT" optional="true"/>
     </service>
 
+    <service name="efinanceCustomerPermission" engine="simple" auth="true" export="false"
+             location="component://efinance/minilang/EfinancePermissionServices.xml"
+             invoke="efinanceCustomerPermission">
+        <description>Check whether the current user has EFINANCE_CUSTOMER or EFINANCE_ADMIN permission</description>
+        <attribute name="hasPermission" type="Boolean" mode="OUT" optional="false"/>
+        <attribute name="failMessage" type="String" mode="OUT" optional="true"/>
+    </service>
+
     <!-- ========================================================= -->
     <!-- Member registration and authentication                    -->
     <!-- ========================================================= -->
@@ -100,14 +108,17 @@ under the License.
     <service name="efLogout" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.account.EfMemberServices"
              invoke="efLogout">
-        <description>Revoke the specified refresh token (logout from current device).</description>
+        <description>Revoke the specified access/refresh token (logout from current device).</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="refreshToken" type="String" mode="IN" optional="true"/>
+        <attribute name="accessToken" type="String" mode="IN" optional="true"/>
     </service>
 
     <service name="efLogoutAll" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.account.EfMemberServices"
              invoke="efLogoutAll">
         <description>Revoke all active tokens for the authenticated member (logout from all devices).</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
     </service>
 
     <service name="efRequestPasswordReset" engine="java" auth="false" export="true"
@@ -129,6 +140,7 @@ under the License.
              location="org.apache.ofbiz.efinance.account.EfMemberServices"
              invoke="efGetProfile">
         <description>Return the authenticated member's profile.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="member" type="java.util.Map" mode="OUT" optional="true"/>
     </service>
 
@@ -136,6 +148,7 @@ under the License.
              location="org.apache.ofbiz.efinance.account.EfMemberServices"
              invoke="efAcceptConsent">
         <description>Record the member's consent to a consent document.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="documentId" type="String" mode="IN" optional="false"/>
         <attribute name="ipAddress" type="String" mode="IN" optional="true"/>
         <attribute name="deviceId" type="String" mode="IN" optional="true"/>
@@ -145,7 +158,16 @@ under the License.
              location="org.apache.ofbiz.efinance.account.EfMemberServices"
              invoke="efListConsents">
         <description>List consents recorded for the authenticated member.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="consents" type="java.util.List" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efListConsentDocuments" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.account.EfMemberServices"
+             invoke="efListConsentDocuments">
+        <description>List currently effective consent documents.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
+        <attribute name="documents" type="java.util.List" mode="OUT" optional="true"/>
     </service>
 
     <!-- ========================================================= -->
@@ -207,6 +229,7 @@ under the License.
     <service name="efCreateDraft" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.application.EfApplicationServices" invoke="efCreateDraft">
         <description>Create a new application draft.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="productId" type="String" mode="IN" optional="false"/>
         <attribute name="applicationTypeId" type="String" mode="IN" optional="false"/>
         <attribute name="sourceEnumId" type="String" mode="IN" optional="true"/>
@@ -217,6 +240,7 @@ under the License.
     <service name="efSaveDraft" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.application.EfApplicationServices" invoke="efSaveDraft">
         <description>Save/update draft step data. Returns validation result for the step.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="draftId" type="String" mode="IN" optional="false"/>
         <attribute name="step" type="Integer" mode="IN" optional="false"/>
         <attribute name="stepData" type="Map" mode="IN" optional="false"/>
@@ -227,6 +251,7 @@ under the License.
     <service name="efGetDraft" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.application.EfApplicationServices" invoke="efGetDraft">
         <description>Get draft data including all steps and attached documents.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="draftId" type="String" mode="IN" optional="false"/>
         <attribute name="draft" type="Map" mode="OUT" optional="true"/>
     </service>
@@ -234,12 +259,14 @@ under the License.
     <service name="efListDrafts" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.application.EfApplicationServices" invoke="efListDrafts">
         <description>List the member's active drafts.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="drafts" type="List" mode="OUT" optional="true"/>
     </service>
 
     <service name="efWithdrawDraft" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.application.EfApplicationServices" invoke="efWithdrawDraft">
         <description>Withdraw (cancel) a draft.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="draftId" type="String" mode="IN" optional="false"/>
     </service>
 
@@ -247,6 +274,7 @@ under the License.
     <service name="efUploadDraftDocument" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.application.EfApplicationServices" invoke="efUploadDraftDocument">
         <description>Upload a document to a draft.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="draftId" type="String" mode="IN" optional="false"/>
         <attribute name="documentTypeEnumId" type="String" mode="IN" optional="false"/>
         <attribute name="fileName" type="String" mode="IN" optional="false"/>
@@ -258,6 +286,7 @@ under the License.
     <service name="efDeleteDraftDocument" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.application.EfApplicationServices" invoke="efDeleteDraftDocument">
         <description>Delete a document from a draft.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="draftDocumentId" type="String" mode="IN" optional="false"/>
     </service>
 
@@ -265,6 +294,7 @@ under the License.
     <service name="efSubmitApplication" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.application.EfApplicationServices" invoke="efSubmitApplication">
         <description>Submit a completed draft as a finance application.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="draftId" type="String" mode="IN" optional="false"/>
         <attribute name="ipAddress" type="String" mode="IN" optional="true"/>
         <attribute name="deviceId" type="String" mode="IN" optional="true"/>
@@ -279,6 +309,7 @@ under the License.
     <service name="efStartKyc" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.kyc.EfKycServices" invoke="efStartKyc">
         <description>Start a KYC identity check for the logged-in member.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="draftId" type="String" mode="IN" optional="true"/>
         <attribute name="kycMethodEnumId" type="String" mode="IN" optional="false"/>
         <attribute name="kycCheckId" type="String" mode="OUT" optional="true"/>
@@ -287,6 +318,7 @@ under the License.
     <service name="efUploadKycImage" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.kyc.EfKycServices" invoke="efUploadKycImage">
         <description>Upload a KYC image (ID doc, facial, IC data).</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="kycCheckId" type="String" mode="IN" optional="false"/>
         <attribute name="imageTypeEnumId" type="String" mode="IN" optional="false"/>
         <attribute name="fileName" type="String" mode="IN" optional="false"/>
@@ -298,12 +330,14 @@ under the License.
     <service name="efSubmitKyc" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.kyc.EfKycServices" invoke="efSubmitKyc">
         <description>Submit the KYC check for review.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="kycCheckId" type="String" mode="IN" optional="false"/>
     </service>
 
     <service name="efGetKycStatus" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.kyc.EfKycServices" invoke="efGetKycStatus">
         <description>Get the current status of a KYC check.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="kycCheckId" type="String" mode="IN" optional="true"/>
         <attribute name="draftId" type="String" mode="IN" optional="true"/>
         <attribute name="kycCheck" type="Map" mode="OUT" optional="true"/>
@@ -322,6 +356,7 @@ under the License.
     <service name="efIsKycVerified" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.kyc.EfKycServices" invoke="efIsKycVerified">
         <description>Check whether the member (or subject party) has a VERIFIED KYC check.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="subjectPartyId" type="String" mode="IN" optional="true"/>
         <attribute name="draftId" type="String" mode="IN" optional="true"/>
         <attribute name="verified" type="Boolean" mode="OUT" optional="true"/>
@@ -334,6 +369,7 @@ under the License.
     <service name="efPreScreen" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.application.EfPreScreenServices" invoke="efPreScreen">
         <description>Run pre-screen checks against draft step data. Returns result hint only (not score/rules).</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="draftId" type="String" mode="IN" optional="false"/>
         <attribute name="result" type="String" mode="OUT" optional="true"/>
         <attribute name="guidance" type="String" mode="OUT" optional="true"/>
@@ -343,6 +379,7 @@ under the License.
     <service name="efGetApplicationStatus" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.application.EfPreScreenServices" invoke="efGetApplicationStatus">
         <description>Get the customer-facing stage of an application based on finance statuses.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="draftId" type="String" mode="IN" optional="false"/>
         <attribute name="stageEnumId" type="String" mode="OUT" optional="true"/>
         <attribute name="stageDescription" type="String" mode="OUT" optional="true"/>
@@ -364,6 +401,7 @@ under the License.
     <service name="efListDocumentRequests" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.application.EfPreScreenServices" invoke="efListDocumentRequests">
         <description>List document requests for an application draft.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="draftId" type="String" mode="IN" optional="false"/>
         <attribute name="docRequests" type="List" mode="OUT" optional="true"/>
     </service>
@@ -371,6 +409,7 @@ under the License.
     <service name="efSubmitRequestedDocument" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.application.EfPreScreenServices" invoke="efSubmitRequestedDocument">
         <description>Customer submits a document for a pending document request.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="docRequestId" type="String" mode="IN" optional="false"/>
         <attribute name="fileName" type="String" mode="IN" optional="false"/>
         <attribute name="contentType" type="String" mode="IN" optional="false"/>
@@ -383,6 +422,7 @@ under the License.
     <service name="efGetOffer" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.contract.EfContractServices" invoke="efGetOffer">
         <description>Get the current presented quote (offer) for an application draft.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="draftId" type="String" mode="IN" optional="false"/>
         <attribute name="offer" type="Map" mode="OUT" optional="true"/>
         <attribute name="quoteId" type="String" mode="OUT" optional="true"/>
@@ -392,6 +432,7 @@ under the License.
     <service name="efAcceptOffer" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.contract.EfContractServices" invoke="efAcceptOffer">
         <description>Customer accepts the presented offer (requires re-authentication handled at API layer).</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="draftId" type="String" mode="IN" optional="false"/>
         <attribute name="quoteId" type="String" mode="IN" optional="false"/>
         <attribute name="quoteTypeId" type="String" mode="IN" optional="false"/>
@@ -401,6 +442,7 @@ under the License.
     <service name="efStartSigning" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.contract.EfContractServices" invoke="efStartSigning">
         <description>Start the signing session for an accepted offer.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="draftId" type="String" mode="IN" optional="false"/>
         <attribute name="quoteId" type="String" mode="IN" optional="false"/>
         <attribute name="quoteTypeId" type="String" mode="IN" optional="false"/>
@@ -411,6 +453,7 @@ under the License.
     <service name="efCompleteSigning" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.contract.EfContractServices" invoke="efCompleteSigning">
         <description>Complete signing (click-wrap consent) and create the finance agreement.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="signingSessionId" type="String" mode="IN" optional="false"/>
         <attribute name="confirmContent" type="Boolean" mode="IN" optional="false"/>
         <attribute name="ipAddress" type="String" mode="IN" optional="true"/>
@@ -422,6 +465,7 @@ under the License.
     <service name="efListDocuments" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.contract.EfContractServices" invoke="efListDocuments">
         <description>List delivered documents for an application draft.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="draftId" type="String" mode="IN" optional="false"/>
         <attribute name="documents" type="List" mode="OUT" optional="true"/>
     </service>
@@ -429,6 +473,7 @@ under the License.
     <service name="efDownloadDocument" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.contract.EfContractServices" invoke="efDownloadDocument">
         <description>Get document metadata and text content (binary streaming via efinance content layer).</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="deliveredDocId" type="String" mode="IN" optional="false"/>
         <attribute name="document" type="Map" mode="OUT" optional="true"/>
         <attribute name="mimeTypeId" type="String" mode="OUT" optional="true"/>
@@ -437,23 +482,124 @@ under the License.
     </service>
 
     <!-- ========================================================= -->
+    <!-- W6: support customer API bridge                           -->
+    <!-- ========================================================= -->
+    <service name="efListSupportCases" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.support.EfSupportServices" invoke="efListSupportCases">
+        <description>List the customer's own support cases through the efinance gateway.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
+        <attribute name="statusIds" type="java.util.List" mode="IN" optional="true"/>
+        <attribute name="financeContractId" type="String" mode="IN" optional="true"/>
+        <attribute name="productId" type="String" mode="IN" optional="true"/>
+        <attribute name="viewIndex" type="Integer" mode="IN" optional="true"/>
+        <attribute name="viewSize" type="Integer" mode="IN" optional="true"/>
+        <attribute name="supportCases" type="java.util.List" mode="OUT" optional="true"/>
+        <attribute name="caseCount" type="Integer" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efCreateSupportCase" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.support.EfSupportServices" invoke="efCreateSupportCase">
+        <description>Create a support case for the authenticated customer.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
+        <attribute name="caseTypeEnumId" type="String" mode="IN" optional="true"/>
+        <attribute name="financeContractId" type="String" mode="IN" optional="true"/>
+        <attribute name="applicationTypeId" type="String" mode="IN" optional="true"/>
+        <attribute name="applicationId" type="String" mode="IN" optional="true"/>
+        <attribute name="productId" type="String" mode="IN" optional="true"/>
+        <attribute name="subject" type="String" mode="IN" optional="false"/>
+        <attribute name="description" type="String" mode="IN" optional="true"/>
+        <attribute name="externalId" type="String" mode="IN" optional="true"/>
+        <attribute name="supportCaseId" type="String" mode="OUT" optional="true"/>
+        <attribute name="statusId" type="String" mode="OUT" optional="true"/>
+        <attribute name="firstResponseDueAt" type="Timestamp" mode="OUT" optional="true"/>
+        <attribute name="resolutionDueAt" type="Timestamp" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efGetSupportCase" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.support.EfSupportServices" invoke="efGetSupportCase">
+        <description>Get one of the customer's own support cases.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
+        <attribute name="supportCaseId" type="String" mode="IN" optional="false"/>
+        <attribute name="supportCase" type="Map" mode="OUT" optional="true"/>
+        <attribute name="messages" type="java.util.List" mode="OUT" optional="true"/>
+        <attribute name="canReply" type="Boolean" mode="OUT" optional="true"/>
+        <attribute name="canClose" type="Boolean" mode="OUT" optional="true"/>
+        <attribute name="canRate" type="Boolean" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efReplySupportCase" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.support.EfSupportServices" invoke="efReplySupportCase">
+        <description>Reply to one of the customer's own support cases.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
+        <attribute name="supportCaseId" type="String" mode="IN" optional="false"/>
+        <attribute name="subject" type="String" mode="IN" optional="true"/>
+        <attribute name="content" type="String" mode="IN" optional="false"/>
+        <attribute name="externalId" type="String" mode="IN" optional="true"/>
+        <attribute name="communicationEventId" type="String" mode="OUT" optional="true"/>
+        <attribute name="statusId" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efCloseSupportCase" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.support.EfSupportServices" invoke="efCloseSupportCase">
+        <description>Close or withdraw one of the customer's own support cases.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
+        <attribute name="supportCaseId" type="String" mode="IN" optional="false"/>
+        <attribute name="reason" type="String" mode="IN" optional="true"/>
+        <attribute name="statusId" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efRateSupportCase" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.support.EfSupportServices" invoke="efRateSupportCase">
+        <description>Rate one of the customer's own resolved support cases.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
+        <attribute name="supportCaseId" type="String" mode="IN" optional="false"/>
+        <attribute name="satisfactionScore" type="String" mode="IN" optional="false"/>
+        <attribute name="satisfactionComment" type="String" mode="IN" optional="true"/>
+    </service>
+
+    <service name="efGetSupportFormOptions" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.support.EfSupportServices" invoke="efGetSupportFormOptions">
+        <description>Get the customer's contracts, products, applications and case types for support.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
+        <attribute name="contracts" type="java.util.List" mode="OUT" optional="true"/>
+        <attribute name="products" type="java.util.List" mode="OUT" optional="true"/>
+        <attribute name="applications" type="java.util.List" mode="OUT" optional="true"/>
+        <attribute name="caseTypes" type="java.util.List" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efUploadSupportAttachment" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.support.EfSupportServices" invoke="efUploadSupportAttachment">
+        <description>Upload an attachment to a customer-visible support message.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
+        <attribute name="supportCaseId" type="String" mode="IN" optional="false"/>
+        <attribute name="communicationEventId" type="String" mode="IN" optional="true"/>
+        <attribute name="fileName" type="String" mode="IN" optional="true"/>
+        <attribute name="contentType" type="String" mode="IN" optional="true"/>
+        <attribute name="uploadedFile" type="java.nio.ByteBuffer" mode="IN" optional="false"/>
+        <attribute name="contentId" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <!-- ========================================================= -->
     <!-- W6: MyPage                                               -->
     <!-- ========================================================= -->
     <service name="efListApplications" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.mypage.EfMyPageServices" invoke="efListApplications">
         <description>List the member's submitted applications.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="applications" type="List" mode="OUT" optional="true"/>
     </service>
 
     <service name="efListContracts" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.mypage.EfMyPageServices" invoke="efListContracts">
         <description>List the member's loan and lease contracts.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="contracts" type="List" mode="OUT" optional="true"/>
     </service>
 
     <service name="efGetContract" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.mypage.EfMyPageServices" invoke="efGetContract">
         <description>Get contract details, repayment schedule, and balance.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="agreementId" type="String" mode="IN" optional="false"/>
         <attribute name="agreementTypeId" type="String" mode="IN" optional="false"/>
         <attribute name="contract" type="Map" mode="OUT" optional="true"/>
@@ -464,6 +610,7 @@ under the License.
     <service name="efSimulatePrepayment" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.mypage.EfMyPageServices" invoke="efSimulatePrepayment">
         <description>Simulate prepayment (loan only). Returns estimated fees and remaining schedule.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="agreementId" type="String" mode="IN" optional="false"/>
         <attribute name="prepaymentAmount" type="BigDecimal" mode="IN" optional="true"/>
         <attribute name="prepaymentTypeEnumId" type="String" mode="IN" optional="true"/>
@@ -476,6 +623,7 @@ under the License.
     <service name="efRequestPrepayment" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.mypage.EfMyPageServices" invoke="efRequestPrepayment">
         <description>Submit a prepayment request (creates EfServiceRequest, staff executes).</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="agreementId" type="String" mode="IN" optional="false"/>
         <attribute name="prepaymentAmount" type="BigDecimal" mode="IN" optional="true"/>
         <attribute name="prepaymentTypeEnumId" type="String" mode="IN" optional="true"/>
@@ -485,6 +633,7 @@ under the License.
     <service name="efRequestModification" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.mypage.EfMyPageServices" invoke="efRequestModification">
         <description>Request loan condition modification (rate/term change consultation).</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="agreementId" type="String" mode="IN" optional="false"/>
         <attribute name="agreementTypeId" type="String" mode="IN" optional="false"/>
         <attribute name="requestContent" type="String" mode="IN" optional="false"/>
@@ -494,6 +643,7 @@ under the License.
     <service name="efRequestExpiryOption" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.mypage.EfMyPageServices" invoke="efRequestExpiryOption">
         <description>Request lease expiry option (return/re-lease/purchase).</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="agreementId" type="String" mode="IN" optional="false"/>
         <attribute name="expiryOptionEnumId" type="String" mode="IN" optional="false"/>
         <attribute name="serviceRequestId" type="String" mode="OUT" optional="true"/>
@@ -502,6 +652,7 @@ under the License.
     <service name="efRequestProfileChange" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.mypage.EfMyPageServices" invoke="efRequestProfileChange">
         <description>Request address/contact/employer change. Creates EfServiceRequest.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="changeType" type="String" mode="IN" optional="false"/>
         <attribute name="changeData" type="Map" mode="IN" optional="false"/>
         <attribute name="serviceRequestId" type="String" mode="OUT" optional="true"/>
@@ -510,6 +661,7 @@ under the License.
     <service name="efRequestCertificate" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.mypage.EfMyPageServices" invoke="efRequestCertificate">
         <description>Request a balance/payment certificate for a contract.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="agreementId" type="String" mode="IN" optional="false"/>
         <attribute name="agreementTypeId" type="String" mode="IN" optional="false"/>
         <attribute name="certificateTypeEnumId" type="String" mode="IN" optional="true"/>
@@ -519,6 +671,7 @@ under the License.
     <service name="efListMessages" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.mypage.EfMyPageServices" invoke="efListMessages">
         <description>List messages (CommunicationEvents) for the member.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="draftId" type="String" mode="IN" optional="true"/>
         <attribute name="messages" type="List" mode="OUT" optional="true"/>
     </service>
@@ -526,6 +679,7 @@ under the License.
     <service name="efSendMessage" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.mypage.EfMyPageServices" invoke="efSendMessage">
         <description>Send a message (creates a CommunicationEvent linked to an application/contract).</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="draftId" type="String" mode="IN" optional="true"/>
         <attribute name="subject" type="String" mode="IN" optional="true"/>
         <attribute name="content" type="String" mode="IN" optional="false"/>
@@ -535,12 +689,14 @@ under the License.
     <service name="efGetNotificationSettings" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.mypage.EfMyPageServices" invoke="efGetNotificationSettings">
         <description>Get notification settings for the member.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="settings" type="List" mode="OUT" optional="true"/>
     </service>
 
     <service name="efUpdateNotificationSettings" engine="java" auth="true" export="true"
              location="org.apache.ofbiz.efinance.mypage.EfMyPageServices" invoke="efUpdateNotificationSettings">
         <description>Update notification settings for the member.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="notificationTypeEnumId" type="String" mode="IN" optional="false"/>
         <attribute name="emailEnabled" type="Boolean" mode="IN" optional="true"/>
         <attribute name="smsEnabled" type="Boolean" mode="IN" optional="true"/>

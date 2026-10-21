@@ -95,6 +95,11 @@ under the License.
             <service name="efAcceptConsent"/>
         </operation>
     </resource>
+    <resource name="consentDocuments" path="/ef/consent-documents" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efListConsentDocuments"/>
+        </operation>
+    </resource>
 
     <!-- W1: Product catalog (no auth) -->
     <resource name="products" path="/ef/products" auth="false">
@@ -298,4 +303,43 @@ under the License.
         </operation>
     </resource>
 
+    <!-- support integration (efinance is the customer-facing gateway) -->
+    <resource name="supportCases" path="/ef/support/cases" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efListSupportCases"/>
+        </operation>
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efCreateSupportCase"/>
+        </operation>
+    </resource>
+    <resource name="supportCase" path="/ef/support/cases/{supportCaseId}" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efGetSupportCase"/>
+        </operation>
+    </resource>
+    <resource name="supportMessages" path="/ef/support/cases/{supportCaseId}/messages" auth="true">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efReplySupportCase"/>
+        </operation>
+    </resource>
+    <resource name="supportClose" path="/ef/support/cases/{supportCaseId}/close" auth="true">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efCloseSupportCase"/>
+        </operation>
+    </resource>
+    <resource name="supportRating" path="/ef/support/cases/{supportCaseId}/rating" auth="true">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efRateSupportCase"/>
+        </operation>
+    </resource>
+    <resource name="supportFormOptions" path="/ef/support/form-options" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efGetSupportFormOptions"/>
+        </operation>
+    </resource>
+    <resource name="supportAttachments" path="/ef/support/attachments" auth="true">
+        <operation verb="post" produces="application/json">
+            <service name="efUploadSupportAttachment"/>
+        </operation>
+    </resource>
 </api>
