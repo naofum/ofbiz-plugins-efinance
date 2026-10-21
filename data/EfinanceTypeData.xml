@@ -240,6 +240,40 @@ under the License.
     <Enumeration enumId="EFAUD_DOC_DELIVER" enumTypeId="EFAUDIT_ACTION" enumCode="DOC_DELIVER" sequenceId="44" description="Document delivered"/>
 
     <!-- ========================================================= -->
+    <!-- W6 Service request types                                 -->
+    <!-- ========================================================= -->
+    <EnumerationType enumTypeId="EFSVCREQ_TYPE" description="eFinance service request type"/>
+    <Enumeration enumId="EFSVCREQ_PREPAY" enumTypeId="EFSVCREQ_TYPE" enumCode="PREPAYMENT" sequenceId="01" description="Prepayment request"/>
+    <Enumeration enumId="EFSVCREQ_MODIFY" enumTypeId="EFSVCREQ_TYPE" enumCode="MODIFICATION" sequenceId="02" description="Condition change"/>
+    <Enumeration enumId="EFSVCREQ_EXPIRY" enumTypeId="EFSVCREQ_TYPE" enumCode="EXPIRY_OPTION" sequenceId="03" description="Expiry option (lease)"/>
+    <Enumeration enumId="EFSVCREQ_PROFILE" enumTypeId="EFSVCREQ_TYPE" enumCode="PROFILE_CHANGE" sequenceId="04" description="Profile/contact change"/>
+    <Enumeration enumId="EFSVCREQ_CERT" enumTypeId="EFSVCREQ_TYPE" enumCode="CERTIFICATE" sequenceId="05" description="Balance certificate"/>
+    <Enumeration enumId="EFSVCREQ_OTHER" enumTypeId="EFSVCREQ_TYPE" enumCode="OTHER" sequenceId="99" description="Other inquiry"/>
+
+    <!-- W6 Service request statuses -->
+    <StatusType statusTypeId="EFSVCREQ_STATUS" description="eFinance service request status" hasTable="N"/>
+    <StatusItem statusId="EFSVCREQ_RECEIVED" statusTypeId="EFSVCREQ_STATUS" statusCode="RECEIVED" sequenceId="01" description="Received"/>
+    <StatusItem statusId="EFSVCREQ_IN_PROG" statusTypeId="EFSVCREQ_STATUS" statusCode="IN_PROGRESS" sequenceId="02" description="In progress"/>
+    <StatusItem statusId="EFSVCREQ_COMPLETE" statusTypeId="EFSVCREQ_STATUS" statusCode="COMPLETED" sequenceId="03" description="Completed"/>
+    <StatusItem statusId="EFSVCREQ_REJECTED" statusTypeId="EFSVCREQ_STATUS" statusCode="REJECTED" sequenceId="04" description="Rejected"/>
+    <StatusValidChange statusId="EFSVCREQ_RECEIVED" statusIdTo="EFSVCREQ_IN_PROG" transitionName="Start"/>
+    <StatusValidChange statusId="EFSVCREQ_IN_PROG" statusIdTo="EFSVCREQ_COMPLETE" transitionName="Complete"/>
+    <StatusValidChange statusId="EFSVCREQ_IN_PROG" statusIdTo="EFSVCREQ_REJECTED" transitionName="Reject"/>
+    <StatusValidChange statusId="EFSVCREQ_RECEIVED" statusIdTo="EFSVCREQ_REJECTED" transitionName="Reject"/>
+
+    <!-- W6 Notification types -->
+    <EnumerationType enumTypeId="EFNOTIF_TYPE" description="eFinance notification type"/>
+    <Enumeration enumId="EFNOTIF_PAYMENT" enumTypeId="EFNOTIF_TYPE" enumCode="PAYMENT_REMINDER" sequenceId="01" description="Payment reminder"/>
+    <Enumeration enumId="EFNOTIF_RECEIPT" enumTypeId="EFNOTIF_TYPE" enumCode="PAYMENT_RECEIPT" sequenceId="02" description="Payment receipt"/>
+    <Enumeration enumId="EFNOTIF_OVERDUE" enumTypeId="EFNOTIF_TYPE" enumCode="OVERDUE" sequenceId="03" description="Overdue notice"/>
+    <Enumeration enumId="EFNOTIF_EXPIRY" enumTypeId="EFNOTIF_TYPE" enumCode="EXPIRY_NOTICE" sequenceId="04" description="Expiry notice (3 months before)"/>
+    <Enumeration enumId="EFNOTIF_INFO" enumTypeId="EFNOTIF_TYPE" enumCode="INFORMATION" sequenceId="05" description="General information"/>
+
+    <!-- W6 audit action enums -->
+    <Enumeration enumId="EFAUD_SVCREQ_CREATE" enumTypeId="EFAUDIT_ACTION" enumCode="SVCREQ_CREATE" sequenceId="51" description="Service request created"/>
+    <Enumeration enumId="EFAUD_MSG_SEND" enumTypeId="EFAUDIT_ACTION" enumCode="MSG_SEND" sequenceId="52" description="Message sent"/>
+
+    <!-- ========================================================= -->
     <!-- System user for internal dispatcher calls                 -->
     <!-- ========================================================= -->
     <Party partyId="EFINANCE_SYSTEM" partyTypeId="PERSON"/>

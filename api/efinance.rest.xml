@@ -235,4 +235,67 @@ under the License.
         </operation>
     </resource>
 
+    <!-- W6: MyPage -->
+    <resource name="meApplications" path="/ef/me/applications" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efListApplications"/>
+        </operation>
+    </resource>
+    <resource name="meContracts" path="/ef/me/contracts" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efListContracts"/>
+        </operation>
+    </resource>
+    <resource name="meContract" path="/ef/me/contracts/{agreementId}" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efGetContract"/>
+        </operation>
+    </resource>
+    <resource name="prepaymentSimulate" path="/ef/me/contracts/{agreementId}/prepayment/simulate" auth="true">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efSimulatePrepayment"/>
+        </operation>
+    </resource>
+    <resource name="prepaymentRequest" path="/ef/me/contracts/{agreementId}/prepayment" auth="true">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efRequestPrepayment"/>
+        </operation>
+    </resource>
+    <resource name="modification" path="/ef/me/contracts/{agreementId}/modification" auth="true">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efRequestModification"/>
+        </operation>
+    </resource>
+    <resource name="expiryOption" path="/ef/me/contracts/{agreementId}/expiry-option" auth="true">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efRequestExpiryOption"/>
+        </operation>
+    </resource>
+    <resource name="profileChange" path="/ef/me/profile-change" auth="true">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efRequestProfileChange"/>
+        </operation>
+    </resource>
+    <resource name="certificate" path="/ef/me/contracts/{agreementId}/certificate" auth="true">
+        <operation verb="post" produces="application/json">
+            <service name="efRequestCertificate"/>
+        </operation>
+    </resource>
+    <resource name="messages" path="/ef/me/messages" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efListMessages"/>
+        </operation>
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efSendMessage"/>
+        </operation>
+    </resource>
+    <resource name="notificationSettings" path="/ef/me/notification-settings" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efGetNotificationSettings"/>
+        </operation>
+        <operation verb="put" consumes="application/json" produces="application/json">
+            <service name="efUpdateNotificationSettings"/>
+        </operation>
+    </resource>
+
 </api>

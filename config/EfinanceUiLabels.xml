@@ -267,4 +267,26 @@ under the License.
         <value xml:lang="ja">この申込の署名手続きがすでに進行中です。</value>
     </property>
 
+    <!-- W6: MyPage labels -->
+    <property key="EfinanceContractNotFound">
+        <value xml:lang="en">Contract not found or you do not have access.</value>
+        <value xml:lang="ja">契約が見つからないか、アクセスする権限がありません。</value>
+    </property>
+    <property key="EfinanceServiceRequestCreated">
+        <value xml:lang="en">Your request has been submitted. Our team will contact you shortly.</value>
+        <value xml:lang="ja">ご依頼を受け付けました。担当者より連絡いたします。</value>
+    </property>
+    <property key="EfinanceLoanOnlyPrepayment">
+        <value xml:lang="en">Prepayment simulation is only available for loan contracts.</value>
+        <value xml:lang="ja">繰上返済シミュレーションはローン契約のみ対応しています。</value>
+    </property>
+    <property key="EfinanceMessageSent">
+        <value xml:lang="en">Your message has been sent.</value>
+        <value xml:lang="ja">メッセージを送信しました。</value>
+    </property>
+    <property key="EfinanceNotificationSettingsUpdated">
+        <value xml:lang="en">Notification settings updated.</value>
+        <value xml:lang="ja">通知設定を更新しました。</value>
+    </property>
+
 </resource>

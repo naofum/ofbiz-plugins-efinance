@@ -523,6 +523,55 @@ under the License.
     </entity>
 
     <!-- ========================================================= -->
+    <!-- W6 Service request                                       -->
+    <!-- ========================================================= -->
+    <entity entity-name="EfServiceRequest" package-name="org.apache.ofbiz.efinance.mypage"
+            title="eFinance post-contract service request">
+        <field name="serviceRequestId" type="id"><description>sequenced</description></field>
+        <field name="memberPartyId" type="id"/>
+        <field name="draftId" type="id"><description>related application draft</description></field>
+        <field name="agreementId" type="id"><description>loanAgreementId or leaseAgreementId</description></field>
+        <field name="agreementTypeId" type="id"><description>LOAN or LEASE</description></field>
+        <field name="requestTypeEnumId" type="id"><description>EFSVCREQ_TYPE enum</description></field>
+        <field name="statusId" type="id"><description>EFSVCREQ_STATUS</description></field>
+        <field name="subject" type="short-varchar"/>
+        <field name="content" type="description"/>
+        <field name="requestData" type="very-long"><description>JSON: type-specific request parameters</description></field>
+        <field name="requestedByPartyId" type="id"/>
+        <field name="assignedToPartyId" type="id"/>
+        <field name="requestedDate" type="date-time"/>
+        <field name="completedDate" type="date-time"/>
+        <field name="staffNotes" type="comment"/>
+        <prim-key field="serviceRequestId"/>
+        <relation type="one" fk-name="EFSVCREQ_MBR" rel-entity-name="Party">
+            <key-map field-name="memberPartyId" rel-field-name="partyId"/>
+        </relation>
+        <relation type="one-nofk" rel-entity-name="EfApplicationDraft">
+            <key-map field-name="draftId"/>
+        </relation>
+        <index name="EFSVCREQ_MBR_IDX"><index-field name="memberPartyId"/></index>
+        <index name="EFSVCREQ_DRF_IDX"><index-field name="draftId"/></index>
+        <index name="EFSVCREQ_STS_IDX"><index-field name="statusId"/></index>
+    </entity>
+
+    <!-- W6 Notification settings -->
+    <entity entity-name="EfNotificationSetting" package-name="org.apache.ofbiz.efinance.mypage"
+            title="eFinance member notification settings">
+        <field name="memberPartyId" type="id"/>
+        <field name="notificationTypeEnumId" type="id"/>
+        <field name="emailEnabled" type="indicator"/>
+        <field name="smsEnabled" type="indicator"/>
+        <field name="pushEnabled" type="indicator"/>
+        <field name="lastModifiedDate" type="date-time"/>
+        <prim-key field="memberPartyId"/>
+        <prim-key field="notificationTypeEnumId"/>
+        <relation type="one" fk-name="EFNOTSET_MBR" rel-entity-name="Party">
+            <key-map field-name="memberPartyId" rel-field-name="partyId"/>
+        </relation>
+        <index name="EFNOTSET_MBR_IDX"><index-field name="memberPartyId"/></index>
+    </entity>
+
+    <!-- ========================================================= -->
     <!-- Audit log                                                 -->
     <!-- ========================================================= -->
     <entity entity-name="EfAuditLog" package-name="org.apache.ofbiz.efinance.audit"

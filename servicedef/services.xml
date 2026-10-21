@@ -436,4 +436,115 @@ under the License.
         <attribute name="textData" type="String" mode="OUT" optional="true"/>
     </service>
 
+    <!-- ========================================================= -->
+    <!-- W6: MyPage                                               -->
+    <!-- ========================================================= -->
+    <service name="efListApplications" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.mypage.EfMyPageServices" invoke="efListApplications">
+        <description>List the member's submitted applications.</description>
+        <attribute name="applications" type="List" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efListContracts" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.mypage.EfMyPageServices" invoke="efListContracts">
+        <description>List the member's loan and lease contracts.</description>
+        <attribute name="contracts" type="List" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efGetContract" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.mypage.EfMyPageServices" invoke="efGetContract">
+        <description>Get contract details, repayment schedule, and balance.</description>
+        <attribute name="agreementId" type="String" mode="IN" optional="false"/>
+        <attribute name="agreementTypeId" type="String" mode="IN" optional="false"/>
+        <attribute name="contract" type="Map" mode="OUT" optional="true"/>
+        <attribute name="schedule" type="List" mode="OUT" optional="true"/>
+        <attribute name="balance" type="Map" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efSimulatePrepayment" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.mypage.EfMyPageServices" invoke="efSimulatePrepayment">
+        <description>Simulate prepayment (loan only). Returns estimated fees and remaining schedule.</description>
+        <attribute name="agreementId" type="String" mode="IN" optional="false"/>
+        <attribute name="prepaymentAmount" type="BigDecimal" mode="IN" optional="true"/>
+        <attribute name="prepaymentTypeEnumId" type="String" mode="IN" optional="true"/>
+        <attribute name="penaltyRate" type="BigDecimal" mode="OUT" optional="true"/>
+        <attribute name="penaltyAmount" type="BigDecimal" mode="OUT" optional="true"/>
+        <attribute name="totalSettlementAmount" type="BigDecimal" mode="OUT" optional="true"/>
+        <attribute name="outstandingPrincipal" type="BigDecimal" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efRequestPrepayment" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.mypage.EfMyPageServices" invoke="efRequestPrepayment">
+        <description>Submit a prepayment request (creates EfServiceRequest, staff executes).</description>
+        <attribute name="agreementId" type="String" mode="IN" optional="false"/>
+        <attribute name="prepaymentAmount" type="BigDecimal" mode="IN" optional="true"/>
+        <attribute name="prepaymentTypeEnumId" type="String" mode="IN" optional="true"/>
+        <attribute name="serviceRequestId" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efRequestModification" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.mypage.EfMyPageServices" invoke="efRequestModification">
+        <description>Request loan condition modification (rate/term change consultation).</description>
+        <attribute name="agreementId" type="String" mode="IN" optional="false"/>
+        <attribute name="agreementTypeId" type="String" mode="IN" optional="false"/>
+        <attribute name="requestContent" type="String" mode="IN" optional="false"/>
+        <attribute name="serviceRequestId" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efRequestExpiryOption" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.mypage.EfMyPageServices" invoke="efRequestExpiryOption">
+        <description>Request lease expiry option (return/re-lease/purchase).</description>
+        <attribute name="agreementId" type="String" mode="IN" optional="false"/>
+        <attribute name="expiryOptionEnumId" type="String" mode="IN" optional="false"/>
+        <attribute name="serviceRequestId" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efRequestProfileChange" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.mypage.EfMyPageServices" invoke="efRequestProfileChange">
+        <description>Request address/contact/employer change. Creates EfServiceRequest.</description>
+        <attribute name="changeType" type="String" mode="IN" optional="false"/>
+        <attribute name="changeData" type="Map" mode="IN" optional="false"/>
+        <attribute name="serviceRequestId" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efRequestCertificate" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.mypage.EfMyPageServices" invoke="efRequestCertificate">
+        <description>Request a balance/payment certificate for a contract.</description>
+        <attribute name="agreementId" type="String" mode="IN" optional="false"/>
+        <attribute name="agreementTypeId" type="String" mode="IN" optional="false"/>
+        <attribute name="certificateTypeEnumId" type="String" mode="IN" optional="true"/>
+        <attribute name="serviceRequestId" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efListMessages" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.mypage.EfMyPageServices" invoke="efListMessages">
+        <description>List messages (CommunicationEvents) for the member.</description>
+        <attribute name="draftId" type="String" mode="IN" optional="true"/>
+        <attribute name="messages" type="List" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efSendMessage" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.mypage.EfMyPageServices" invoke="efSendMessage">
+        <description>Send a message (creates a CommunicationEvent linked to an application/contract).</description>
+        <attribute name="draftId" type="String" mode="IN" optional="true"/>
+        <attribute name="subject" type="String" mode="IN" optional="true"/>
+        <attribute name="content" type="String" mode="IN" optional="false"/>
+        <attribute name="communicationEventId" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efGetNotificationSettings" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.mypage.EfMyPageServices" invoke="efGetNotificationSettings">
+        <description>Get notification settings for the member.</description>
+        <attribute name="settings" type="List" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efUpdateNotificationSettings" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.mypage.EfMyPageServices" invoke="efUpdateNotificationSettings">
+        <description>Update notification settings for the member.</description>
+        <attribute name="notificationTypeEnumId" type="String" mode="IN" optional="false"/>
+        <attribute name="emailEnabled" type="Boolean" mode="IN" optional="true"/>
+        <attribute name="smsEnabled" type="Boolean" mode="IN" optional="true"/>
+        <attribute name="pushEnabled" type="Boolean" mode="IN" optional="true"/>
+    </service>
+
 </services>
