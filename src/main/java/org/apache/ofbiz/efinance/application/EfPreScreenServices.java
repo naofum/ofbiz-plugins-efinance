@@ -41,6 +41,9 @@ import org.apache.ofbiz.entity.GenericValue;
 import org.apache.ofbiz.entity.condition.EntityCondition;
 import org.apache.ofbiz.entity.condition.EntityOperator;
 import org.apache.ofbiz.entity.util.EntityQuery;
+import org.apache.ofbiz.efinance.notification.NotificationAdapter;
+import org.apache.ofbiz.efinance.notification.NotificationAdapterFactory;
+import org.apache.ofbiz.efinance.security.EfAccessGuard;
 import org.apache.ofbiz.service.DispatchContext;
 import org.apache.ofbiz.service.LocalDispatcher;
 import org.apache.ofbiz.service.ServiceUtil;
@@ -278,9 +281,12 @@ public final class EfPreScreenServices {
             String financeApplicationId = draft.getString("submittedApplicationId");
             String financeApplicationTypeId = draft.getString("submittedApplicationTypeId");
 
+            String memberPartyId = draft.getString("memberPartyId");
+
             // If not yet submitted, still in RECEIVED stage
             if (UtilValidate.isEmpty(financeApplicationId)) {
-                return buildStageResult(delegator, locale, STAGE_RECEIVED, null, null, null, null);
+                return buildStageResult(delegator, locale, draftId, memberPartyId, STAGE_RECEIVED,
+                        null, null, null, null);
             }
 
             // Check for any pending document requests
@@ -291,7 +297,7 @@ public final class EfPreScreenServices {
                             EntityCondition.makeCondition("statusId", "EFDOCREQ_PENDING")))
                     .queryCount();
             if (pendingDocCount > 0) {
-                return buildStageResult(delegator, locale, STAGE_DOC_REQUEST,
+                return buildStageResult(delegator, locale, draftId, memberPartyId, STAGE_DOC_REQUEST,
                         financeApplicationId, financeApplicationTypeId, null, null);
             }
 
@@ -352,7 +358,7 @@ public final class EfPreScreenServices {
                         loanAgreement, loanQuote);
             }
 
-            return buildStageResult(delegator, locale, stageEnumId,
+            return buildStageResult(delegator, locale, draftId, memberPartyId, stageEnumId,
                     financeApplicationId, financeApplicationTypeId,
                     financeStatusId, underwritingStatusId);
 
@@ -411,7 +417,8 @@ public final class EfPreScreenServices {
     }
 
     private static Map<String, Object> buildStageResult(Delegator delegator, Locale locale,
-            String stageEnumId, String financeApplicationId, String financeApplicationTypeId,
+            String draftId, String memberPartyId, String stageEnumId,
+            String financeApplicationId, String financeApplicationTypeId,
             String financeStatusId, String underwritingStatusId) throws GenericEntityException {
 
         // Look up the stage description from Enumeration
@@ -421,6 +428,8 @@ public final class EfPreScreenServices {
         if (stageEnum != null && UtilValidate.isNotEmpty(stageEnum.getString("description"))) {
             stageDescription = stageEnum.getString("description");
         }
+
+        recordStageEvent(delegator, draftId, memberPartyId, stageEnumId, stageDescription, locale);
 
         // Build nextAction message
         String nextAction = buildNextAction(locale, stageEnumId);
@@ -440,6 +449,85 @@ public final class EfPreScreenServices {
         result.put("nextAction", nextAction);
         result.put("applicationStatus", applicationStatus);
         return result;
+    }
+
+    public static Map<String, Object> efListStageEvents(DispatchContext dctx, Map<String, Object> context) {
+        Delegator delegator = dctx.getDelegator();
+        Locale locale = (Locale) context.get("locale");
+        String partyId = getPartyIdFromContext(context);
+        String draftId = (String) context.get("draftId");
+        try {
+            GenericValue draft = EntityQuery.use(delegator).from("EfApplicationDraft")
+                    .where("draftId", draftId).queryOne();
+            if (draft == null) {
+                return ServiceUtil.returnError(UtilProperties.getMessage(RESOURCE, "EfinanceDraftNotFound", locale));
+            }
+            if (!ownsDraft(draft, partyId)) {
+                return ServiceUtil.returnError(UtilProperties.getMessage(RESOURCE, "EfinanceDraftNotOwned", locale));
+            }
+            List<GenericValue> events = EntityQuery.use(delegator).from("EfStageEvent")
+                    .where("draftId", draftId)
+                    .orderBy("-eventDate")
+                    .queryList();
+            List<Map<String, Object>> rows = new ArrayList<>();
+            for (GenericValue event : events) {
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("stageEventId", event.getString("stageEventId"));
+                row.put("fromStageEnumId", event.getString("fromStageEnumId"));
+                row.put("toStageEnumId", event.getString("toStageEnumId"));
+                row.put("eventDate", event.getTimestamp("eventDate"));
+                row.put("notified", event.getString("notified"));
+                rows.add(row);
+            }
+            Map<String, Object> result = ServiceUtil.returnSuccess();
+            result.put("stageEvents", rows);
+            return result;
+        } catch (GenericEntityException e) {
+            Debug.logError(e, MODULE);
+            return ServiceUtil.returnError(e.getMessage());
+        }
+    }
+
+    private static void recordStageEvent(Delegator delegator, String draftId, String memberPartyId,
+            String stageEnumId, String stageDescription, Locale locale) throws GenericEntityException {
+        if (UtilValidate.isEmpty(draftId) || UtilValidate.isEmpty(memberPartyId)
+                || UtilValidate.isEmpty(stageEnumId)) {
+            return;
+        }
+        GenericValue latest = EntityQuery.use(delegator).from("EfStageEvent")
+                .where("draftId", draftId)
+                .orderBy("-eventDate")
+                .queryFirst();
+        if (latest != null && stageEnumId.equals(latest.getString("toStageEnumId"))) {
+            if (!"Y".equals(latest.getString("notified"))) {
+                notifyStageEvent(delegator, latest, memberPartyId, draftId, stageEnumId, stageDescription, locale);
+            }
+            return;
+        }
+
+        GenericValue event = delegator.makeValue("EfStageEvent");
+        event.set("stageEventId", delegator.getNextSeqId("EfStageEvent"));
+        event.set("draftId", draftId);
+        event.set("memberPartyId", memberPartyId);
+        event.set("fromStageEnumId", latest == null ? null : latest.getString("toStageEnumId"));
+        event.set("toStageEnumId", stageEnumId);
+        event.set("eventDate", UtilDateTime.nowTimestamp());
+        event.set("notified", "N");
+        delegator.create(event);
+        notifyStageEvent(delegator, event, memberPartyId, draftId, stageEnumId, stageDescription, locale);
+    }
+
+    private static void notifyStageEvent(Delegator delegator, GenericValue event, String memberPartyId,
+            String draftId, String stageEnumId, String stageDescription, Locale locale) {
+        try {
+            NotificationAdapter adapter = NotificationAdapterFactory.getAdapter();
+            if (adapter.sendStageChange(delegator, memberPartyId, draftId, stageEnumId, stageDescription, locale)) {
+                event.set("notified", "Y");
+                delegator.store(event);
+            }
+        } catch (Exception e) {
+            Debug.logError(e, "Unable to notify stage change for draft " + draftId, MODULE);
+        }
     }
 
     private static String buildNextAction(Locale locale, String stageEnumId) {
@@ -657,7 +745,12 @@ public final class EfPreScreenServices {
 
     private static boolean ownsDraft(GenericValue draft, String partyId) {
         if (partyId == null) return false;
-        return partyId.equals(draft.getString("memberPartyId"));
+        try {
+            return EfAccessGuard.isDraftAccessible(draft.getDelegator(), draft, partyId, "roleApply");
+        } catch (GenericEntityException e) {
+            Debug.logError(e, "Unable to check draft ownership", MODULE);
+            return false;
+        }
     }
 
     private static BigDecimal getBigDecimal(Map<String, Object> data, String key) {

@@ -171,6 +171,79 @@ under the License.
     </service>
 
     <!-- ========================================================= -->
+    <!-- W0: Corporate account management                          -->
+    <!-- ========================================================= -->
+    <service name="efCreateCorporateAccount" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.account.EfCorporateServices" invoke="efCreateCorporateAccount">
+        <description>Create or update a corporate account and its administrator role.</description>
+        <permission-service service-name="efinanceAdminPermission"/>
+        <attribute name="corporatePartyId" type="String" mode="IN" optional="false"/>
+        <attribute name="adminMemberPartyId" type="String" mode="IN" optional="false"/>
+        <attribute name="companyName" type="String" mode="IN" optional="true"/>
+    </service>
+
+    <service name="efAddCorporateUser" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.account.EfCorporateServices" invoke="efAddCorporateUser">
+        <description>Add or update a corporate member role.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
+        <attribute name="corporatePartyId" type="String" mode="IN" optional="false"/>
+        <attribute name="memberPartyId" type="String" mode="IN" optional="false"/>
+        <attribute name="roleApply" type="String" mode="IN" optional="true"/>
+        <attribute name="roleView" type="String" mode="IN" optional="true"/>
+        <attribute name="rolePayment" type="String" mode="IN" optional="true"/>
+        <attribute name="roleAdmin" type="String" mode="IN" optional="true"/>
+        <attribute name="thruDate" type="Timestamp" mode="IN" optional="true"/>
+    </service>
+
+    <service name="efUpdateCorporateUser" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.account.EfCorporateServices" invoke="efUpdateCorporateUser">
+        <description>Update a corporate member role.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
+        <attribute name="corporatePartyId" type="String" mode="IN" optional="false"/>
+        <attribute name="memberPartyId" type="String" mode="IN" optional="false"/>
+        <attribute name="roleApply" type="String" mode="IN" optional="true"/>
+        <attribute name="roleView" type="String" mode="IN" optional="true"/>
+        <attribute name="rolePayment" type="String" mode="IN" optional="true"/>
+        <attribute name="roleAdmin" type="String" mode="IN" optional="true"/>
+        <attribute name="thruDate" type="Timestamp" mode="IN" optional="true"/>
+    </service>
+
+    <service name="efListCorporateUsers" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.account.EfCorporateServices" invoke="efListCorporateUsers">
+        <description>List the members and roles of a corporate account.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
+        <attribute name="corporatePartyId" type="String" mode="IN" optional="false"/>
+        <attribute name="corporateUsers" type="java.util.List" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efListCorporateAccounts" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.account.EfCorporateServices" invoke="efListCorporateAccounts">
+        <description>List the corporate accounts of the authenticated member.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
+        <attribute name="corporateAccounts" type="java.util.List" mode="OUT" optional="true"/>
+    </service>
+
+    <!-- ========================================================= -->
+    <!-- W6: Staff administration                                  -->
+    <!-- ========================================================= -->
+    <service name="efUpdateServiceRequestStatus" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.admin.EfAdminServices" invoke="efUpdateServiceRequestStatus">
+        <description>Staff updates a service request status, assignee, or notes.</description>
+        <permission-service service-name="efinanceAdminPermission"/>
+        <attribute name="serviceRequestId" type="String" mode="IN" optional="false"/>
+        <attribute name="statusId" type="String" mode="IN" optional="true"/>
+        <attribute name="assignedToPartyId" type="String" mode="IN" optional="true"/>
+        <attribute name="staffNotes" type="String" mode="IN" optional="true"/>
+    </service>
+
+    <service name="efUnlockMember" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.admin.EfAdminServices" invoke="efUnlockMember">
+        <description>Staff unlocks a locked member account.</description>
+        <permission-service service-name="efinanceAdminPermission"/>
+        <attribute name="partyId" type="String" mode="IN" optional="false"/>
+    </service>
+
+    <!-- ========================================================= -->
     <!-- W1: Product catalog (no auth)                            -->
     <!-- ========================================================= -->
     <service name="efListProducts" engine="java" auth="false" export="true"
@@ -385,6 +458,14 @@ under the License.
         <attribute name="stageDescription" type="String" mode="OUT" optional="true"/>
         <attribute name="nextAction" type="String" mode="OUT" optional="true"/>
         <attribute name="applicationStatus" type="Map" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efListStageEvents" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.application.EfPreScreenServices" invoke="efListStageEvents">
+        <description>List the stage-change timeline of an application draft.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
+        <attribute name="draftId" type="String" mode="IN" optional="false"/>
+        <attribute name="stageEvents" type="java.util.List" mode="OUT" optional="true"/>
     </service>
 
     <service name="efCreateDocumentRequest" engine="java" auth="true"

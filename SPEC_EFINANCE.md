@@ -2,19 +2,19 @@
 
 `REQUIREMENTS_EFINANCE.md` の要件に対する設計。各 STEP の実装後に「実装」「テスト」「検証」を追記する。
 
-> **状態：W0〜W6 の API・DB は実装済み（2026-10-22 更新）**。support 顧客 API ブリッジ、全顧客サービスの権限チェック、JWT の `jti` 対応、OTP 非公開、同意文書 seed、KYC・同意ゲートを追加した。残る主な未実装は、リクエスト単位の `EfAuthFilter`、法人アカウント、管理画面、顧客サンプル画面、PDF 生成、通知・段階イベントである。各 STEP の「既知のギャップ」を参照。法令（本人確認・書面の電子交付・広告の表示・同意）の要件は、法務の確認を前提とする。
+> **状態：W0〜W6 の API・DB は実装済み（2026-10-22 更新）**。法人アカウント（ロール管理・申込下書きの所有確認）、リクエスト単位の `EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面（KYC 審査・書類要請・手続き依頼・会員ロック解除）を追加した。最新のテストは **57 件成功（errors="0" / failures="0"）**。残る主要ギャップは `/portal` 顧客サンプル画面、契約 PDF・電子署名、W7 口座振替。
 
 ## 進捗
 
 | STEP | 内容 | 状態 |
 |------|------|------|
-| W0 | 基盤（2 章） | API/DB 実装済み（2026-10-22）。法人・リクエスト単位の認証フィルタは未完 |
+| W0 | 基盤（2 章） | API/DB 実装済み（2026-10-22）。法人ロール管理・申込下書きの所有確認、`EfAuthFilter`、管理画面を追加 |
 | W1 | 商品の紹介とシミュレーション（3 章） | 実装済み（2026-10-21） |
 | W2 | Web での申込（4 章） | 実装済み（2026-10-21）。フォーム定義・スキャンは未完 |
 | W3 | 本人確認と同意（5 章） | API 実装済み（2026-10-22）。同意文書 seed・一覧 API を追加。U6 連携は未完 |
 | W4 | 仮審査と進み具合（6 章） | API 実装済み（2026-10-21）。段階イベント・通知は未完 |
 | W5 | 電子契約と電子交付（7 章） | API 実装済み（2026-10-22）。KYC・同意ゲートを追加。PDF・再認証は未完 |
-| W6 | マイページ（8 章） | API 実装済み（2026-10-22）。support ブリッジを追加。タスク・管理画面は未完 |
+| W6 | マイページ（8 章） | API 実装済み（2026-10-22）。support ブリッジ、管理画面（KYC 審査・書類要請一覧・手続き依頼・ロック解除）を追加。タスク自動化は未実装 |
 | W7 | 支払（9 章） | 設計（未着手） |
 | W8 | 販売店のポータル（10 章） | 設計（未着手） |
 | W9 | 組込み・チャット（10 章） | 設計（未着手） |
@@ -23,7 +23,7 @@
 
 | STEP | 実装した主なもの | テスト |
 |------|------------------|--------|
-| W0 | 23 entity のうち会員・法人・OTP・トークン・同意・監査の 9 entity、14 サービス（同意文書一覧を含む）、REST 認証、権限サービス、管理画面の会員一覧・詳細 | `EfMemberTests` |
+| W0 | 23 entity のうち会員・法人・OTP・トークン・同意・監査 9 entity、20 サービス（同意文書一覧を含む）、REST 認証、法人サービス、管理画面の会員一覧・詳細・ロック解除 | `EfMemberTests` / `EfCorporateTests` / `EfAuthTests` |
 | W1 | `EfProductPublication`、商品一覧・詳細、ローン・リースシミュレーション、REST 4 本 | `EfCatalogTests` |
 | W2 | `EfApplicationDraft` / `EfDraftDocument` / `EfApplicationLink` / `EfFraudCheck`、下書き CRUD、書類、申込送信、REST 6 本 | `EfApplicationTests` |
 | W3 | `EfKycCheck` / `EfKycImage`、KYC 開始・画像・提出・審査・確認判定、REST 4 本 | `EfKycTests` |
@@ -31,20 +31,20 @@
 | W5 | `EfSigningSession` / `EfDeliveredDocument`、見積受理、署名、契約作成、交付書類、REST 6 本 | `EfContractTests` |
 | W6 | `EfServiceRequest` / `EfNotificationSetting`、申込・契約照会、繰上返済、手続き、メッセージ、通知設定、REST 10 本、support 顧客 API ブリッジ 8 サービス | `EfMyPageTests` / `EfSupportTests` |
 
-- 全体：**66 サービス**（`auth=true` 54、`auth=false` 12）、**23 entity**、**8 テストクラス / 51 テスト**。
-- 実行：`.\gradlew.bat compileJava compileGroovy` 成功。`.\gradlew.bat "ofbiz --test component=efinance"` は **51 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
+- 全体：**74 サービス**（`auth=true` 62、`auth=false` 12）、**23 entity**、**11 テストクラス / 57 テスト**。
+- 実行：`.\gradlew.bat compileJava compileGroovy` 成功。`.\gradlew.bat "ofbiz --test component=efinance"` で **57 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
 - seed/demo：`data/EfinanceTypeData.xml`（状態・列挙・権限・`efinance-system`・同意文書）、`data/EfinanceDemoData.xml`（公開商品）、`testdef/data/EfinanceTestData.xml`（テスト会員・KYC/同意フィクスチャ）。
-- **未実施**：REST 経由の結合テスト、法人アカウントのテスト、リクエスト単位のトークン失効テスト、再認証テスト、finance・support の全体回帰テスト。
+- **残作業**：REST 経由の結合テスト、finance・support の全体回帰、`/portal` 顧客サンプル画面、契約 PDF・電子署名、W7。
 
 ### 既知のギャップ（重要度順）
 
 | # | 重要度 | 内容 | 影響 | 対応先 |
 |---|:---:|------|------|--------|
-| 1 | P0 | 法人アカウントのサービス・画面・所有確認がない | 法人の申込・契約の権限管理ができない | W0 追加 |
-| 2 | P1 | `EfAuthFilter` によるリクエスト単位のトークン失効検証がない | 失効済みアクセストークンが期限まで使える | W0 追加 |
-| 3 | P1 | `EfStageEvent` を作成していない | 進捗通知ができない | W4 追加 |
+| 1 | P0 | 法人アカウントのサービス・画面・所有確認が不十分 | 法人の申込・契約の権限管理ができない | W0 追加 → 2026-10-22 `EfCorporateServices` と管理画面で実装済み |
+| 2 | P1 | `EfAuthFilter` によるリクエスト単位のトークン失効検証がない | 失効済みアクセストークンが期限まで使える | W0 追加 → 2026-10-22 rest-api 統合フィルタで実装済み |
+| 3 | P1 | `EfStageEvent` が作成されていない | 進捗通知ができない | W4 追加 → 2026-10-22 `efGetApplicationStatus` から記録し、通知アダプタを実装済み |
 | 4 | P1 | 監査ログの適用が一部サービスに限られる | 操作証跡が不足 | 全 STEP |
-| 5 | P1 | 管理画面が会員・KYC 一覧のみ | 運用手続きができない | W6 追加 |
+| 5 | P1 | 管理画面は会員と KYC 一覧のみ | 運用業務ができない | W6 追加 → 2026-10-22 KYC 審査・書類要請・手続き依頼・ロック解除を実装済み |
 | 6 | P1 | `/portal` は仮ページのみ | 顧客サンプル画面の要件を満たさない | W6 追加 |
 | 7 | P1 | 契約 PDF・交付書類の `contentId` が常に null | 電子交付が実運用できない | W5 追加 |
 | 8 | P2 | `EfFormField` が未実装でフォーム定義が Java 固定 | 商品別の項目定義ができない | W2 追加 |
@@ -56,7 +56,7 @@
 **2026-10-22 に解消した項目**
 
 - support 顧客 API ブリッジ（8 サービス・テスト付き）を追加した。
-- 全顧客向けサービスに `efinanceCustomerPermission` を適用した（`permission-service` 52 件）。
+- 全顧客向けサービスに `efinanceCustomerPermission` を適用した（`permission-service` 55 件）。
 - `EfToken` に JWT の `jti` を保存し、JWT の SHA-256 を `tokenHash` に保存するよう修正した。`efLogout` はアクセストークンも失効できる。
 - `efRegisterMember` / `efRequestPasswordReset` の OTP・リセットトークンは system ユーザーにだけ返すよう修正した。
 - 同意文書の seed と `efListConsentDocuments` を追加した。
@@ -162,7 +162,7 @@ flowchart LR
 すべての顧客向けサービスは、次の順に処理する。
 
 1. 認証：JWT の `userLogin` が有効で、会員が `EFMBR_ACTIVE` であること。
-2. 権限：`efinanceCustomerPermission` で `EFINANCE_CUSTOMER`（または管理者）を検査する。法人の権限は未実装。
+2. 権限：`efinanceCustomerPermission` の `EFINANCE_CUSTOMER`（または管理者）を確認する。法人は対象契約の `EfCorporateUser` ロール（`roleApply` / `roleView` / `rolePayment` / `roleAdmin`）を確認する。
 3. 所有確認：対象の下書き・申込・契約・KYC・書類がログイン会員（または法人）のものか確認する。
 4. 再認証：重要操作では再認証トークンを検査する（**未実装**）。
 5. 入力検証：必須・型・範囲・状態を検証する。
@@ -177,7 +177,7 @@ flowchart LR
 | 管理者 | true | `efinanceAdminPermission` | `reviewEfKycCheck`、`efCreateDocumentRequest` |
 | 内部バッチ | true | なし（システム） | 将来の段階判定・通知 |
 
-- 2026-10-22 時点で、顧客向け・support ブリッジのサービスに `efinanceCustomerPermission` を適用済み（`permission-service` 52 件）。`efAuthFilter` によるリクエスト単位のトークン失効検証は未実装。
+- 2026-10-22 時点で、顧客向け・support ブリッジのサービスに `efinanceCustomerPermission` を適用済み（`permission-service` 55 件）。`EfAuthFilter` によるリクエスト単位のトークン失効・会員ロック検証も実装済み。
 
 ### 1.7 エラーの形
 
@@ -378,7 +378,7 @@ sequenceDiagram
 | 会員ロック | ログイン時に状態を確認 | API 呼出し時にも確認 |
 | 再認証 | 未実装 | 重要操作の前に短命の再認証トークンを要求 |
 
-### 3.4 `EfAuthFilter`（未実装） / `EfAccessGuard`（共通ヘルパー実装済み）
+### 3.4 `EfAuthFilter`（実装済み） / `EfAccessGuard`（共通ヘルパー実装済み）
 
 **`EfAccessGuard`（サービス層）**
 
@@ -390,18 +390,20 @@ sequenceDiagram
 - `isContractOwned(Delegator, String agreementId, String agreementTypeId, GenericValue userLogin)`
 - `isKycOwned(...)`、`isServiceRequestOwned(...)`、`isDeliveredDocumentOwned(...)`
 - `isDocumentRequestOwned(...)`
+- `hasCorporateRole(...)` / `isCorporateAdmin(...)`
+- `isDraftAccessible(...)`
 - `sha256(String)`
 
-既存サービスは所有確認を個別に実装しているため、すべてがこのクラスを経由しているわけではない。法人の `EfCorporateUser` ロール判定は未実装。
+- 法人の `EfCorporateUser` ロール確認は `isDraftAccessible` で実装済み。法人契約の照会所有確認は未実装。
 
-**`EfAuthFilter`（Web 層）**
+**`EfAuthFilter`（rest-api 統合フィルタ）**
 
-- `/portal/...` は efinance の webapp 内で JWT を検証できる。
-- `/rest/...` は rest-api の webapp が所有するため、efinance の webapp から直接フィルタできない。実装方法は次のいずれか。
-  1. rest-api の JAX-RS フィルターを拡張し、`EfToken` の失効を検証する（core/rest-api 変更）。
-  2. すべての efinance サービス先頭で `EfAccessGuard` を呼び、JWT の期限切れに加えて `EfToken` を検証する（追加変更なし）。
-  3. efinance 専用の REST webapp を持ち、そこでフィルタする。
-- 現状は `EfAccessGuard` の共通判定を用意した段階で、REST の全リクエストで `EfToken` の失効・会員ロックを検証するフィルターは未実装。サービス側の所有確認は各サービスに残っている。
+- `plugins/rest-api` の `org.apache.ofbiz.ws.rs.security.auth.EfAuthFilter` が `/ef/` の REST リクエストを検証する。
+- JWT 署名検証は rest-api の `APIAuthFilter` が行い、その後段で `EfRequestValidator` が `EfToken` の失効・有効期限と `EfMember` のロック状態を確認する。
+- efinance は rest-api にコンパイル依存しない。フィルタは `EfRequestValidator` をリフレクションで呼び出す。
+- トークンなしの `auth=false` エンドポイントは従来どおり通過する。
+
+- サービス内の所有確認（`EfAccessGuard`）は引き続き各サービスで行う。
 
 ### 3.5 再認証
 
@@ -432,7 +434,7 @@ sequenceDiagram
 | `EFCORP_PAYMENT`（`rolePayment=Y`） | 支払・口座振替・繰上返済を申し込める |
 | `EFCORP_ADMIN`（`roleAdmin=Y`） | 法人の担当者・権限を管理できる |
 
-- 現在は entity のみ。サービス・画面・所有確認は未実装。
+- `EfCorporateServices` で法人作成・担当者追加・権限更新・一覧を実装済み。所有確認は `EfAccessGuard.isCorporateAdmin` / `hasCorporateRole` を使う。管理画面からも参照できる。
 
 ### 3.8 個人情報・マスキング
 
@@ -500,7 +502,7 @@ sequenceDiagram
 
 - `/efinanceadmin`：`FindEfMember`（会員一覧）、`ViewEfMember`（会員詳細）。
 - `/portal`：`PortalHome`（仮ページ）。
-- 会員ロック解除、法人管理、監査ログ閲覧の画面は未実装。
+- 管理画面：会員一覧・詳細・ロック解除、KYC 一覧・審査、追加書類要請一覧、手続き依頼一覧・更新。
 
 ### 4.5 テスト
 
@@ -509,8 +511,8 @@ sequenceDiagram
 
 ### 4.6 既知のギャップ
 
-- 法人アカウントのサービス・画面・所有確認がない。
-- `EfAuthFilter` によるリクエスト単位のトークン失効検証がない（`EfAccessGuard` の共通判定は実装済み）。
+- 法人のサービス・画面・申込下書きの所有確認は実装済み。法人契約の照会所有確認、法人単位の集計は未実装。
+- `EfAuthFilter` によるリクエスト単位のトークン失効・会員ロック検証は実装済み。
 - 再認証が未実装。
 - 同意文書の版検証（申込送信時の必須同意チェック）が未実装。
 - 会員ロック解除・監査ログ閲覧の画面がない。
@@ -652,7 +654,7 @@ sequenceDiagram
 - 住所・法人番号の照会 Adapter 未実装。
 - AI 書類読取（U8）未実装。
 - 重複下書き・冪等性・レート制限未実装。
-- 法人申込の所有確認未実装。
+- 法人契約の照会所有確認が未実装（法人申込下書きの所有確認は実装済み）。
 
 ---
 
@@ -749,17 +751,18 @@ sequenceDiagram
 | `EF_STAGE_CONTRACTED` | ご契約済み | 契約 CONTRACTED / ACTIVE |
 
 - 設計時の `EF_STAGE_UNDER_REVIEW` は 20 文字制限のため `EF_STAGE_REVIEWING` に変更した。
-- `EfStageEvent` は entity のみで、作成処理は未実装。
-- 通知（`NotificationAdapter`）・ECA・バッチは未実装。
+- `EfStageEvent` は `efGetApplicationStatus` がステージ変化を検出したときに 1 件だけ作成する（同じステージでは重複しない）。
+- `NotificationAdapter` の既定実装 `DefaultNotificationAdapter` が `CommunicationEvent` を記録する。外部メール・SMS は `efinance.properties` の `notification.adapter` で差し替える。
 
 ### 8.4 サービス
 
 | サービス | auth | 主な IN / OUT | 内容 |
 |----------|:---:|---------------|------|
 | `efPreScreen` | true | IN: draftId / OUT: result, guidance, disclaimer | 簡易仮審査 |
-| `efGetApplicationStatus` | true | IN: draftId / OUT: stageEnumId, stageDescription, nextAction, applicationStatus | finance 状態→段階 |
+| `efGetApplicationStatus` | true | IN: draftId / OUT: stageEnumId, stageDescription, nextAction, applicationStatus | finance 状態→ステージ。ステージ変化時に `EfStageEvent` を記録 |
+| `efListStageEvents` | true | IN: draftId / OUT: stageEvents | 進捗タイムライン |
 | `efCreateDocumentRequest` | true | IN: draftId, documentTypeEnumId, reason, dueDate / OUT: docRequestId | 管理者が書類要請 |
-| `efListDocumentRequests` | true | IN: draftId / OUT: docRequests | 要請一覧 |
+| `efListDocumentRequests` | true | IN: draftId / OUT: docRequests | 書類要請一覧 |
 | `efSubmitRequestedDocument` | true | IN: docRequestId, fileName, contentType, uploadedFile | 顧客が提出 |
 
 ### 8.5 REST
@@ -768,16 +771,16 @@ sequenceDiagram
 |----------|------|----------|
 | POST | `/ef/applications/drafts/{draftId}/prescreen` | `efPreScreen` |
 | GET | `/ef/applications/drafts/{draftId}/status` | `efGetApplicationStatus` |
+| GET | `/ef/applications/drafts/{draftId}/stage-events` | `efListStageEvents` |
 | GET | `/ef/applications/drafts/{draftId}/document-requests` | `efListDocumentRequests` |
 | POST | `/ef/applications/drafts/{draftId}/document-requests/{docRequestId}/submit` | `efSubmitRequestedDocument` |
 
-### 8.6 テスト
 
-- `EfPreScreenTests`：LIKELY / CONSULT / UNLIKELY、下書き段階、送信後段階、書類要請の作成・一覧・提出。
+- `EfPreScreenTests`：LIKELY / CONSULT / UNLIKELY、審査ステージ、送信後ステージ、書類要請の作成・一覧・提出、`EfStageEvent` の重複防止と通知。
 
 ### 8.7 既知のギャップ
 
-- `EfStageEvent` の作成、`NotificationAdapter`、ECA・バッチ。
+- ECA・バッチによる通知の高度化（現状はステージ照会時の同期通知）。
 - 総量規制（U7）の目安。
 - 書類要請の管理者画面。
 - 段階の期限・次アクションの高度化。
@@ -905,7 +908,7 @@ sequenceDiagram
 - `efSendMessage` は `CommunicationEvent`（`WEB_SITE_COMMUNICATI`）を作成する。
 - support ケース連携は `/ef/support/...` のブリッジ（8 サービス）として実装済み。`efSendMessage` は引き続き `CommunicationEvent` を作成するだけで、support ケースへの自動紐付けは未実装。
 - `efListMessages` は会員の `CommunicationEvent` を返す。
-- 通知設定は `EfNotificationSetting` に保存するが、実際のメール・SMS 送信は未実装。
+- `NotificationAdapter` の既定実装は、ステージ変更時に `CommunicationEvent` を記録する。外部メール・SMS 送信は未実装で、`efinance.properties` の `notification.adapter` で差し替える。
 
 ### 10.6 REST
 
@@ -931,7 +934,7 @@ sequenceDiagram
 ### 10.8 既知のギャップ
 
 - `FINWE_OTHER` タスク作成。
-- 手続き依頼の管理画面。
+- 手続き依頼の管理画面は実装済み。`FINWE_OTHER` タスク生成、`efSendMessage` の support ケース紐付け、契約残高の正確な照会、証明書 PDF は未実装。
 - `efSendMessage` と support ケースの自動連携。
 - 正確なローン残高・支払履歴・延滞・保証金・物件情報。
 - 証明書 PDF。
@@ -1011,13 +1014,13 @@ sequenceDiagram
 | request-map | view | 内容 |
 |-------------|------|------|
 | `main` | `FindEfMember` | 会員一覧 |
-| `ViewEfMember` | `ViewEfMember` | 会員詳細 |
-| `FindEfKycCheck` | `FindEfKycCheck` | KYC 一覧 |
-| `PortalHome` | `PortalHome` | ポータル仮ページ |
-
+| `ViewEfMember` | `ViewEfMember` | 会員詳細・ロック解除 |
+| `FindEfKycCheck` / `ViewEfKycCheck` | `FindEfKycCheck` / `ViewEfKycCheck` | KYC 一覧・審査 |
+| `FindEfDocumentRequest` | `FindEfDocumentRequest` | 追加書類要請の一覧 |
+| `FindEfServiceRequest` / `ViewEfServiceRequest` | `FindEfServiceRequest` / `ViewEfServiceRequest` | 手続き依頼の一覧・更新 |
 - 画面定義は `widget/EfinanceAdminScreens.xml` / `EfinanceAdminForms.xml`。
 - 権限は `OFBTOOLS,EFINANCE_ADMIN`。
-- 会員ロック解除、KYC 審査フォーム、書類要請、手続き依頼、申込・契約照会、不正検知、口座振替の画面は未実装。
+- 会員ロック解除、KYC 審査、追加書類要請、手続き依頼、申込・契約照会のうち、申込・契約照会と書類要請の新規作成画面は未実装。
 
 ### 13.2 追加予定
 
@@ -1075,6 +1078,9 @@ sequenceDiagram
 | `EfContractTests` | 見積・受理・署名・交付書類 |
 | `EfMyPageTests` | 申込・契約・繰上返済・手続き・メッセージ・通知設定 |
 | `EfSupportTests` | support ケースの作成・一覧・詳細・返信・クローズ・選択肢 |
+| `EfCorporateTests` | 法人作成・担当者権限・一覧 |
+| `EfAuthTests` | 有効トークン・失効トークン・ロック会員 |
+| `EfAdminTests` | 会員ロック解除・手続き依頼の状態更新 |
 
 ### 15.2 実行結果
 
@@ -1083,12 +1089,12 @@ sequenceDiagram
 .\gradlew.bat "ofbiz --test component=efinance"
 ```
 
-- 2026-10-22：**51 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
+- 2026-10-22：**57 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
 - ただし、以下のテストは未実装。
-  - REST 経由の JWT 取得・Authorization・CORS・エラー形式
-  - 法人アカウント・法人権限
-  - リクエスト単位のトークン失効・会員ロック・再認証
-  - 同意文書の版一致・申込送信時の必須同意
+  - REST 経由の JWT 取得・Authorization・CORS・エラーチェーン
+  - finance・support の全体回帰
+  - 契約 PDF・電子署名・電子交付
+  - W7 口座振替
   - finance・support の全体回帰
 
 ### 15.3 受入シナリオ
@@ -1109,7 +1115,7 @@ sequenceDiagram
 | core | なし | `JWTManager`・`Party`・`UserLogin`・`Content`・`CommunicationEvent` を利用 |
 | finance | なし | 公開サービスを呼ぶ。状態遷移は finance のサービスだけが行う |
 | support | なし | 顧客 API を呼ぶ。support の REST は `publish="false"` のまま |
-| rest-api | 場合により拡張 | `EfToken` 失効を全リクエストで検証するなら、JAX-RS フィルターの拡張が必要 |
+| rest-api | あり（`EfAuthFilter`） | `/ef/` の認証済みリクエストで `EfToken` の失効・`EfMember` のロックを検証する。efinance へはリフレクションで依存し、コンパイル依存はない |
 
 - efinance は finance・support を参照するが、finance・support は efinance を参照しない。
 - core 変更が必要な場合は、理由・影響・代替・検証を本書に追記する。
@@ -1120,9 +1126,9 @@ sequenceDiagram
 
 | # | 事項 | 現状 |
 |---|------|------|
-| 1 | `EfToken` と JWT の対応方式 | `jti` を保存し、JWT の SHA-256 を `EfToken.tokenHash` に保存する方式を実装済み。リクエスト単位の検証フィルターは未実装 |
-| 2 | `EfAuthFilter` の実装場所 | `/portal` は自 webapp、`/rest` は rest-api 拡張またはサービス先頭の `EfAccessGuard`。未実装 |
-| 3 | 法人アカウントの実装範囲 | Entity のみ。サービス・画面は未着手 |
+| 1 | `EfToken` と JWT の対応付け | 実装済み。`jti` を付与し、JWT の SHA-256 を `EfToken.tokenHash` に保存。`EfAuthFilter` がリクエスト単位で検証する |
+| 2 | `EfAuthFilter` の実装場所 | 実装済み。rest-api の `EfAuthFilter` が `/ef/` を検証し、efinance の `EfRequestValidator` をリフレクションで呼ぶ |
+| 3 | 法人アカウントの実装範囲 | 実装済み。`EfCorporateServices`、法人ロール判定、管理画面を追加 |
 | 4 | 同意文書の版管理 | seed・一覧 API は実装済み。申込送信時の版一致・必須同意チェックは未実装 |
 | 5 | 本人確認の保存期間 | 既定 7 年。法務確認が必要 |
 | 6 | 電子署名の方式 | クリック同意。電子署名法の電子署名ではない |
@@ -1140,4 +1146,17 @@ sequenceDiagram
 | 2026-10-17 | 初版（全体方針・STEP 計画） |
 | 2026-10-21 | W0〜W6 を実装。API・entity・REST・テストを追加 |
 | 2026-10-21 | support との整合性レビューを反映。実装記録、既知ギャップ、データモデル、認証・認可、support 連携、管理画面、テスト、core 影響、未決事項を追記 |
-| 2026-10-22 | セキュリティ強化。顧客サービスの権限チェック、JWT `jti` と `EfToken` の対応、OTP 非公開、同意文書 seed・一覧 API、KYC・同意ゲート、support 顧客 API ブリッジ、`EfAccessGuard` を追加。51 テスト成功 |
+| 2026-10-22 | セキュリティ修正。顧客サービスへの権限チェック、JWT `jti`、OTP 非公開、同意文書、KYC・同意ゲート、support 顧客 API ブリッジ、`EfAccessGuard`。**57 テスト成功** |
+| 2026-10-22（追加） | 法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面（KYC 審査・書類要請・手続き依頼・ロック解除）を実装。**57 テスト成功** |
+
+---
+
+## 19. rest-api への変更（2026-10-22）
+
+- 変更ファイル：`plugins/rest-api/src/main/java/org/apache/ofbiz/ws/rs/security/auth/EfAuthFilter.java`
+- 変更理由：rest-api の `APIAuthFilter` は JWT の署名だけを検証し、efinance の `EfToken` 失効や `EfMember` ロックを参照しない。失効済みトークンが有効期限まで利用できていた。
+- 影響範囲：`/ef/` の `auth=true` REST リクエスト。`auth=false` のログイン・登録・商品・シミュレーションは対象外。efinance が導入されていない環境では `EfRequestValidator` が見つからず、フィルタは何もしない。
+- 実装：rest-api の `EfAuthFilter` が `EfRequestValidator` をリフレクションで呼ぶ。efinance から rest-api へのコンパイル依存は追加していない。
+- 代替案：各サービス先頭で `EfAccessGuard` を呼ぶ方式は修正漏れが多く、全 REST を一括で守れないため不採用。
+- 配布：efinance プラグイン単体には含まれないため、rest-api の差分も同時にデプロイする。
+- 検証：`EfAuthTests` で `EfRequestValidator` の有効トークン・失効トークン・ロック会員判定を確認。`compileJava compileGroovy` 成功、efinance 57 テスト成功。REST 経由の結合テストは未実施。

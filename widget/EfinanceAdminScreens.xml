@@ -60,6 +60,10 @@ under the License.
                             <include-form name="ViewEfMember"
                                           location="component://efinance/widget/EfinanceAdminForms.xml"/>
                         </screenlet>
+                        <screenlet title="Account Actions">
+                            <include-form name="UnlockEfMember"
+                                          location="component://efinance/widget/EfinanceAdminForms.xml"/>
+                        </screenlet>
                     </decorator-section>
                 </decorator-screen>
             </widgets>
@@ -93,6 +97,101 @@ under the License.
                     <decorator-section name="body">
                         <screenlet title="eFinance KYC Checks">
                             <include-form name="ListEfKycChecks"
+                                          location="component://efinance/widget/EfinanceAdminForms.xml"/>
+                        </screenlet>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <!-- ===== Admin: KYC check detail and review ===== -->
+    <screen name="ViewEfKycCheck">
+        <section>
+            <actions>
+                <set field="titleProperty" value="EfinanceViewKycCheck"/>
+                <entity-one entity-name="EfKycCheck" value-field="efKycCheck">
+                    <field-map field-name="kycCheckId" from-field="parameters.kycCheckId"/>
+                </entity-one>
+                <entity-condition entity-name="EfKycImage" list="efKycImages">
+                    <condition-expr field-name="kycCheckId" from-field="parameters.kycCheckId"/>
+                    <order-by field-name="uploadedDate"/>
+                </entity-condition>
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                        <screenlet title="eFinance KYC Check">
+                            <include-form name="ViewEfKycCheck"
+                                          location="component://efinance/widget/EfinanceAdminForms.xml"/>
+                        </screenlet>
+                        <screenlet title="Uploaded Images">
+                            <include-form name="ListEfKycImages"
+                                          location="component://efinance/widget/EfinanceAdminForms.xml"/>
+                        </screenlet>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <!-- ===== Admin: additional document requests ===== -->
+    <screen name="FindEfDocumentRequest">
+        <section>
+            <actions>
+                <set field="titleProperty" value="EfinanceFindDocumentRequest"/>
+                <entity-condition entity-name="EfDocumentRequest" list="efDocumentRequests">
+                    <order-by field-name="-requestedDate"/>
+                </entity-condition>
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                        <screenlet title="eFinance Document Requests">
+                            <include-form name="ListEfDocumentRequests"
+                                          location="component://efinance/widget/EfinanceAdminForms.xml"/>
+                        </screenlet>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <!-- ===== Admin: service requests ===== -->
+    <screen name="FindEfServiceRequest">
+        <section>
+            <actions>
+                <set field="titleProperty" value="EfinanceFindServiceRequest"/>
+                <entity-condition entity-name="EfServiceRequest" list="efServiceRequests">
+                    <order-by field-name="-requestedDate"/>
+                </entity-condition>
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                        <screenlet title="eFinance Service Requests">
+                            <include-form name="ListEfServiceRequests"
+                                          location="component://efinance/widget/EfinanceAdminForms.xml"/>
+                        </screenlet>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="ViewEfServiceRequest">
+        <section>
+            <actions>
+                <set field="titleProperty" value="EfinanceViewServiceRequest"/>
+                <entity-one entity-name="EfServiceRequest" value-field="efServiceRequest">
+                    <field-map field-name="serviceRequestId" from-field="parameters.serviceRequestId"/>
+                </entity-one>
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                        <screenlet title="eFinance Service Request">
+                            <include-form name="ViewEfServiceRequest"
                                           location="component://efinance/widget/EfinanceAdminForms.xml"/>
                         </screenlet>
                     </decorator-section>

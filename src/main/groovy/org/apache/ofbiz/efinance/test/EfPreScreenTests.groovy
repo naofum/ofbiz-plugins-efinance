@@ -120,6 +120,27 @@ class EfPreScreenTests extends OFBizTestCase {
         ]
     }
 
+    void testStageEventRecordedOnceAndNotified() {
+        String draftId = createLoanDraft()
+
+        Map first = dispatcher.runSync('efGetApplicationStatus', [userLogin: apiUser(), draftId: draftId])
+        ok(first)
+        Map second = dispatcher.runSync('efGetApplicationStatus', [userLogin: apiUser(), draftId: draftId])
+        ok(second)
+        assert first.stageEnumId == second.stageEnumId
+
+        List<GenericValue> events = from('EfStageEvent').where('draftId', draftId).queryList()
+        assert events.size() == 1
+        assert events[0].toStageEnumId == first.stageEnumId
+        assert events[0].fromStageEnumId == null
+        assert events[0].notified == 'Y'
+
+        Map timeline = dispatcher.runSync('efListStageEvents', [userLogin: apiUser(), draftId: draftId])
+        ok(timeline)
+        assert timeline.stageEvents.size() == 1
+        assert timeline.stageEvents[0].toStageEnumId == first.stageEnumId
+    }
+
     void testCreateAndListDocumentRequest() {
         String draftId = createLoanDraft()
 

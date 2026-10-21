@@ -40,7 +40,58 @@ under the License.
         <response name="success" type="view" value="ViewEfMember"/>
     </request-map>
 
+    <request-map uri="unlockEfMember">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="efUnlockMember"/>
+        <response name="success" type="view" value="ViewEfMember"/>
+        <response name="error" type="view" value="ViewEfMember"/>
+    </request-map>
+
+    <request-map uri="FindEfKycCheck">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="FindEfKycCheck"/>
+    </request-map>
+
+    <request-map uri="ViewEfKycCheck">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="ViewEfKycCheck"/>
+    </request-map>
+
+    <request-map uri="reviewEfKycCheck">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="reviewEfKycCheck"/>
+        <response name="success" type="view" value="ViewEfKycCheck"/>
+        <response name="error" type="view" value="ViewEfKycCheck"/>
+    </request-map>
+
+    <request-map uri="FindEfDocumentRequest">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="FindEfDocumentRequest"/>
+    </request-map>
+
+    <request-map uri="FindEfServiceRequest">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="FindEfServiceRequest"/>
+    </request-map>
+
+    <request-map uri="ViewEfServiceRequest">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="ViewEfServiceRequest"/>
+    </request-map>
+
+    <request-map uri="updateEfServiceRequest">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="efUpdateServiceRequestStatus"/>
+        <response name="success" type="view" value="ViewEfServiceRequest"/>
+        <response name="error" type="view" value="ViewEfServiceRequest"/>
+    </request-map>
+
     <view-map name="main" type="screen" page="component://efinance/widget/EfinanceAdminScreens.xml#FindEfMember"/>
     <view-map name="FindEfMember" type="screen" page="component://efinance/widget/EfinanceAdminScreens.xml#FindEfMember"/>
     <view-map name="ViewEfMember" type="screen" page="component://efinance/widget/EfinanceAdminScreens.xml#ViewEfMember"/>
+    <view-map name="FindEfKycCheck" type="screen" page="component://efinance/widget/EfinanceAdminScreens.xml#FindEfKycCheck"/>
+    <view-map name="ViewEfKycCheck" type="screen" page="component://efinance/widget/EfinanceAdminScreens.xml#ViewEfKycCheck"/>
+    <view-map name="FindEfDocumentRequest" type="screen" page="component://efinance/widget/EfinanceAdminScreens.xml#FindEfDocumentRequest"/>
+    <view-map name="FindEfServiceRequest" type="screen" page="component://efinance/widget/EfinanceAdminScreens.xml#FindEfServiceRequest"/>
+    <view-map name="ViewEfServiceRequest" type="screen" page="component://efinance/widget/EfinanceAdminScreens.xml#ViewEfServiceRequest"/>
 </site-conf>

@@ -197,6 +197,11 @@ under the License.
             <service name="efGetApplicationStatus"/>
         </operation>
     </resource>
+    <resource name="applicationStageEvents" path="/ef/applications/drafts/{draftId}/stage-events" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efListStageEvents"/>
+        </operation>
+    </resource>
     <resource name="documentRequests" path="/ef/applications/drafts/{draftId}/document-requests" auth="true">
         <operation verb="get" produces="application/json">
             <service name="efListDocumentRequests"/>
@@ -300,6 +305,29 @@ under the License.
         </operation>
         <operation verb="put" consumes="application/json" produces="application/json">
             <service name="efUpdateNotificationSettings"/>
+        </operation>
+    </resource>
+
+    <!-- corporate accounts -->
+    <resource name="corporateAccounts" path="/ef/corporate/accounts" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efListCorporateAccounts"/>
+        </operation>
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efCreateCorporateAccount"/>
+        </operation>
+    </resource>
+    <resource name="corporateUsers" path="/ef/corporate/accounts/{corporatePartyId}/users" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efListCorporateUsers"/>
+        </operation>
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efAddCorporateUser"/>
+        </operation>
+    </resource>
+    <resource name="corporateUser" path="/ef/corporate/accounts/{corporatePartyId}/users/{memberPartyId}" auth="true">
+        <operation verb="put" consumes="application/json" produces="application/json">
+            <service name="efUpdateCorporateUser"/>
         </operation>
     </resource>
 

@@ -75,11 +75,21 @@ under the License.
         </field>
     </form>
 
+    <!-- Unlock member (shown on member detail) -->
+    <form name="UnlockEfMember" type="single" default-map-name="efMember" target="unlockEfMember">
+        <field name="partyId" title="Party ID"><hidden/></field>
+        <field name="submitButton" title="Unlock Account" widget-style="smallSubmit">
+            <submit button-type="button"/>
+        </field>
+    </form>
+
     <!-- W3: KYC check list (read-only) -->
     <form name="ListEfKycChecks" type="list" list-name="efKycChecks"
           paginate-target="FindEfKycCheck">
         <field name="kycCheckId" title="KYC Check ID">
-            <display/>
+            <hyperlink description="${kycCheckId}" target="ViewEfKycCheck">
+                <parameter param-name="kycCheckId" from-field="kycCheckId"/>
+            </hyperlink>
         </field>
         <field name="memberPartyId" title="Member">
             <display/>
@@ -98,6 +108,97 @@ under the License.
         </field>
         <field name="createdDate" title="Created">
             <display type="date-time"/>
+        </field>
+    </form>
+
+    <!-- W3: KYC detail and staff review -->
+    <form name="ViewEfKycCheck" type="single" default-map-name="efKycCheck"
+          target="reviewEfKycCheck">
+        <field name="kycCheckId" title="KYC Check ID"><hidden/></field>
+        <field name="memberPartyId" title="Member"><display/></field>
+        <field name="kycSubjectPartyId" title="Subject Party"><display/></field>
+        <field name="kycMethodEnumId" title="Method"><display/></field>
+        <field name="confirmerPartyId" title="Reviewer"><display/></field>
+        <field name="confirmedDate" title="Reviewed"><display type="date-time"/></field>
+        <field name="createdDate" title="Created"><display type="date-time"/></field>
+        <field name="statusId" title="Review Result">
+            <drop-down allow-empty="false">
+                <entity-options entity-name="StatusItem" key-field-name="statusId"
+                                description="${description}">
+                    <entity-constraint name="statusTypeId" operator="equals" value="EFKYC_STATUS"/>
+                    <entity-order-by field-name="sequenceId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="confirmerNote" title="Reviewer Note">
+            <text-line size="80"/>
+        </field>
+        <field name="submitButton" title="Save Review" widget-style="smallSubmit">
+            <submit button-type="button"/>
+        </field>
+    </form>
+
+    <form name="ListEfKycImages" type="list" list-name="efKycImages">
+        <field name="kycImageId" title="Image ID"><display/></field>
+        <field name="imageTypeEnumId" title="Type"><display/></field>
+        <field name="contentId" title="Content"><display/></field>
+        <field name="uploadedDate" title="Uploaded"><display type="date-time"/></field>
+    </form>
+
+    <!-- W4: additional document requests -->
+    <form name="ListEfDocumentRequests" type="list" list-name="efDocumentRequests">
+        <field name="docRequestId" title="Request ID"><display/></field>
+        <field name="draftId" title="Application"><display/></field>
+        <field name="memberPartyId" title="Member"><display/></field>
+        <field name="documentTypeEnumId" title="Document Type"><display/></field>
+        <field name="statusId" title="Status"><display/></field>
+        <field name="dueDate" title="Due"><display type="date-time"/></field>
+        <field name="requestedDate" title="Requested"><display type="date-time"/></field>
+        <field name="submittedDate" title="Submitted"><display type="date-time"/></field>
+    </form>
+
+    <!-- W6: service requests -->
+    <form name="ListEfServiceRequests" type="list" list-name="efServiceRequests"
+          paginate-target="FindEfServiceRequest">
+        <field name="serviceRequestId" title="Request ID">
+            <hyperlink description="${serviceRequestId}" target="ViewEfServiceRequest">
+                <parameter param-name="serviceRequestId" from-field="serviceRequestId"/>
+            </hyperlink>
+        </field>
+        <field name="memberPartyId" title="Member"><display/></field>
+        <field name="requestTypeEnumId" title="Type"><display/></field>
+        <field name="statusId" title="Status"><display/></field>
+        <field name="subject" title="Subject"><display/></field>
+        <field name="assignedToPartyId" title="Assignee"><display/></field>
+        <field name="requestedDate" title="Requested"><display type="date-time"/></field>
+        <field name="completedDate" title="Completed"><display type="date-time"/></field>
+    </form>
+
+    <form name="ViewEfServiceRequest" type="single" default-map-name="efServiceRequest"
+          target="updateEfServiceRequest">
+        <field name="serviceRequestId" title="Request ID"><hidden/></field>
+        <field name="memberPartyId" title="Member"><display/></field>
+        <field name="requestTypeEnumId" title="Type"><display/></field>
+        <field name="agreementId" title="Contract"><display/></field>
+        <field name="agreementTypeId" title="Contract Type"><display/></field>
+        <field name="subject" title="Subject"><display/></field>
+        <field name="content" title="Content"><display/></field>
+        <field name="requestData" title="Request Data"><display/></field>
+        <field name="requestedDate" title="Requested"><display type="date-time"/></field>
+        <field name="completedDate" title="Completed"><display type="date-time"/></field>
+        <field name="statusId" title="New Status">
+            <drop-down allow-empty="true">
+                <entity-options entity-name="StatusItem" key-field-name="statusId"
+                                description="${description}">
+                    <entity-constraint name="statusTypeId" operator="equals" value="EFSVCREQ_STATUS"/>
+                    <entity-order-by field-name="sequenceId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="assignedToPartyId" title="Assignee"><text-line size="40"/></field>
+        <field name="staffNotes" title="Staff Notes"><text-line size="80"/></field>
+        <field name="submitButton" title="Update Request" widget-style="smallSubmit">
+            <submit button-type="button"/>
         </field>
     </form>
 

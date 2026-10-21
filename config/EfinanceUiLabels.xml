@@ -278,6 +278,90 @@ under the License.
         <value xml:lang="en">The support operation could not be completed. Please try again or contact support.</value>
         <value xml:lang="ja">サポート操作を完了できませんでした。再試行するか、サポートにお問い合わせください。</value>
     </property>
+    <property key="EfinanceCorporateRequired">
+        <value xml:lang="en">Corporate account and administrator are required.</value>
+        <value xml:lang="ja">法人アカウントと管理者が必要です。</value>
+    </property>
+    <property key="EfinanceCorporateCreated">
+        <value xml:lang="en">Corporate account saved.</value>
+        <value xml:lang="ja">法人アカウントを保存しました。</value>
+    </property>
+    <property key="EfinanceCorporateUserSaved">
+        <value xml:lang="en">Corporate member role saved.</value>
+        <value xml:lang="ja">法人担当者の権限を保存しました。</value>
+    </property>
+    <property key="EfinanceCorporateUserNotFound">
+        <value xml:lang="en">Corporate member not found.</value>
+        <value xml:lang="ja">法人担当者が見つかりません。</value>
+    </property>
+    <property key="EfinanceStageNotificationSubject">
+        <value xml:lang="en">Your application status has changed</value>
+        <value xml:lang="ja">お申込の進捗状況が更新されました</value>
+    </property>
+    <property key="EfinanceStageNotificationBody">
+        <value xml:lang="en">The application stage is now: {0}.</value>
+        <value xml:lang="ja">お申込の現在の段階は「{0}」です。</value>
+    </property>
+    <property key="EfinanceSessionInvalid">
+        <value xml:lang="en">The session is invalid. Please sign in again.</value>
+        <value xml:lang="ja">セッションが無効です。再度ログインしてください。</value>
+    </property>
+    <property key="EfinanceSessionRevoked">
+        <value xml:lang="en">This access token has been revoked. Please sign in again.</value>
+        <value xml:lang="ja">このアクセストークンは失効しています。再度ログインしてください。</value>
+    </property>
+    <property key="EfinanceAccountLocked">
+        <value xml:lang="en">This account is locked. Please contact support.</value>
+        <value xml:lang="ja">このアカウントはロックされています。サポートにお問い合わせください。</value>
+    </property>
+    <property key="EfinanceServiceRequestNotFound">
+        <value xml:lang="en">Service request not found.</value>
+        <value xml:lang="ja">手続き依頼が見つかりません。</value>
+    </property>
+    <property key="EfinanceServiceRequestUpdated">
+        <value xml:lang="en">Service request updated.</value>
+        <value xml:lang="ja">手続き依頼を更新しました。</value>
+    </property>
+    <property key="EfinanceInvalidStatusTransition">
+        <value xml:lang="en">The requested status transition is not allowed.</value>
+        <value xml:lang="ja">この状態遷移は許可されていません。</value>
+    </property>
+    <property key="EfinanceMemberNotLocked">
+        <value xml:lang="en">The member is not locked.</value>
+        <value xml:lang="ja">この会員はロックされていません。</value>
+    </property>
+    <property key="EfinanceMemberUnlocked">
+        <value xml:lang="en">The member was unlocked.</value>
+        <value xml:lang="ja">会員のロックを解除しました。</value>
+    </property>
+    <property key="EfinanceFindMember">
+        <value xml:lang="en">eFinance Members</value>
+        <value xml:lang="ja">eFinance 会員一覧</value>
+    </property>
+    <property key="EfinanceViewMember">
+        <value xml:lang="en">eFinance Member</value>
+        <value xml:lang="ja">eFinance 会員詳細</value>
+    </property>
+    <property key="EfinanceFindKycCheck">
+        <value xml:lang="en">eFinance KYC Checks</value>
+        <value xml:lang="ja">eFinance 本人確認一覧</value>
+    </property>
+    <property key="EfinanceViewKycCheck">
+        <value xml:lang="en">eFinance KYC Check</value>
+        <value xml:lang="ja">eFinance 本人確認審査</value>
+    </property>
+    <property key="EfinanceFindDocumentRequest">
+        <value xml:lang="en">eFinance Document Requests</value>
+        <value xml:lang="ja">eFinance 追加書類要請一覧</value>
+    </property>
+    <property key="EfinanceFindServiceRequest">
+        <value xml:lang="en">eFinance Service Requests</value>
+        <value xml:lang="ja">eFinance 手続き依頼一覧</value>
+    </property>
+    <property key="EfinanceViewServiceRequest">
+        <value xml:lang="en">eFinance Service Request</value>
+        <value xml:lang="ja">eFinance 手続き依頼詳細</value>
+    </property>
 
     <!-- W6: MyPage labels -->
     <property key="EfinanceContractNotFound">

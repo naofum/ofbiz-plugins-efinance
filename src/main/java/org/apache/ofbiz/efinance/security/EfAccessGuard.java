@@ -27,6 +27,8 @@ import org.apache.ofbiz.base.util.UtilValidate;
 import org.apache.ofbiz.entity.Delegator;
 import org.apache.ofbiz.entity.GenericEntityException;
 import org.apache.ofbiz.entity.GenericValue;
+import org.apache.ofbiz.entity.condition.EntityCondition;
+import org.apache.ofbiz.entity.condition.EntityOperator;
 import org.apache.ofbiz.entity.util.EntityQuery;
 
 /**
@@ -76,7 +78,53 @@ public final class EfAccessGuard {
         return expiresAt == null || !expiresAt.before(UtilDateTime.nowTimestamp());
     }
 
-    /** True when the draft belongs to the logged-in member. */
+    /** True when the member has the given corporate role in an active corporate account. */
+    public static boolean hasCorporateRole(Delegator delegator, String corporatePartyId, String memberPartyId,
+            String roleField) throws GenericEntityException {
+        if (UtilValidate.isEmpty(corporatePartyId) || UtilValidate.isEmpty(memberPartyId)
+                || UtilValidate.isEmpty(roleField)) {
+            return false;
+        }
+        Timestamp now = UtilDateTime.nowTimestamp();
+        return EntityQuery.use(delegator).from("EfCorporateUser")
+                .where(EntityCondition.makeCondition(EntityOperator.AND,
+                        EntityCondition.makeCondition("corporatePartyId", corporatePartyId),
+                        EntityCondition.makeCondition("memberPartyId", memberPartyId),
+                        EntityCondition.makeCondition(roleField, "Y"),
+                        EntityCondition.makeCondition("fromDate",
+                                EntityOperator.LESS_THAN_EQUAL_TO, now),
+                        EntityCondition.makeCondition(EntityOperator.OR,
+                                EntityCondition.makeCondition("thruDate", EntityOperator.EQUALS, null),
+                                EntityCondition.makeCondition("thruDate",
+                                        EntityOperator.GREATER_THAN_EQUAL_TO, now))))
+                .queryFirst() != null;
+    }
+
+    public static boolean isCorporateAdmin(Delegator delegator, String corporatePartyId, String memberPartyId)
+            throws GenericEntityException {
+        return hasCorporateRole(delegator, corporatePartyId, memberPartyId, "roleAdmin");
+    }
+
+    /**
+     * True when the member owns the draft personally, or has the requested
+     * role on the draft's corporate account.
+     */
+    public static boolean isDraftAccessible(Delegator delegator, GenericValue draft, String partyId,
+            String roleField) throws GenericEntityException {
+        if (draft == null || UtilValidate.isEmpty(partyId)) {
+            return false;
+        }
+        if (partyId.equals(draft.getString("memberPartyId"))) {
+            return true;
+        }
+        String corporatePartyId = draft.getString("corporatePartyId");
+        if (UtilValidate.isEmpty(corporatePartyId)) {
+            return false;
+        }
+        return hasCorporateRole(delegator, corporatePartyId, partyId, roleField);
+    }
+
+    /** True when the draft belongs to the logged-in member or corporate account. */
     public static boolean isDraftOwned(Delegator delegator, String draftId, GenericValue userLogin)
             throws GenericEntityException {
         if (userLogin == null || UtilValidate.isEmpty(draftId)) {
@@ -84,7 +132,7 @@ public final class EfAccessGuard {
         }
         GenericValue draft = EntityQuery.use(delegator).from("EfApplicationDraft")
                 .where("draftId", draftId).queryOne();
-        return draft != null && userLogin.getString("partyId").equals(draft.getString("memberPartyId"));
+        return isDraftAccessible(delegator, draft, userLogin.getString("partyId"), "roleView");
     }
 
     /** True when the loan or lease agreement belongs to the logged-in member. */

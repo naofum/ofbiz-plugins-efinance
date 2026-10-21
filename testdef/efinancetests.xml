@@ -58,4 +58,16 @@ under the License.
         <junit-test-suite class-name="org.apache.ofbiz.efinance.test.EfSupportTests"/>
     </test-case>
 
+    <test-case case-name="ef-corporate-tests">
+        <junit-test-suite class-name="org.apache.ofbiz.efinance.test.EfCorporateTests"/>
+    </test-case>
+
+    <test-case case-name="ef-auth-tests">
+        <junit-test-suite class-name="org.apache.ofbiz.efinance.test.EfAuthTests"/>
+    </test-case>
+
+    <test-case case-name="ef-admin-tests">
+        <junit-test-suite class-name="org.apache.ofbiz.efinance.test.EfAdminTests"/>
+    </test-case>
+
 </test-suite>

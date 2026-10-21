@@ -285,6 +285,8 @@ under the License.
     <!-- W6 audit action enums -->
     <Enumeration enumId="EFAUD_SVCREQ_CREATE" enumTypeId="EFAUDIT_ACTION" enumCode="SVCREQ_CREATE" sequenceId="51" description="Service request created"/>
     <Enumeration enumId="EFAUD_MSG_SEND" enumTypeId="EFAUDIT_ACTION" enumCode="MSG_SEND" sequenceId="52" description="Message sent"/>
+    <Enumeration enumId="EFAUD_SVCREQ_UPDATE" enumTypeId="EFAUDIT_ACTION" enumCode="SVCREQ_UPDATE" sequenceId="53" description="Service request updated by staff"/>
+    <Enumeration enumId="EFAUD_MEMBER_UNLOCK" enumTypeId="EFAUDIT_ACTION" enumCode="MEMBER_UNLOCK" sequenceId="54" description="Member account unlocked"/>
 
     <!-- ========================================================= -->
     <!-- System user for internal dispatcher calls                 -->
