@@ -228,6 +228,121 @@ under the License.
     </entity>
 
     <!-- ========================================================= -->
+    <!-- Product publication (W1)                                 -->
+    <!-- ========================================================= -->
+    <!-- EfProductPublication: controls which FinancialProducts are visible on the portal -->
+    <entity entity-name="EfProductPublication" package-name="org.apache.ofbiz.efinance.catalog"
+            title="eFinance product publication">
+        <field name="publicationId" type="id"><description>sequenced</description></field>
+        <field name="productId" type="id"/>
+        <field name="fromDate" type="date-time"/>
+        <field name="thruDate" type="date-time"/>
+        <field name="displayOrder" type="numeric"/>
+        <field name="targetEnumId" type="id"><description>EFPROD_TARGET: PERSONAL, CORPORATE, ALL</description></field>
+        <field name="active" type="indicator"/>
+        <prim-key field="publicationId"/>
+        <relation type="one" fk-name="EFPUB_PROD" rel-entity-name="FinancialProduct">
+            <key-map field-name="productId"/>
+        </relation>
+        <index name="EFPUB_PROD_IDX"><index-field name="productId"/></index>
+        <index name="EFPUB_ACTIVE_IDX"><index-field name="active"/></index>
+    </entity>
+
+    <!-- ========================================================= -->
+    <!-- W2 Application draft                                     -->
+    <!-- ========================================================= -->
+    <entity entity-name="EfApplicationDraft" package-name="org.apache.ofbiz.efinance.application"
+            title="eFinance application draft">
+        <field name="draftId" type="id"><description>sequenced</description></field>
+        <field name="memberPartyId" type="id"><description>EfMember.partyId</description></field>
+        <field name="corporatePartyId" type="id"><description>for corporate applications</description></field>
+        <field name="productId" type="id"/>
+        <field name="applicationTypeId" type="id"><description>LOAN or LEASE</description></field>
+        <field name="currentStep" type="numeric"><description>1-based step number</description></field>
+        <field name="totalSteps" type="numeric"/>
+        <field name="draftJson" type="very-long"><description>JSON blob of all step data</description></field>
+        <field name="statusId" type="id"><description>EFDRF_EDITING, EFDRF_SUBMITTED, EFDRF_EXPIRED, EFDRF_WITHDRAWN</description></field>
+        <field name="sourceEnumId" type="id"><description>EFSRC_DIRECT, EFSRC_PARTNER etc.</description></field>
+        <field name="submittedApplicationId" type="id"><description>finance loanApplicationId or leaseApplicationId after submission</description></field>
+        <field name="submittedApplicationTypeId" type="id"><description>LOAN or LEASE</description></field>
+        <field name="expiresAt" type="date-time"/>
+        <field name="createdDate" type="date-time"/>
+        <field name="lastModifiedDate" type="date-time"/>
+        <prim-key field="draftId"/>
+        <relation type="one" fk-name="EFDRF_MBR" rel-entity-name="Party">
+            <key-map field-name="memberPartyId" rel-field-name="partyId"/>
+        </relation>
+        <relation type="one-nofk" title="Product" rel-entity-name="FinancialProduct">
+            <key-map field-name="productId"/>
+        </relation>
+        <index name="EFDRF_MBR_IDX"><index-field name="memberPartyId"/></index>
+        <index name="EFDRF_PROD_IDX"><index-field name="productId"/></index>
+        <index name="EFDRF_STS_IDX"><index-field name="statusId"/></index>
+    </entity>
+
+    <entity entity-name="EfDraftDocument" package-name="org.apache.ofbiz.efinance.application"
+            title="eFinance draft document attachment">
+        <field name="draftDocumentId" type="id"><description>sequenced</description></field>
+        <field name="draftId" type="id"/>
+        <field name="contentId" type="id"><description>FK to Content</description></field>
+        <field name="documentTypeEnumId" type="id"><description>EFDOC_TYPE: ID_FRONT, ID_BACK, INCOME_PROOF, CORPORATE_REGISTRY, etc.</description></field>
+        <field name="fileName" type="short-varchar"/>
+        <field name="mimeTypeId" type="id"/>
+        <field name="fileSizeBytes" type="numeric"/>
+        <field name="scanStatus" type="id"><description>EFSCAN_PENDING, EFSCAN_OK, EFSCAN_INFECTED</description></field>
+        <field name="uploadedDate" type="date-time"/>
+        <prim-key field="draftDocumentId"/>
+        <relation type="one" fk-name="EFDRFDOC_DRF" rel-entity-name="EfApplicationDraft">
+            <key-map field-name="draftId"/>
+        </relation>
+        <relation type="one-nofk" fk-name="EFDRFDOC_CTN" rel-entity-name="Content">
+            <key-map field-name="contentId"/>
+        </relation>
+        <index name="EFDRFDOC_DRF_IDX"><index-field name="draftId"/></index>
+    </entity>
+
+    <entity entity-name="EfApplicationLink" package-name="org.apache.ofbiz.efinance.application"
+            title="eFinance draft to finance application link">
+        <field name="linkId" type="id"><description>sequenced</description></field>
+        <field name="draftId" type="id"/>
+        <field name="memberPartyId" type="id"/>
+        <field name="corporatePartyId" type="id"/>
+        <field name="financeApplicationId" type="id"><description>loanApplicationId or leaseApplicationId</description></field>
+        <field name="financeApplicationTypeId" type="id"><description>LOAN or LEASE</description></field>
+        <field name="linkedDate" type="date-time"/>
+        <prim-key field="linkId"/>
+        <relation type="one-nofk" fk-name="EFLINK_DRF" rel-entity-name="EfApplicationDraft">
+            <key-map field-name="draftId"/>
+        </relation>
+        <relation type="one" fk-name="EFLINK_MBR" rel-entity-name="Party">
+            <key-map field-name="memberPartyId" rel-field-name="partyId"/>
+        </relation>
+        <index name="EFLINK_MBR_IDX"><index-field name="memberPartyId"/></index>
+        <index name="EFLINK_DRF_IDX"><index-field name="draftId"/></index>
+    </entity>
+
+    <entity entity-name="EfFraudCheck" package-name="org.apache.ofbiz.efinance.application"
+            title="eFinance fraud check result">
+        <field name="fraudCheckId" type="id"><description>sequenced</description></field>
+        <field name="draftId" type="id"/>
+        <field name="memberPartyId" type="id"/>
+        <field name="checkDate" type="date-time"/>
+        <field name="resultEnumId" type="id"><description>EFFRAUD_OK, EFFRAUD_REVIEW, EFFRAUD_BLOCK</description></field>
+        <field name="triggeredRules" type="short-varchar"><description>comma-separated rule codes</description></field>
+        <field name="ipAddress" type="short-varchar"/>
+        <field name="deviceId" type="short-varchar"/>
+        <prim-key field="fraudCheckId"/>
+        <relation type="one-nofk" fk-name="EFFRAUD_DRF" rel-entity-name="EfApplicationDraft">
+            <key-map field-name="draftId"/>
+        </relation>
+        <relation type="one" fk-name="EFFRAUD_MBR" rel-entity-name="Party">
+            <key-map field-name="memberPartyId" rel-field-name="partyId"/>
+        </relation>
+        <index name="EFFRAUD_DRF_IDX"><index-field name="draftId"/></index>
+        <index name="EFFRAUD_MBR_IDX"><index-field name="memberPartyId"/></index>
+    </entity>
+
+    <!-- ========================================================= -->
     <!-- Audit log                                                 -->
     <!-- ========================================================= -->
     <entity entity-name="EfAuditLog" package-name="org.apache.ofbiz.efinance.audit"

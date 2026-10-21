@@ -96,4 +96,67 @@ under the License.
         </operation>
     </resource>
 
+    <!-- W1: Product catalog (no auth) -->
+    <resource name="products" path="/ef/products" auth="false">
+        <operation verb="get" produces="application/json">
+            <service name="efListProducts"/>
+        </operation>
+    </resource>
+    <resource name="product" path="/ef/products/{productId}" auth="false">
+        <operation verb="get" produces="application/json">
+            <service name="efGetProduct"/>
+        </operation>
+    </resource>
+    <resource name="simulateLoan" path="/ef/simulate/loan" auth="false">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efSimulateLoan"/>
+        </operation>
+    </resource>
+    <resource name="simulateLease" path="/ef/simulate/lease" auth="false">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efSimulateLease"/>
+        </operation>
+    </resource>
+    <!-- W2: Application form schema -->
+    <resource name="applicationForm" path="/ef/applications/form" auth="false">
+        <operation verb="get" produces="application/json">
+            <service name="efGetApplicationForm"/>
+        </operation>
+    </resource>
+    <!-- W2: Draft operations -->
+    <resource name="drafts" path="/ef/applications/drafts" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efListDrafts"/>
+        </operation>
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efCreateDraft"/>
+        </operation>
+    </resource>
+    <resource name="draft" path="/ef/applications/drafts/{draftId}" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efGetDraft"/>
+        </operation>
+        <operation verb="put" consumes="application/json" produces="application/json">
+            <service name="efSaveDraft"/>
+        </operation>
+        <operation verb="delete" produces="application/json">
+            <service name="efWithdrawDraft"/>
+        </operation>
+    </resource>
+    <resource name="draftDocuments" path="/ef/applications/drafts/{draftId}/documents" auth="true">
+        <operation verb="post" produces="application/json">
+            <service name="efUploadDraftDocument"/>
+        </operation>
+    </resource>
+    <resource name="draftDocument" path="/ef/applications/drafts/{draftId}/documents/{draftDocumentId}" auth="true">
+        <operation verb="delete" produces="application/json">
+            <service name="efDeleteDraftDocument"/>
+        </operation>
+    </resource>
+    <resource name="submitApplication" path="/ef/applications/drafts/{draftId}/submit" auth="true">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efSubmitApplication"/>
+        </operation>
+    </resource>
+
 </api>

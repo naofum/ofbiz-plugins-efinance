@@ -96,4 +96,58 @@ under the License.
         <value xml:lang="ja">このメールアドレスはすでに登録されています。</value>
     </property>
 
+    <property key="EfinanceProductNotFound">
+        <value xml:lang="en">Product not found or not published.</value>
+        <value xml:lang="ja">商品が見つからないか、公開されていません。</value>
+    </property>
+    <property key="EfinanceSimulationDisclaimer">
+        <value xml:lang="en">This is an estimate only. Actual terms may differ based on your credit assessment.</value>
+        <value xml:lang="ja">この計算結果は目安です。実際の条件は審査結果により変わる場合があります。</value>
+    </property>
+    <property key="EfinanceInvalidAmount">
+        <value xml:lang="en">Amount is outside the allowed range for this product.</value>
+        <value xml:lang="ja">金額がこの商品の範囲外です。</value>
+    </property>
+    <property key="EfinanceInvalidTerm">
+        <value xml:lang="en">Term is outside the allowed range for this product.</value>
+        <value xml:lang="ja">期間がこの商品の範囲外です。</value>
+    </property>
+
+    <property key="EfinanceDraftNotFound">
+        <value xml:lang="en">Draft not found.</value>
+        <value xml:lang="ja">下書きが見つかりません。</value>
+    </property>
+    <property key="EfinanceDraftNotOwned">
+        <value xml:lang="en">You do not have access to this draft.</value>
+        <value xml:lang="ja">この下書きにアクセスする権限がありません。</value>
+    </property>
+    <property key="EfinanceDraftExpired">
+        <value xml:lang="en">This draft has expired.</value>
+        <value xml:lang="ja">この下書きは有効期限が切れています。</value>
+    </property>
+    <property key="EfinanceDraftNotEditable">
+        <value xml:lang="en">This draft cannot be modified.</value>
+        <value xml:lang="ja">この下書きは変更できません。</value>
+    </property>
+    <property key="EfinanceDuplicateDraft">
+        <value xml:lang="en">You already have an active draft for this product.</value>
+        <value xml:lang="ja">この商品の申込下書きがすでに存在します。</value>
+    </property>
+    <property key="EfinanceSubmissionBlocked">
+        <value xml:lang="en">Submission is temporarily blocked. Please contact support.</value>
+        <value xml:lang="ja">送信が一時的にブロックされています。サポートにお問い合わせください。</value>
+    </property>
+    <property key="EfinanceValidationFailed">
+        <value xml:lang="en">Please complete all required fields before submitting.</value>
+        <value xml:lang="ja">送信前にすべての必須項目を入力してください。</value>
+    </property>
+    <property key="EfinanceApplicationSubmitted">
+        <value xml:lang="en">Your application has been submitted successfully.</value>
+        <value xml:lang="ja">申込を送信しました。</value>
+    </property>
+    <property key="EfinanceFileTooLarge">
+        <value xml:lang="en">File size exceeds the allowed limit.</value>
+        <value xml:lang="ja">ファイルサイズが上限を超えています。</value>
+    </property>
+
 </resource>

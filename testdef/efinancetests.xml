@@ -30,4 +30,12 @@ under the License.
         <junit-test-suite class-name="org.apache.ofbiz.efinance.test.EfMemberTests"/>
     </test-case>
 
+    <test-case case-name="ef-catalog-tests">
+        <junit-test-suite class-name="org.apache.ofbiz.efinance.test.EfCatalogTests"/>
+    </test-case>
+
+    <test-case case-name="ef-application-tests">
+        <junit-test-suite class-name="org.apache.ofbiz.efinance.test.EfApplicationTests"/>
+    </test-case>
+
 </test-suite>

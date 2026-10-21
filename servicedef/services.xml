@@ -148,4 +148,129 @@ under the License.
         <attribute name="consents" type="java.util.List" mode="OUT" optional="true"/>
     </service>
 
+    <!-- ========================================================= -->
+    <!-- W1: Product catalog (no auth)                            -->
+    <!-- ========================================================= -->
+    <service name="efListProducts" engine="java" auth="false" export="true"
+             location="org.apache.ofbiz.efinance.catalog.EfCatalogServices" invoke="efListProducts">
+        <description>List published financial products. Authentication not required.</description>
+        <attribute name="targetEnumId" type="String" mode="IN" optional="true"/>
+        <attribute name="products" type="List" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efGetProduct" engine="java" auth="false" export="true"
+             location="org.apache.ofbiz.efinance.catalog.EfCatalogServices" invoke="efGetProduct">
+        <description>Get a single published financial product by productId.</description>
+        <attribute name="productId" type="String" mode="IN" optional="false"/>
+        <attribute name="product" type="Map" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efSimulateLoan" engine="java" auth="false" export="true"
+             location="org.apache.ofbiz.efinance.catalog.EfCatalogServices" invoke="efSimulateLoan">
+        <description>Simulate loan repayment schedule. No authentication required. Result is not saved.</description>
+        <attribute name="productId" type="String" mode="IN" optional="false"/>
+        <attribute name="principalAmount" type="BigDecimal" mode="IN" optional="false"/>
+        <attribute name="termMonths" type="Integer" mode="IN" optional="false"/>
+        <attribute name="repaymentMethod" type="String" mode="IN" optional="true"/>
+        <attribute name="annualInterestRate" type="BigDecimal" mode="IN" optional="true"/>
+        <attribute name="monthlyPayment" type="BigDecimal" mode="OUT" optional="true"/>
+        <attribute name="totalPayment" type="BigDecimal" mode="OUT" optional="true"/>
+        <attribute name="totalInterest" type="BigDecimal" mode="OUT" optional="true"/>
+        <attribute name="effectiveAnnualRate" type="BigDecimal" mode="OUT" optional="true"/>
+        <attribute name="schedule" type="List" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efSimulateLease" engine="java" auth="false" export="true"
+             location="org.apache.ofbiz.efinance.catalog.EfCatalogServices" invoke="efSimulateLease">
+        <description>Simulate lease payment schedule. No authentication required. Result is not saved.</description>
+        <attribute name="productId" type="String" mode="IN" optional="false"/>
+        <attribute name="acquisitionCost" type="BigDecimal" mode="IN" optional="false"/>
+        <attribute name="termMonths" type="Integer" mode="IN" optional="false"/>
+        <attribute name="taxRate" type="BigDecimal" mode="IN" optional="true"/>
+        <attribute name="monthlyLeaseAmount" type="BigDecimal" mode="OUT" optional="true"/>
+        <attribute name="totalLeaseAmount" type="BigDecimal" mode="OUT" optional="true"/>
+        <attribute name="totalTax" type="BigDecimal" mode="OUT" optional="true"/>
+        <attribute name="calcInterestRate" type="BigDecimal" mode="OUT" optional="true"/>
+        <attribute name="schedule" type="List" mode="OUT" optional="true"/>
+    </service>
+    <!-- W2: Application form schema (auth=false) -->
+    <service name="efGetApplicationForm" engine="java" auth="false" export="true"
+             location="org.apache.ofbiz.efinance.application.EfApplicationServices" invoke="efGetApplicationForm">
+        <description>Return the field schema for the given product and application type.</description>
+        <attribute name="productId" type="String" mode="IN" optional="false"/>
+        <attribute name="applicationTypeId" type="String" mode="IN" optional="false"/>
+        <attribute name="steps" type="List" mode="OUT" optional="true"/>
+        <attribute name="totalSteps" type="Integer" mode="OUT" optional="true"/>
+    </service>
+
+    <!-- W2: Draft CRUD -->
+    <service name="efCreateDraft" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.application.EfApplicationServices" invoke="efCreateDraft">
+        <description>Create a new application draft.</description>
+        <attribute name="productId" type="String" mode="IN" optional="false"/>
+        <attribute name="applicationTypeId" type="String" mode="IN" optional="false"/>
+        <attribute name="sourceEnumId" type="String" mode="IN" optional="true"/>
+        <attribute name="draftId" type="String" mode="OUT" optional="true"/>
+        <attribute name="expiresAt" type="Timestamp" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efSaveDraft" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.application.EfApplicationServices" invoke="efSaveDraft">
+        <description>Save/update draft step data. Returns validation result for the step.</description>
+        <attribute name="draftId" type="String" mode="IN" optional="false"/>
+        <attribute name="step" type="Integer" mode="IN" optional="false"/>
+        <attribute name="stepData" type="Map" mode="IN" optional="false"/>
+        <attribute name="stepValid" type="Boolean" mode="OUT" optional="true"/>
+        <attribute name="validationErrors" type="List" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efGetDraft" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.application.EfApplicationServices" invoke="efGetDraft">
+        <description>Get draft data including all steps and attached documents.</description>
+        <attribute name="draftId" type="String" mode="IN" optional="false"/>
+        <attribute name="draft" type="Map" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efListDrafts" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.application.EfApplicationServices" invoke="efListDrafts">
+        <description>List the member's active drafts.</description>
+        <attribute name="drafts" type="List" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efWithdrawDraft" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.application.EfApplicationServices" invoke="efWithdrawDraft">
+        <description>Withdraw (cancel) a draft.</description>
+        <attribute name="draftId" type="String" mode="IN" optional="false"/>
+    </service>
+
+    <!-- W2: Document upload/delete -->
+    <service name="efUploadDraftDocument" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.application.EfApplicationServices" invoke="efUploadDraftDocument">
+        <description>Upload a document to a draft.</description>
+        <attribute name="draftId" type="String" mode="IN" optional="false"/>
+        <attribute name="documentTypeEnumId" type="String" mode="IN" optional="false"/>
+        <attribute name="fileName" type="String" mode="IN" optional="false"/>
+        <attribute name="contentType" type="String" mode="IN" optional="false"/>
+        <attribute name="uploadedFile" type="java.nio.ByteBuffer" mode="IN" optional="false"/>
+        <attribute name="draftDocumentId" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efDeleteDraftDocument" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.application.EfApplicationServices" invoke="efDeleteDraftDocument">
+        <description>Delete a document from a draft.</description>
+        <attribute name="draftDocumentId" type="String" mode="IN" optional="false"/>
+    </service>
+
+    <!-- W2: Submit application -->
+    <service name="efSubmitApplication" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.application.EfApplicationServices" invoke="efSubmitApplication">
+        <description>Submit a completed draft as a finance application.</description>
+        <attribute name="draftId" type="String" mode="IN" optional="false"/>
+        <attribute name="ipAddress" type="String" mode="IN" optional="true"/>
+        <attribute name="deviceId" type="String" mode="IN" optional="true"/>
+        <attribute name="financeApplicationId" type="String" mode="OUT" optional="true"/>
+        <attribute name="financeApplicationTypeId" type="String" mode="OUT" optional="true"/>
+        <attribute name="fraudResult" type="String" mode="OUT" optional="true"/>
+    </service>
+
 </services>

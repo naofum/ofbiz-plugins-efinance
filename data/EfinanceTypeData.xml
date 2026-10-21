@@ -98,12 +98,63 @@ under the License.
     <SecurityGroupPermission groupId="SUPER" permissionId="EFINANCE_ADMIN" fromDate="2026-10-21 00:00:00.0"/>
 
     <!-- ========================================================= -->
+    <!-- Product target audience (W1)                             -->
+    <!-- ========================================================= -->
+    <EnumerationType enumTypeId="EFPROD_TARGET" description="eFinance product target audience"/>
+    <Enumeration enumId="EFPROD_TGT_ALL" enumTypeId="EFPROD_TARGET" enumCode="ALL" sequenceId="01" description="All"/>
+    <Enumeration enumId="EFPROD_TGT_PERS" enumTypeId="EFPROD_TARGET" enumCode="PERSONAL" sequenceId="02" description="Personal"/>
+    <Enumeration enumId="EFPROD_TGT_CORP" enumTypeId="EFPROD_TARGET" enumCode="CORPORATE" sequenceId="03" description="Corporate"/>
+
+    <!-- ========================================================= -->
+    <!-- W2 Draft statuses                                        -->
+    <!-- ========================================================= -->
+    <StatusType statusTypeId="EFDRAFT_STATUS" description="eFinance application draft status" hasTable="N"/>
+    <StatusItem statusId="EFDRF_EDITING" statusTypeId="EFDRAFT_STATUS" statusCode="EDITING" sequenceId="01" description="Editing"/>
+    <StatusItem statusId="EFDRF_SUBMITTED" statusTypeId="EFDRAFT_STATUS" statusCode="SUBMITTED" sequenceId="02" description="Submitted"/>
+    <StatusItem statusId="EFDRF_EXPIRED" statusTypeId="EFDRAFT_STATUS" statusCode="EXPIRED" sequenceId="03" description="Expired"/>
+    <StatusItem statusId="EFDRF_WITHDRAWN" statusTypeId="EFDRAFT_STATUS" statusCode="WITHDRAWN" sequenceId="04" description="Withdrawn"/>
+
+    <!-- W2 Document types -->
+    <EnumerationType enumTypeId="EFDOC_TYPE" description="eFinance document type"/>
+    <Enumeration enumId="EFDOC_ID_FRONT" enumTypeId="EFDOC_TYPE" enumCode="ID_FRONT" sequenceId="01" description="ID document (front)"/>
+    <Enumeration enumId="EFDOC_ID_BACK" enumTypeId="EFDOC_TYPE" enumCode="ID_BACK" sequenceId="02" description="ID document (back)"/>
+    <Enumeration enumId="EFDOC_INCOME" enumTypeId="EFDOC_TYPE" enumCode="INCOME_PROOF" sequenceId="03" description="Income proof"/>
+    <Enumeration enumId="EFDOC_CORP_REG" enumTypeId="EFDOC_TYPE" enumCode="CORPORATE_REGISTRY" sequenceId="04" description="Corporate registry"/>
+    <Enumeration enumId="EFDOC_QUOTE" enumTypeId="EFDOC_TYPE" enumCode="SUPPLIER_QUOTE" sequenceId="05" description="Supplier quote (lease asset)"/>
+    <Enumeration enumId="EFDOC_OTHER" enumTypeId="EFDOC_TYPE" enumCode="OTHER" sequenceId="99" description="Other"/>
+
+    <!-- W2 Scan statuses -->
+    <EnumerationType enumTypeId="EFSCAN_STATUS" description="Document virus scan status"/>
+    <Enumeration enumId="EFSCAN_PENDING" enumTypeId="EFSCAN_STATUS" enumCode="PENDING" sequenceId="01" description="Pending"/>
+    <Enumeration enumId="EFSCAN_OK" enumTypeId="EFSCAN_STATUS" enumCode="OK" sequenceId="02" description="OK"/>
+    <Enumeration enumId="EFSCAN_INFECTED" enumTypeId="EFSCAN_STATUS" enumCode="INFECTED" sequenceId="03" description="Infected"/>
+
+    <!-- W2 Fraud check results -->
+    <EnumerationType enumTypeId="EFFRAUD_RESULT" description="Fraud check result"/>
+    <Enumeration enumId="EFFRAUD_OK" enumTypeId="EFFRAUD_RESULT" enumCode="OK" sequenceId="01" description="OK"/>
+    <Enumeration enumId="EFFRAUD_REVIEW" enumTypeId="EFFRAUD_RESULT" enumCode="REVIEW" sequenceId="02" description="Requires review"/>
+    <Enumeration enumId="EFFRAUD_BLOCK" enumTypeId="EFFRAUD_RESULT" enumCode="BLOCK" sequenceId="03" description="Blocked"/>
+
+    <!-- W2 Application source -->
+    <EnumerationType enumTypeId="EFAPP_SOURCE" description="eFinance application source"/>
+    <Enumeration enumId="EFSRC_DIRECT" enumTypeId="EFAPP_SOURCE" enumCode="DIRECT" sequenceId="01" description="Direct (portal)"/>
+    <Enumeration enumId="EFSRC_PARTNER" enumTypeId="EFAPP_SOURCE" enumCode="PARTNER" sequenceId="02" description="Partner/affiliate"/>
+
+    <!-- W2 Audit actions -->
+    <Enumeration enumId="EFAUD_DRAFT_CREATE" enumTypeId="EFAUDIT_ACTION" enumCode="DRAFT_CREATE" sequenceId="11" description="Draft created"/>
+    <Enumeration enumId="EFAUD_DRAFT_SAVE" enumTypeId="EFAUDIT_ACTION" enumCode="DRAFT_SAVE" sequenceId="12" description="Draft saved"/>
+    <Enumeration enumId="EFAUD_DRAFT_SUBMIT" enumTypeId="EFAUDIT_ACTION" enumCode="DRAFT_SUBMIT" sequenceId="13" description="Application submitted"/>
+    <Enumeration enumId="EFAUD_DRAFT_WITHDRAW" enumTypeId="EFAUDIT_ACTION" enumCode="DRAFT_WITHDRAW" sequenceId="14" description="Draft withdrawn"/>
+    <Enumeration enumId="EFAUD_DOC_UPLOAD" enumTypeId="EFAUDIT_ACTION" enumCode="DOC_UPLOAD" sequenceId="15" description="Document uploaded"/>
+    <Enumeration enumId="EFAUD_DOC_DELETE" enumTypeId="EFAUDIT_ACTION" enumCode="DOC_DELETE" sequenceId="16" description="Document deleted"/>
+
+    <!-- ========================================================= -->
     <!-- System user for internal dispatcher calls                 -->
     <!-- ========================================================= -->
     <Party partyId="EFINANCE_SYSTEM" partyTypeId="PERSON"/>
     <Person partyId="EFINANCE_SYSTEM" firstName="eFinance" lastName="System"/>
     <UserLogin userLoginId="efinance-system" partyId="EFINANCE_SYSTEM"
-               currentPassword="{SHA2}47bce5c74f589f4867dbe55c2e62e9af1b95de32fa1f0ee8f4299cb69ed81e63"
+               currentPassword="{SHA}681a4f5638758172c850c29f3646310c63036bfa"
                enabled="Y" hasLoggedOut="N"/>
     <UserLoginSecurityGroup userLoginId="efinance-system" groupId="SUPER" fromDate="2026-10-21 00:00:00.0"/>
 

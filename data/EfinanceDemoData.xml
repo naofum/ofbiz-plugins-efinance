@@ -19,5 +19,16 @@ under the License.
 -->
 
 <entity-engine-xml>
-    <!-- eFinance demo data placeholder -->
+    <!-- eFinance W1: product publication demo data -->
+    <EfProductPublication publicationId="EFPUB1" productId="DEMO_LOANPROD1"
+                          fromDate="2026-01-01 00:00:00.0"
+                          displayOrder="1" targetEnumId="EFPROD_TGT_ALL" active="Y"/>
+    <EfProductPublication publicationId="EFPUB2" productId="DEMO_LEASEPROD1"
+                          fromDate="2026-01-01 00:00:00.0"
+                          displayOrder="2" targetEnumId="EFPROD_TGT_CORP" active="Y"/>
+    <!-- Add defaultCalcInterestRate to the lease product for simulation service -->
+    <FinancialProductLease productId="DEMO_LEASEPROD1" leaseClassEnumId="LEASE_CLS_FIN_NONTR"
+                           defaultMonthlyRateFactor="0.018000" defaultCalcInterestRate="0.030000"
+                           paymentTimingEnumId="LEASE_PAY_ADVANCE"
+                           residualValueRate="0" revenueMethodEnumId="LEASE_REV_AT_START" taxable="Y"/>
 </entity-engine-xml>
