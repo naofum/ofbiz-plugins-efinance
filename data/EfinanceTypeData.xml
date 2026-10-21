@@ -149,6 +149,73 @@ under the License.
     <Enumeration enumId="EFAUD_DOC_DELETE" enumTypeId="EFAUDIT_ACTION" enumCode="DOC_DELETE" sequenceId="16" description="Document deleted"/>
 
     <!-- ========================================================= -->
+    <!-- W3 KYC statuses                                          -->
+    <!-- ========================================================= -->
+    <StatusType statusTypeId="EFKYC_STATUS" description="eFinance KYC check status" hasTable="N"/>
+    <StatusItem statusId="EFKYC_PENDING" statusTypeId="EFKYC_STATUS" statusCode="PENDING" sequenceId="01" description="Pending"/>
+    <StatusItem statusId="EFKYC_SUBMITTED" statusTypeId="EFKYC_STATUS" statusCode="SUBMITTED" sequenceId="02" description="Submitted for review"/>
+    <StatusItem statusId="EFKYC_VERIFIED" statusTypeId="EFKYC_STATUS" statusCode="VERIFIED" sequenceId="03" description="Verified"/>
+    <StatusItem statusId="EFKYC_RESUBMIT" statusTypeId="EFKYC_STATUS" statusCode="RESUBMIT" sequenceId="04" description="Resubmission required"/>
+    <StatusItem statusId="EFKYC_REJECTED" statusTypeId="EFKYC_STATUS" statusCode="REJECTED" sequenceId="05" description="Rejected"/>
+    <StatusValidChange statusId="EFKYC_PENDING" statusIdTo="EFKYC_SUBMITTED" transitionName="Submit for review"/>
+    <StatusValidChange statusId="EFKYC_SUBMITTED" statusIdTo="EFKYC_VERIFIED" transitionName="Verify"/>
+    <StatusValidChange statusId="EFKYC_SUBMITTED" statusIdTo="EFKYC_RESUBMIT" transitionName="Request resubmission"/>
+    <StatusValidChange statusId="EFKYC_SUBMITTED" statusIdTo="EFKYC_REJECTED" transitionName="Reject"/>
+    <StatusValidChange statusId="EFKYC_RESUBMIT" statusIdTo="EFKYC_SUBMITTED" transitionName="Resubmit"/>
+
+    <!-- W3 KYC method enums -->
+    <EnumerationType enumTypeId="EFKYC_METHOD" description="eFinance KYC verification method"/>
+    <Enumeration enumId="EFKYC_M_IMAGE_FACE" enumTypeId="EFKYC_METHOD" enumCode="IMAGE_FACE" sequenceId="01" description="ID document image + facial photo"/>
+    <Enumeration enumId="EFKYC_M_IC_CHIP" enumTypeId="EFKYC_METHOD" enumCode="IC_CHIP" sequenceId="02" description="IC chip read"/>
+    <Enumeration enumId="EFKYC_M_POSTAL" enumTypeId="EFKYC_METHOD" enumCode="POSTAL" sequenceId="03" description="Postal document"/>
+
+    <!-- W3 KYC image types -->
+    <EnumerationType enumTypeId="EFKYC_IMG_TYPE" description="eFinance KYC image type"/>
+    <Enumeration enumId="EFKYC_IMG_ID_FRONT" enumTypeId="EFKYC_IMG_TYPE" enumCode="ID_DOC_FRONT" sequenceId="01" description="ID document (front)"/>
+    <Enumeration enumId="EFKYC_IMG_ID_BACK" enumTypeId="EFKYC_IMG_TYPE" enumCode="ID_DOC_BACK" sequenceId="02" description="ID document (back)"/>
+    <Enumeration enumId="EFKYC_IMG_FACIAL" enumTypeId="EFKYC_IMG_TYPE" enumCode="FACIAL" sequenceId="03" description="Facial photo"/>
+    <Enumeration enumId="EFKYC_IMG_IC_CHIP" enumTypeId="EFKYC_IMG_TYPE" enumCode="IC_CHIP_DATA" sequenceId="04" description="IC chip data"/>
+
+    <!-- W3 KYC audit actions -->
+    <Enumeration enumId="EFAUD_KYC_START" enumTypeId="EFAUDIT_ACTION" enumCode="KYC_START" sequenceId="21" description="KYC check started"/>
+    <Enumeration enumId="EFAUD_KYC_SUBMIT" enumTypeId="EFAUDIT_ACTION" enumCode="KYC_SUBMIT" sequenceId="22" description="KYC submitted for review"/>
+    <Enumeration enumId="EFAUD_KYC_REVIEW" enumTypeId="EFAUDIT_ACTION" enumCode="KYC_REVIEW" sequenceId="23" description="KYC reviewed by staff"/>
+
+    <!-- ========================================================= -->
+    <!-- W4 Pre-screen result enums                               -->
+    <!-- ========================================================= -->
+    <EnumerationType enumTypeId="EFPRE_RESULT" description="eFinance pre-screen result"/>
+    <Enumeration enumId="EFPRE_LIKELY" enumTypeId="EFPRE_RESULT" enumCode="LIKELY" sequenceId="01" description="お申込みいただけます (likely eligible)"/>
+    <Enumeration enumId="EFPRE_CONSULT" enumTypeId="EFPRE_RESULT" enumCode="CONSULT" sequenceId="02" description="ご相談ください (consult)"/>
+    <Enumeration enumId="EFPRE_UNLIKELY" enumTypeId="EFPRE_RESULT" enumCode="UNLIKELY" sequenceId="03" description="お受けできません (unlikely)"/>
+
+    <!-- W4 EF_STAGE (customer-facing application stage) -->
+    <EnumerationType enumTypeId="EF_STAGE" description="eFinance customer-facing application stage"/>
+    <Enumeration enumId="EF_STAGE_RECEIVED" enumTypeId="EF_STAGE" enumCode="RECEIVED" sequenceId="01" description="受付"/>
+    <Enumeration enumId="EF_STAGE_DOC_REQUEST" enumTypeId="EF_STAGE" enumCode="DOC_REQUEST" sequenceId="02" description="追加の書類のお願い"/>
+    <Enumeration enumId="EF_STAGE_REVIEWING" enumTypeId="EF_STAGE" enumCode="UNDER_REVIEW" sequenceId="03" description="審査中"/>
+    <Enumeration enumId="EF_STAGE_RESULT" enumTypeId="EF_STAGE" enumCode="RESULT" sequenceId="04" description="結果のご連絡"/>
+    <Enumeration enumId="EF_STAGE_OFFER" enumTypeId="EF_STAGE" enumCode="OFFER" sequenceId="05" description="ご契約の手続き"/>
+    <Enumeration enumId="EF_STAGE_CONTRACTED" enumTypeId="EF_STAGE" enumCode="CONTRACTED" sequenceId="06" description="ご契約済み"/>
+
+    <!-- W4 Document request statuses -->
+    <StatusType statusTypeId="EFDOCREQ_STATUS" description="eFinance document request status" hasTable="N"/>
+    <StatusItem statusId="EFDOCREQ_PENDING" statusTypeId="EFDOCREQ_STATUS" statusCode="PENDING" sequenceId="01" description="Pending"/>
+    <StatusItem statusId="EFDOCREQ_SUBMITTED" statusTypeId="EFDOCREQ_STATUS" statusCode="SUBMITTED" sequenceId="02" description="Submitted"/>
+    <StatusItem statusId="EFDOCREQ_ACCEPTED" statusTypeId="EFDOCREQ_STATUS" statusCode="ACCEPTED" sequenceId="03" description="Accepted"/>
+    <StatusItem statusId="EFDOCREQ_REJECTED" statusTypeId="EFDOCREQ_STATUS" statusCode="REJECTED" sequenceId="04" description="Rejected (resubmit required)"/>
+    <StatusValidChange statusId="EFDOCREQ_PENDING" statusIdTo="EFDOCREQ_SUBMITTED" transitionName="Submit"/>
+    <StatusValidChange statusId="EFDOCREQ_SUBMITTED" statusIdTo="EFDOCREQ_ACCEPTED" transitionName="Accept"/>
+    <StatusValidChange statusId="EFDOCREQ_SUBMITTED" statusIdTo="EFDOCREQ_REJECTED" transitionName="Reject"/>
+    <StatusValidChange statusId="EFDOCREQ_REJECTED" statusIdTo="EFDOCREQ_SUBMITTED" transitionName="Resubmit"/>
+
+    <!-- W4 audit action enums -->
+    <Enumeration enumId="EFAUD_PRESCREEN" enumTypeId="EFAUDIT_ACTION" enumCode="PRESCREEN" sequenceId="31" description="Pre-screen executed"/>
+    <Enumeration enumId="EFAUD_STAGE_CHANGE" enumTypeId="EFAUDIT_ACTION" enumCode="STAGE_CHANGE" sequenceId="32" description="Stage changed"/>
+    <Enumeration enumId="EFAUD_DOC_REQ_CREATE" enumTypeId="EFAUDIT_ACTION" enumCode="DOC_REQ_CREATE" sequenceId="33" description="Document request created"/>
+    <Enumeration enumId="EFAUD_DOC_REQ_SUBMIT" enumTypeId="EFAUDIT_ACTION" enumCode="DOC_REQ_SUBMIT" sequenceId="34" description="Document request submitted"/>
+
+    <!-- ========================================================= -->
     <!-- System user for internal dispatcher calls                 -->
     <!-- ========================================================= -->
     <Party partyId="EFINANCE_SYSTEM" partyTypeId="PERSON"/>

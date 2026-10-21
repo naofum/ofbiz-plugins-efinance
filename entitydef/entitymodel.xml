@@ -343,6 +343,129 @@ under the License.
     </entity>
 
     <!-- ========================================================= -->
+    <!-- W3 KYC check                                             -->
+    <!-- ========================================================= -->
+    <entity entity-name="EfKycCheck" package-name="org.apache.ofbiz.efinance.kyc"
+            title="eFinance KYC identity verification check">
+        <field name="kycCheckId" type="id"><description>sequenced</description></field>
+        <field name="memberPartyId" type="id"/>
+        <field name="kycSubjectPartyId" type="id"><description>individual being verified (may differ for corporate representative)</description></field>
+        <field name="draftId" type="id"><description>associated application draft if any</description></field>
+        <field name="kycMethodEnumId" type="id"><description>EFKYC_METHOD enum</description></field>
+        <field name="statusId" type="id"><description>EFKYC_STATUS: EFKYC_PENDING, EFKYC_SUBMITTED, EFKYC_VERIFIED, EFKYC_RESUBMIT, EFKYC_REJECTED</description></field>
+        <field name="confirmerPartyId" type="id"><description>staff who confirmed; null for automatic</description></field>
+        <field name="confirmedDate" type="date-time"/>
+        <field name="confirmerNote" type="comment"/>
+        <field name="adapterResultCode" type="short-varchar"><description>result code from EkycAdapter</description></field>
+        <field name="adapterExternalId" type="short-varchar"/>
+        <field name="expiresDate" type="date-time"><description>legal retention expiry</description></field>
+        <field name="createdDate" type="date-time"/>
+        <field name="lastModifiedDate" type="date-time"/>
+        <prim-key field="kycCheckId"/>
+        <relation type="one" fk-name="EFKYC_MBR" rel-entity-name="Party">
+            <key-map field-name="memberPartyId" rel-field-name="partyId"/>
+        </relation>
+        <relation type="one" fk-name="EFKYC_SUBJ" rel-entity-name="Party">
+            <key-map field-name="kycSubjectPartyId" rel-field-name="partyId"/>
+        </relation>
+        <relation type="one-nofk" rel-entity-name="EfApplicationDraft">
+            <key-map field-name="draftId"/>
+        </relation>
+        <index name="EFKYC_MBR_IDX"><index-field name="memberPartyId"/></index>
+        <index name="EFKYC_SUBJ_IDX"><index-field name="kycSubjectPartyId"/></index>
+        <index name="EFKYC_STS_IDX"><index-field name="statusId"/></index>
+    </entity>
+
+    <entity entity-name="EfKycImage" package-name="org.apache.ofbiz.efinance.kyc"
+            title="eFinance KYC image attachment">
+        <field name="kycImageId" type="id"><description>sequenced</description></field>
+        <field name="kycCheckId" type="id"/>
+        <field name="contentId" type="id"/>
+        <field name="imageTypeEnumId" type="id"><description>EFKYC_IMG_TYPE: ID_DOC_FRONT, ID_DOC_BACK, FACIAL, IC_CHIP_DATA</description></field>
+        <field name="uploadedDate" type="date-time"/>
+        <prim-key field="kycImageId"/>
+        <relation type="one" fk-name="EFKYCIMG_KYC" rel-entity-name="EfKycCheck">
+            <key-map field-name="kycCheckId"/>
+        </relation>
+        <relation type="one-nofk" rel-entity-name="Content">
+            <key-map field-name="contentId"/>
+        </relation>
+        <index name="EFKYCIMG_KYC_IDX"><index-field name="kycCheckId"/></index>
+    </entity>
+
+    <!-- ========================================================= -->
+    <!-- W4 Pre-screen result (internal only)                     -->
+    <!-- ========================================================= -->
+    <entity entity-name="EfPreScreenResult" package-name="org.apache.ofbiz.efinance.application"
+            title="eFinance pre-screen result">
+        <field name="preScreenId" type="id"><description>sequenced</description></field>
+        <field name="draftId" type="id"/>
+        <field name="memberPartyId" type="id"/>
+        <field name="preScreenDate" type="date-time"/>
+        <field name="resultEnumId" type="id"><description>EFPRE_LIKELY, EFPRE_CONSULT, EFPRE_UNLIKELY</description></field>
+        <field name="triggeredRules" type="short-varchar"><description>internal: comma-separated rule codes fired</description></field>
+        <field name="inputSummary" type="short-varchar"><description>non-PII summary e.g. amount=300000,term=24</description></field>
+        <prim-key field="preScreenId"/>
+        <relation type="one" fk-name="EFPRE_DRF" rel-entity-name="EfApplicationDraft">
+            <key-map field-name="draftId"/>
+        </relation>
+        <relation type="one" fk-name="EFPRE_MBR" rel-entity-name="Party">
+            <key-map field-name="memberPartyId" rel-field-name="partyId"/>
+        </relation>
+        <index name="EFPRE_DRF_IDX"><index-field name="draftId"/></index>
+        <index name="EFPRE_MBR_IDX"><index-field name="memberPartyId"/></index>
+    </entity>
+
+    <!-- ========================================================= -->
+    <!-- W4 Stage event for notification                          -->
+    <!-- ========================================================= -->
+    <entity entity-name="EfStageEvent" package-name="org.apache.ofbiz.efinance.application"
+            title="eFinance application stage change event">
+        <field name="stageEventId" type="id"><description>sequenced</description></field>
+        <field name="draftId" type="id"/>
+        <field name="memberPartyId" type="id"/>
+        <field name="fromStageEnumId" type="id"/>
+        <field name="toStageEnumId" type="id"/>
+        <field name="eventDate" type="date-time"/>
+        <field name="notified" type="indicator"/>
+        <prim-key field="stageEventId"/>
+        <relation type="one" fk-name="EFSTEV_DRF" rel-entity-name="EfApplicationDraft">
+            <key-map field-name="draftId"/>
+        </relation>
+        <relation type="one" fk-name="EFSTEV_MBR" rel-entity-name="Party">
+            <key-map field-name="memberPartyId" rel-field-name="partyId"/>
+        </relation>
+        <index name="EFSTEV_DRF_IDX"><index-field name="draftId"/></index>
+    </entity>
+
+    <!-- ========================================================= -->
+    <!-- W4 Additional document request                           -->
+    <!-- ========================================================= -->
+    <entity entity-name="EfDocumentRequest" package-name="org.apache.ofbiz.efinance.application"
+            title="eFinance additional document request">
+        <field name="docRequestId" type="id"><description>sequenced</description></field>
+        <field name="draftId" type="id"/>
+        <field name="memberPartyId" type="id"/>
+        <field name="documentTypeEnumId" type="id"/>
+        <field name="reason" type="comment"/>
+        <field name="dueDate" type="date-time"/>
+        <field name="statusId" type="id"><description>EFDOCREQ_PENDING, EFDOCREQ_SUBMITTED, EFDOCREQ_ACCEPTED, EFDOCREQ_REJECTED</description></field>
+        <field name="requestedByPartyId" type="id"/>
+        <field name="requestedDate" type="date-time"/>
+        <field name="submittedContentId" type="id"><description>Content when document is submitted</description></field>
+        <field name="submittedDate" type="date-time"/>
+        <prim-key field="docRequestId"/>
+        <relation type="one" fk-name="EFDOCREQ_DRF" rel-entity-name="EfApplicationDraft">
+            <key-map field-name="draftId"/>
+        </relation>
+        <relation type="one" fk-name="EFDOCREQ_MBR" rel-entity-name="Party">
+            <key-map field-name="memberPartyId" rel-field-name="partyId"/>
+        </relation>
+        <index name="EFDOCREQ_DRF_IDX"><index-field name="draftId"/></index>
+        <index name="EFDOCREQ_MBR_IDX"><index-field name="memberPartyId"/></index>
+    </entity>
+
+    <!-- ========================================================= -->
     <!-- Audit log                                                 -->
     <!-- ========================================================= -->
     <entity entity-name="EfAuditLog" package-name="org.apache.ofbiz.efinance.audit"

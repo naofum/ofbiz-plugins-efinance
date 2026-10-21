@@ -150,4 +150,83 @@ under the License.
         <value xml:lang="ja">ファイルサイズが上限を超えています。</value>
     </property>
 
+    <property key="EfinanceKycCheckNotFound">
+        <value xml:lang="en">KYC check not found.</value>
+        <value xml:lang="ja">本人確認が見つかりません。</value>
+    </property>
+    <property key="EfinanceKycNotOwned">
+        <value xml:lang="en">You do not have access to this KYC check.</value>
+        <value xml:lang="ja">この本人確認にアクセスする権限がありません。</value>
+    </property>
+    <property key="EfinanceKycNotSubmittable">
+        <value xml:lang="en">KYC check is not in a submittable state.</value>
+        <value xml:lang="ja">本人確認を提出できる状態ではありません。</value>
+    </property>
+    <property key="EfinanceKycNoImages">
+        <value xml:lang="en">Please upload at least one image before submitting.</value>
+        <value xml:lang="ja">提出前に少なくとも1枚の画像をアップロードしてください。</value>
+    </property>
+    <property key="EfinanceKycAlreadyActive">
+        <value xml:lang="en">You already have an active KYC check in progress.</value>
+        <value xml:lang="ja">本人確認がすでに進行中です。</value>
+    </property>
+    <property key="EfinanceKycReviewInvalidStatus">
+        <value xml:lang="en">Invalid review status. Must be VERIFIED, RESUBMIT, or REJECTED.</value>
+        <value xml:lang="ja">無効なレビューステータスです。</value>
+    </property>
+    <property key="EfinanceKycSubmitted">
+        <value xml:lang="en">KYC check submitted for review.</value>
+        <value xml:lang="ja">本人確認を提出しました。</value>
+    </property>
+    <property key="EfinanceKycVerified">
+        <value xml:lang="en">Identity verification completed successfully.</value>
+        <value xml:lang="ja">本人確認が完了しました。</value>
+    </property>
+    <property key="EfinanceKycNotSubmitted">
+        <value xml:lang="en">KYC check is not in SUBMITTED status. Cannot review.</value>
+        <value xml:lang="ja">本人確認がSUBMITTED状態ではありません。レビューできません。</value>
+    </property>
+
+    <!-- W4: Pre-screen and application status labels -->
+    <property key="EfinancePreScreenLikely">
+        <value xml:lang="en">Based on the information provided, you appear eligible to apply.</value>
+        <value xml:lang="ja">ご入力の情報をもとにした目安では、お申込みいただける可能性があります。</value>
+    </property>
+    <property key="EfinancePreScreenConsult">
+        <value xml:lang="en">Based on the information provided, we recommend consulting with us before applying.</value>
+        <value xml:lang="ja">ご入力の情報をもとにした目安では、ご相談をお勧めします。</value>
+    </property>
+    <property key="EfinancePreScreenUnlikely">
+        <value xml:lang="en">Based on the information provided, approval may be difficult. Please contact us for more information.</value>
+        <value xml:lang="ja">ご入力の情報をもとにした目安では、ご希望のお申込みをお受けしにくい場合があります。詳しくはご相談ください。</value>
+    </property>
+    <property key="EfinanceStagePendingDocRequest">
+        <value xml:lang="en">Additional documents are required. Please submit the requested documents.</value>
+        <value xml:lang="ja">追加の書類が必要です。ご要請の書類をご提出ください。</value>
+    </property>
+    <property key="EfinanceStageUnderReview">
+        <value xml:lang="en">Your application is under review. We will notify you when the review is complete.</value>
+        <value xml:lang="ja">ただいま審査中です。結果が出次第ご連絡いたします。</value>
+    </property>
+    <property key="EfinanceStageResult">
+        <value xml:lang="en">The review has been completed. Please check the result in your portal.</value>
+        <value xml:lang="ja">審査が完了しました。マイページでご確認ください。</value>
+    </property>
+    <property key="EfinanceStageOffer">
+        <value xml:lang="en">A contract offer has been presented. Please review and proceed with the contract.</value>
+        <value xml:lang="ja">お見積が提示されています。内容をご確認の上、ご契約手続きをお進めください。</value>
+    </property>
+    <property key="EfinanceStageContracted">
+        <value xml:lang="en">Your contract is in place. Welcome as a valued customer.</value>
+        <value xml:lang="ja">ご契約が成立しています。ご契約いただきありがとうございます。</value>
+    </property>
+    <property key="EfinanceDocRequestNotFound">
+        <value xml:lang="en">Document request not found.</value>
+        <value xml:lang="ja">書類要請が見つかりません。</value>
+    </property>
+    <property key="EfinanceDocRequestNotPending">
+        <value xml:lang="en">This document request is not in a submittable state.</value>
+        <value xml:lang="ja">この書類要請は提出できる状態ではありません。</value>
+    </property>
+
 </resource>

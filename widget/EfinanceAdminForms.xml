@@ -75,4 +75,30 @@ under the License.
         </field>
     </form>
 
+    <!-- W3: KYC check list (read-only) -->
+    <form name="ListEfKycChecks" type="list" list-name="efKycChecks"
+          paginate-target="FindEfKycCheck">
+        <field name="kycCheckId" title="KYC Check ID">
+            <display/>
+        </field>
+        <field name="memberPartyId" title="Member">
+            <display/>
+        </field>
+        <field name="kycMethodEnumId" title="Method">
+            <display/>
+        </field>
+        <field name="statusId" title="Status">
+            <display/>
+        </field>
+        <field name="confirmerPartyId" title="Reviewer">
+            <display/>
+        </field>
+        <field name="confirmedDate" title="Reviewed">
+            <display type="date-time"/>
+        </field>
+        <field name="createdDate" title="Created">
+            <display type="date-time"/>
+        </field>
+    </form>
+
 </forms>

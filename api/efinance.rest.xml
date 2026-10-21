@@ -159,4 +159,48 @@ under the License.
         </operation>
     </resource>
 
+    <!-- W3: KYC identity verification -->
+    <resource name="kycStart" path="/ef/kyc" auth="true">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efStartKyc"/>
+        </operation>
+    </resource>
+    <resource name="kycStatus" path="/ef/kyc/{kycCheckId}" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efGetKycStatus"/>
+        </operation>
+    </resource>
+    <resource name="kycImages" path="/ef/kyc/{kycCheckId}/images" auth="true">
+        <operation verb="post" produces="application/json">
+            <service name="efUploadKycImage"/>
+        </operation>
+    </resource>
+    <resource name="kycSubmit" path="/ef/kyc/{kycCheckId}/submit" auth="true">
+        <operation verb="post" produces="application/json">
+            <service name="efSubmitKyc"/>
+        </operation>
+    </resource>
+
+    <!-- W4: Pre-screen and application status -->
+    <resource name="preScreen" path="/ef/applications/drafts/{draftId}/prescreen" auth="true">
+        <operation verb="post" produces="application/json">
+            <service name="efPreScreen"/>
+        </operation>
+    </resource>
+    <resource name="applicationStatus" path="/ef/applications/drafts/{draftId}/status" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efGetApplicationStatus"/>
+        </operation>
+    </resource>
+    <resource name="documentRequests" path="/ef/applications/drafts/{draftId}/document-requests" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efListDocumentRequests"/>
+        </operation>
+    </resource>
+    <resource name="submitDocumentRequest" path="/ef/applications/drafts/{draftId}/document-requests/{docRequestId}/submit" auth="true">
+        <operation verb="post" produces="application/json">
+            <service name="efSubmitRequestedDocument"/>
+        </operation>
+    </resource>
+
 </api>

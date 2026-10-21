@@ -273,4 +273,108 @@ under the License.
         <attribute name="fraudResult" type="String" mode="OUT" optional="true"/>
     </service>
 
+    <!-- ========================================================= -->
+    <!-- W3: KYC identity verification                            -->
+    <!-- ========================================================= -->
+    <service name="efStartKyc" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.kyc.EfKycServices" invoke="efStartKyc">
+        <description>Start a KYC identity check for the logged-in member.</description>
+        <attribute name="draftId" type="String" mode="IN" optional="true"/>
+        <attribute name="kycMethodEnumId" type="String" mode="IN" optional="false"/>
+        <attribute name="kycCheckId" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efUploadKycImage" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.kyc.EfKycServices" invoke="efUploadKycImage">
+        <description>Upload a KYC image (ID doc, facial, IC data).</description>
+        <attribute name="kycCheckId" type="String" mode="IN" optional="false"/>
+        <attribute name="imageTypeEnumId" type="String" mode="IN" optional="false"/>
+        <attribute name="fileName" type="String" mode="IN" optional="false"/>
+        <attribute name="contentType" type="String" mode="IN" optional="false"/>
+        <attribute name="uploadedFile" type="java.nio.ByteBuffer" mode="IN" optional="false"/>
+        <attribute name="kycImageId" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efSubmitKyc" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.kyc.EfKycServices" invoke="efSubmitKyc">
+        <description>Submit the KYC check for review.</description>
+        <attribute name="kycCheckId" type="String" mode="IN" optional="false"/>
+    </service>
+
+    <service name="efGetKycStatus" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.kyc.EfKycServices" invoke="efGetKycStatus">
+        <description>Get the current status of a KYC check.</description>
+        <attribute name="kycCheckId" type="String" mode="IN" optional="true"/>
+        <attribute name="draftId" type="String" mode="IN" optional="true"/>
+        <attribute name="kycCheck" type="Map" mode="OUT" optional="true"/>
+        <attribute name="images" type="List" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="reviewEfKycCheck" engine="java" auth="true"
+             location="org.apache.ofbiz.efinance.kyc.EfKycServices" invoke="reviewEfKycCheck">
+        <description>Staff review of a submitted KYC check (VERIFIED/RESUBMIT/REJECTED).</description>
+        <permission-service service-name="efinanceAdminPermission"/>
+        <attribute name="kycCheckId" type="String" mode="IN" optional="false"/>
+        <attribute name="statusId" type="String" mode="IN" optional="false"/>
+        <attribute name="confirmerNote" type="String" mode="IN" optional="true"/>
+    </service>
+
+    <service name="efIsKycVerified" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.kyc.EfKycServices" invoke="efIsKycVerified">
+        <description>Check whether the member (or subject party) has a VERIFIED KYC check.</description>
+        <attribute name="subjectPartyId" type="String" mode="IN" optional="true"/>
+        <attribute name="draftId" type="String" mode="IN" optional="true"/>
+        <attribute name="verified" type="Boolean" mode="OUT" optional="true"/>
+        <attribute name="kycCheckId" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <!-- ========================================================= -->
+    <!-- W4: Pre-screen and application status                    -->
+    <!-- ========================================================= -->
+    <service name="efPreScreen" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.application.EfPreScreenServices" invoke="efPreScreen">
+        <description>Run pre-screen checks against draft step data. Returns result hint only (not score/rules).</description>
+        <attribute name="draftId" type="String" mode="IN" optional="false"/>
+        <attribute name="result" type="String" mode="OUT" optional="true"/>
+        <attribute name="guidance" type="String" mode="OUT" optional="true"/>
+        <attribute name="disclaimer" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efGetApplicationStatus" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.application.EfPreScreenServices" invoke="efGetApplicationStatus">
+        <description>Get the customer-facing stage of an application based on finance statuses.</description>
+        <attribute name="draftId" type="String" mode="IN" optional="false"/>
+        <attribute name="stageEnumId" type="String" mode="OUT" optional="true"/>
+        <attribute name="stageDescription" type="String" mode="OUT" optional="true"/>
+        <attribute name="nextAction" type="String" mode="OUT" optional="true"/>
+        <attribute name="applicationStatus" type="Map" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efCreateDocumentRequest" engine="java" auth="true"
+             location="org.apache.ofbiz.efinance.application.EfPreScreenServices" invoke="efCreateDocumentRequest">
+        <description>Staff creates an additional document request for a draft/application.</description>
+        <permission-service service-name="efinanceAdminPermission"/>
+        <attribute name="draftId" type="String" mode="IN" optional="false"/>
+        <attribute name="documentTypeEnumId" type="String" mode="IN" optional="false"/>
+        <attribute name="reason" type="String" mode="IN" optional="true"/>
+        <attribute name="dueDate" type="Timestamp" mode="IN" optional="true"/>
+        <attribute name="docRequestId" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efListDocumentRequests" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.application.EfPreScreenServices" invoke="efListDocumentRequests">
+        <description>List document requests for an application draft.</description>
+        <attribute name="draftId" type="String" mode="IN" optional="false"/>
+        <attribute name="docRequests" type="List" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efSubmitRequestedDocument" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.application.EfPreScreenServices" invoke="efSubmitRequestedDocument">
+        <description>Customer submits a document for a pending document request.</description>
+        <attribute name="docRequestId" type="String" mode="IN" optional="false"/>
+        <attribute name="fileName" type="String" mode="IN" optional="false"/>
+        <attribute name="contentType" type="String" mode="IN" optional="false"/>
+        <attribute name="uploadedFile" type="java.nio.ByteBuffer" mode="IN" optional="false"/>
+    </service>
+
 </services>

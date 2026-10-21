@@ -38,4 +38,12 @@ under the License.
         <junit-test-suite class-name="org.apache.ofbiz.efinance.test.EfApplicationTests"/>
     </test-case>
 
+    <test-case case-name="ef-kyc-tests">
+        <junit-test-suite class-name="org.apache.ofbiz.efinance.test.EfKycTests"/>
+    </test-case>
+
+    <test-case case-name="ef-prescreen-tests">
+        <junit-test-suite class-name="org.apache.ofbiz.efinance.test.EfPreScreenTests"/>
+    </test-case>
+
 </test-suite>
