@@ -377,4 +377,63 @@ under the License.
         <attribute name="uploadedFile" type="java.nio.ByteBuffer" mode="IN" optional="false"/>
     </service>
 
+    <!-- ========================================================= -->
+    <!-- W5: Contract flow                                        -->
+    <!-- ========================================================= -->
+    <service name="efGetOffer" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.contract.EfContractServices" invoke="efGetOffer">
+        <description>Get the current presented quote (offer) for an application draft.</description>
+        <attribute name="draftId" type="String" mode="IN" optional="false"/>
+        <attribute name="offer" type="Map" mode="OUT" optional="true"/>
+        <attribute name="quoteId" type="String" mode="OUT" optional="true"/>
+        <attribute name="quoteTypeId" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efAcceptOffer" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.contract.EfContractServices" invoke="efAcceptOffer">
+        <description>Customer accepts the presented offer (requires re-authentication handled at API layer).</description>
+        <attribute name="draftId" type="String" mode="IN" optional="false"/>
+        <attribute name="quoteId" type="String" mode="IN" optional="false"/>
+        <attribute name="quoteTypeId" type="String" mode="IN" optional="false"/>
+        <attribute name="acceptedQuoteId" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efStartSigning" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.contract.EfContractServices" invoke="efStartSigning">
+        <description>Start the signing session for an accepted offer.</description>
+        <attribute name="draftId" type="String" mode="IN" optional="false"/>
+        <attribute name="quoteId" type="String" mode="IN" optional="false"/>
+        <attribute name="quoteTypeId" type="String" mode="IN" optional="false"/>
+        <attribute name="signingSessionId" type="String" mode="OUT" optional="true"/>
+        <attribute name="contractSummary" type="Map" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efCompleteSigning" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.contract.EfContractServices" invoke="efCompleteSigning">
+        <description>Complete signing (click-wrap consent) and create the finance agreement.</description>
+        <attribute name="signingSessionId" type="String" mode="IN" optional="false"/>
+        <attribute name="confirmContent" type="Boolean" mode="IN" optional="false"/>
+        <attribute name="ipAddress" type="String" mode="IN" optional="true"/>
+        <attribute name="deviceId" type="String" mode="IN" optional="true"/>
+        <attribute name="agreementId" type="String" mode="OUT" optional="true"/>
+        <attribute name="agreementTypeId" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efListDocuments" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.contract.EfContractServices" invoke="efListDocuments">
+        <description>List delivered documents for an application draft.</description>
+        <attribute name="draftId" type="String" mode="IN" optional="false"/>
+        <attribute name="documents" type="List" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efDownloadDocument" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.contract.EfContractServices" invoke="efDownloadDocument">
+        <description>Get document metadata and text content (binary streaming via efinance content layer).</description>
+        <attribute name="deliveredDocId" type="String" mode="IN" optional="false"/>
+        <attribute name="document" type="Map" mode="OUT" optional="true"/>
+        <attribute name="mimeTypeId" type="String" mode="OUT" optional="true"/>
+        <attribute name="fileName" type="String" mode="OUT" optional="true"/>
+        <attribute name="textData" type="String" mode="OUT" optional="true"/>
+    </service>
+
 </services>

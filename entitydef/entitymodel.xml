@@ -466,6 +466,63 @@ under the License.
     </entity>
 
     <!-- ========================================================= -->
+    <!-- W5 Signing session                                       -->
+    <!-- ========================================================= -->
+    <entity entity-name="EfSigningSession" package-name="org.apache.ofbiz.efinance.contract"
+            title="eFinance signing session">
+        <field name="signingSessionId" type="id"><description>sequenced</description></field>
+        <field name="draftId" type="id"/>
+        <field name="memberPartyId" type="id"/>
+        <field name="quoteId" type="id"><description>loanQuoteId or leaseQuoteId</description></field>
+        <field name="quoteTypeId" type="id"><description>LOAN or LEASE</description></field>
+        <field name="statusId" type="id"><description>EFSIG_PENDING, EFSIG_SIGNED, EFSIG_DECLINED, EFSIG_EXPIRED</description></field>
+        <field name="consentIpAddress" type="short-varchar"/>
+        <field name="consentDeviceId" type="short-varchar"/>
+        <field name="consentDate" type="date-time"/>
+        <field name="signedContentId" type="id"><description>Content: record of consent (text/hash)</description></field>
+        <field name="agreementId" type="id"><description>loanAgreementId or leaseAgreementId after successful signing</description></field>
+        <field name="agreementTypeId" type="id"><description>LOAN or LEASE</description></field>
+        <field name="expiresAt" type="date-time"/>
+        <field name="createdDate" type="date-time"/>
+        <prim-key field="signingSessionId"/>
+        <relation type="one" fk-name="EFSIG_DRF" rel-entity-name="EfApplicationDraft">
+            <key-map field-name="draftId"/>
+        </relation>
+        <relation type="one" fk-name="EFSIG_MBR" rel-entity-name="Party">
+            <key-map field-name="memberPartyId" rel-field-name="partyId"/>
+        </relation>
+        <index name="EFSIG_DRF_IDX"><index-field name="draftId"/></index>
+        <index name="EFSIG_MBR_IDX"><index-field name="memberPartyId"/></index>
+    </entity>
+
+    <!-- ========================================================= -->
+    <!-- W5 Delivered document                                    -->
+    <!-- ========================================================= -->
+    <entity entity-name="EfDeliveredDocument" package-name="org.apache.ofbiz.efinance.contract"
+            title="eFinance delivered document">
+        <field name="deliveredDocId" type="id"><description>sequenced</description></field>
+        <field name="draftId" type="id"/>
+        <field name="memberPartyId" type="id"/>
+        <field name="documentTypeEnumId" type="id"><description>EFDELDOC_TYPE enum</description></field>
+        <field name="contentId" type="id"/>
+        <field name="deliveredDate" type="date-time"/>
+        <field name="consentId" type="id"><description>EfConsent for electronic delivery consent</description></field>
+        <field name="viewedDate" type="date-time"/>
+        <prim-key field="deliveredDocId"/>
+        <relation type="one" fk-name="EFDELDOC_DRF" rel-entity-name="EfApplicationDraft">
+            <key-map field-name="draftId"/>
+        </relation>
+        <relation type="one" fk-name="EFDELDOC_MBR" rel-entity-name="Party">
+            <key-map field-name="memberPartyId" rel-field-name="partyId"/>
+        </relation>
+        <relation type="one-nofk" fk-name="EFDELDOC_CTN" rel-entity-name="Content">
+            <key-map field-name="contentId"/>
+        </relation>
+        <index name="EFDELDOC_DRF_IDX"><index-field name="draftId"/></index>
+        <index name="EFDELDOC_MBR_IDX"><index-field name="memberPartyId"/></index>
+    </entity>
+
+    <!-- ========================================================= -->
     <!-- Audit log                                                 -->
     <!-- ========================================================= -->
     <entity entity-name="EfAuditLog" package-name="org.apache.ofbiz.efinance.audit"

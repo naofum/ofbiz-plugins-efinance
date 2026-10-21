@@ -216,6 +216,30 @@ under the License.
     <Enumeration enumId="EFAUD_DOC_REQ_SUBMIT" enumTypeId="EFAUDIT_ACTION" enumCode="DOC_REQ_SUBMIT" sequenceId="34" description="Document request submitted"/>
 
     <!-- ========================================================= -->
+    <!-- W5 Signing session statuses                              -->
+    <!-- ========================================================= -->
+    <StatusType statusTypeId="EFSIG_STATUS" description="eFinance signing session status" hasTable="N"/>
+    <StatusItem statusId="EFSIG_PENDING" statusTypeId="EFSIG_STATUS" statusCode="PENDING" sequenceId="01" description="Pending signature"/>
+    <StatusItem statusId="EFSIG_SIGNED" statusTypeId="EFSIG_STATUS" statusCode="SIGNED" sequenceId="02" description="Signed"/>
+    <StatusItem statusId="EFSIG_DECLINED" statusTypeId="EFSIG_STATUS" statusCode="DECLINED" sequenceId="03" description="Declined"/>
+    <StatusItem statusId="EFSIG_EXPIRED" statusTypeId="EFSIG_STATUS" statusCode="EXPIRED" sequenceId="04" description="Expired"/>
+    <StatusValidChange statusId="EFSIG_PENDING" statusIdTo="EFSIG_SIGNED" transitionName="Sign"/>
+    <StatusValidChange statusId="EFSIG_PENDING" statusIdTo="EFSIG_DECLINED" transitionName="Decline"/>
+
+    <!-- W5 Delivered document types -->
+    <EnumerationType enumTypeId="EFDELDOC_TYPE" description="eFinance delivered document type"/>
+    <Enumeration enumId="EFDELDOC_PRE" enumTypeId="EFDELDOC_TYPE" enumCode="PRE_CONTRACT" sequenceId="01" description="Pre-contract disclosure"/>
+    <Enumeration enumId="EFDELDOC_CONTRACT" enumTypeId="EFDELDOC_TYPE" enumCode="CONTRACT" sequenceId="02" description="Contract"/>
+    <Enumeration enumId="EFDELDOC_IMPORTANT" enumTypeId="EFDELDOC_TYPE" enumCode="IMPORTANT_MATTERS" sequenceId="03" description="Important matters explanation"/>
+    <Enumeration enumId="EFDELDOC_SCHEDULE" enumTypeId="EFDELDOC_TYPE" enumCode="REPAYMENT_SCHEDULE" sequenceId="04" description="Repayment schedule"/>
+
+    <!-- W5 audit action enums -->
+    <Enumeration enumId="EFAUD_OFFER_ACCEPT" enumTypeId="EFAUDIT_ACTION" enumCode="OFFER_ACCEPT" sequenceId="41" description="Offer accepted"/>
+    <Enumeration enumId="EFAUD_SIGN_START" enumTypeId="EFAUDIT_ACTION" enumCode="SIGN_START" sequenceId="42" description="Signing started"/>
+    <Enumeration enumId="EFAUD_SIGN_COMPLETE" enumTypeId="EFAUDIT_ACTION" enumCode="SIGN_COMPLETE" sequenceId="43" description="Signing completed"/>
+    <Enumeration enumId="EFAUD_DOC_DELIVER" enumTypeId="EFAUDIT_ACTION" enumCode="DOC_DELIVER" sequenceId="44" description="Document delivered"/>
+
+    <!-- ========================================================= -->
     <!-- System user for internal dispatcher calls                 -->
     <!-- ========================================================= -->
     <Party partyId="EFINANCE_SYSTEM" partyTypeId="PERSON"/>

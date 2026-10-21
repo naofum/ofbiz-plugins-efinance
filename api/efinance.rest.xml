@@ -203,4 +203,36 @@ under the License.
         </operation>
     </resource>
 
+    <!-- W5: Contract -->
+    <resource name="offer" path="/ef/applications/drafts/{draftId}/offer" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efGetOffer"/>
+        </operation>
+    </resource>
+    <resource name="acceptOffer" path="/ef/applications/drafts/{draftId}/offer/accept" auth="true">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efAcceptOffer"/>
+        </operation>
+    </resource>
+    <resource name="signing" path="/ef/applications/drafts/{draftId}/signing" auth="true">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efStartSigning"/>
+        </operation>
+    </resource>
+    <resource name="signingComplete" path="/ef/signing/{signingSessionId}/complete" auth="true">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efCompleteSigning"/>
+        </operation>
+    </resource>
+    <resource name="documents" path="/ef/applications/drafts/{draftId}/documents" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efListDocuments"/>
+        </operation>
+    </resource>
+    <resource name="downloadDocument" path="/ef/documents/{deliveredDocId}" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efDownloadDocument"/>
+        </operation>
+    </resource>
+
 </api>

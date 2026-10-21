@@ -229,4 +229,42 @@ under the License.
         <value xml:lang="ja">この書類要請は提出できる状態ではありません。</value>
     </property>
 
+    <!-- W5: Contract workflow labels -->
+    <property key="EfinanceOfferNotFound">
+        <value xml:lang="en">No offer is available for this application yet. Please check back later.</value>
+        <value xml:lang="ja">まだお見積が用意されていません。後ほどご確認ください。</value>
+    </property>
+    <property key="EfinanceOfferNotPresented">
+        <value xml:lang="en">This offer is not in a presented state.</value>
+        <value xml:lang="ja">このお見積は提示状態ではありません。</value>
+    </property>
+    <property key="EfinanceSigningSessionNotFound">
+        <value xml:lang="en">Signing session not found.</value>
+        <value xml:lang="ja">署名セッションが見つかりません。</value>
+    </property>
+    <property key="EfinanceSigningExpired">
+        <value xml:lang="en">This signing session has expired. Please start a new signing session.</value>
+        <value xml:lang="ja">署名セッションの有効期限が切れています。新しいセッションを開始してください。</value>
+    </property>
+    <property key="EfinanceSigningNotConfirmed">
+        <value xml:lang="en">You must confirm you have read and agree to the contract terms.</value>
+        <value xml:lang="ja">契約内容を確認し同意してください。</value>
+    </property>
+    <property key="EfinanceSigningAgreementFailed">
+        <value xml:lang="en">Unable to create the agreement at this time. Please contact our support team.</value>
+        <value xml:lang="ja">ただいま契約の作成ができません。担当者にお問い合わせください。</value>
+    </property>
+    <property key="EfinanceNoApplicationSubmitted">
+        <value xml:lang="en">No submitted application found for this draft.</value>
+        <value xml:lang="ja">この下書きに対して送信済みの申込が見つかりません。</value>
+    </property>
+    <property key="EfinanceQuoteNotAccepted">
+        <value xml:lang="en">The offer has not been accepted yet.</value>
+        <value xml:lang="ja">お見積がまだ受理されていません。</value>
+    </property>
+    <property key="EfinanceSigningAlreadyActive">
+        <value xml:lang="en">A signing session is already in progress for this application.</value>
+        <value xml:lang="ja">この申込の署名手続きがすでに進行中です。</value>
+    </property>
+
 </resource>

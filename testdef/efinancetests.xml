@@ -46,4 +46,8 @@ under the License.
         <junit-test-suite class-name="org.apache.ofbiz.efinance.test.EfPreScreenTests"/>
     </test-case>
 
+    <test-case case-name="ef-contract-tests">
+        <junit-test-suite class-name="org.apache.ofbiz.efinance.test.EfContractTests"/>
+    </test-case>
+
 </test-suite>
