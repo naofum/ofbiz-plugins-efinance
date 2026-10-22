@@ -565,6 +565,8 @@ under the License.
         <attribute name="reauthToken" type="String" mode="IN" optional="true"/>
         <attribute name="agreementId" type="String" mode="OUT" optional="true"/>
         <attribute name="agreementTypeId" type="String" mode="OUT" optional="true"/>
+        <attribute name="deliveredDocId" type="String" mode="OUT" optional="true"/>
+        <attribute name="contentId" type="String" mode="OUT" optional="true"/>
     </service>
 
     <service name="efListDocuments" engine="java" auth="true" export="true"
@@ -581,9 +583,11 @@ under the License.
         <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="deliveredDocId" type="String" mode="IN" optional="false"/>
         <attribute name="document" type="Map" mode="OUT" optional="true"/>
+        <attribute name="contentId" type="String" mode="OUT" optional="true"/>
         <attribute name="mimeTypeId" type="String" mode="OUT" optional="true"/>
         <attribute name="fileName" type="String" mode="OUT" optional="true"/>
         <attribute name="textData" type="String" mode="OUT" optional="true"/>
+        <attribute name="contentBase64" type="String" mode="OUT" optional="true"/>
     </service>
 
     <!-- ========================================================= -->

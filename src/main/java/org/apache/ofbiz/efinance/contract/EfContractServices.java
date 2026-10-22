@@ -18,9 +18,17 @@
  *******************************************************************************/
 package org.apache.ofbiz.efinance.contract;
 
+import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Timestamp;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -37,6 +45,7 @@ import org.apache.ofbiz.entity.condition.EntityCondition;
 import org.apache.ofbiz.entity.condition.EntityOperator;
 import org.apache.ofbiz.entity.util.EntityQuery;
 import org.apache.ofbiz.efinance.security.EfAccessGuard;
+import org.apache.ofbiz.party.party.PartyHelper;
 import org.apache.ofbiz.service.DispatchContext;
 import org.apache.ofbiz.service.LocalDispatcher;
 import org.apache.ofbiz.service.ServiceUtil;
@@ -403,6 +412,17 @@ public final class EfContractServices {
                 agreementTypeId = QUOTE_TYPE_LOAN;
             }
 
+            // Generate the delivered contract PDF and attach it to the signing session.
+            GenericValue agreement = loadAgreement(delegator, agreementTypeId, agreementId);
+            String contentId = null;
+            try {
+                contentId = createContractDocument(delegator, dispatcher, agreement, agreementTypeId,
+                        draftId, signingSessionId, now);
+            } catch (Exception documentException) {
+                Debug.logWarning("Unable to create contract PDF for " + agreementId
+                        + ": " + documentException.getMessage(), MODULE);
+            }
+
             // Update signing session to SIGNED
             session.set("statusId", STATUS_EFSIG_SIGNED);
             session.set("consentIpAddress", ipAddress);
@@ -410,16 +430,22 @@ public final class EfContractServices {
             session.set("consentDate", now);
             session.set("agreementId", agreementId);
             session.set("agreementTypeId", agreementTypeId);
+            if (contentId != null) {
+                session.set("signedContentId", contentId);
+            }
             delegator.store(session);
 
-            // Create EfDeliveredDocument record for the contract
-            createDeliveredDocument(delegator, draftId, partyId, "EFDELDOC_CONTRACT", null, now);
+            // Create EfDeliveredDocument record for the contract.
+            String deliveredDocId = createDeliveredDocument(delegator, draftId, partyId,
+                    "EFDELDOC_CONTRACT", contentId, now);
 
             writeAuditLog(delegator, partyId, ACTION_SIGN_COMPLETE, "EfSigningSession", signingSessionId);
 
             Map<String, Object> result = ServiceUtil.returnSuccess();
             result.put("agreementId", agreementId);
             result.put("agreementTypeId", agreementTypeId);
+            result.put("deliveredDocId", deliveredDocId);
+            result.put("contentId", contentId);
             return result;
 
         } catch (Exception e) {
@@ -461,6 +487,7 @@ public final class EfContractServices {
                 m.put("documentTypeEnumId", doc.getString("documentTypeEnumId"));
                 m.put("deliveredDate", doc.getTimestamp("deliveredDate"));
                 m.put("viewedDate", doc.getTimestamp("viewedDate"));
+                m.put("contentId", doc.getString("contentId"));
                 m.put("hasContent", UtilValidate.isNotEmpty(doc.getString("contentId")));
                 documents.add(m);
             }
@@ -517,10 +544,12 @@ public final class EfContractServices {
             result.put("document", documentMap);
 
             String contentId = doc.getString("contentId");
+            result.put("contentId", contentId);
             if (UtilValidate.isEmpty(contentId)) {
                 result.put("mimeTypeId", null);
                 result.put("fileName", null);
                 result.put("textData", null);
+                result.put("contentBase64", null);
                 return result;
             }
 
@@ -528,14 +557,34 @@ public final class EfContractServices {
             GenericValue contentDataView = EntityQuery.use(delegator).from("ContentDataResourceView")
                     .where("contentId", contentId).queryOne();
             if (contentDataView != null) {
-                result.put("mimeTypeId", contentDataView.getString("mimeTypeId"));
-                result.put("fileName", contentDataView.getString("drObjectInfo"));
-                String textData = contentDataView.getString("drObjectInfo");
-                result.put("textData", textData);
+                String mimeTypeId = contentDataView.getString("mimeTypeId");
+                String dataResourceTypeId = contentDataView.getString("drDataResourceTypeId");
+                String objectInfo = contentDataView.getString("drObjectInfo");
+                String dataResourceName = contentDataView.getString("drDataResourceName");
+                result.put("mimeTypeId", mimeTypeId);
+                result.put("fileName", UtilValidate.isNotEmpty(dataResourceName) ? dataResourceName : objectInfo);
+                result.put("contentBase64", null);
+                result.put("textData", null);
+
+                if ("LOCAL_FILE".equals(dataResourceTypeId) && UtilValidate.isNotEmpty(objectInfo)) {
+                    try {
+                        byte[] bytes = Files.readAllBytes(Path.of(objectInfo));
+                        result.put("contentBase64", Base64.getEncoder().encodeToString(bytes));
+                        if (UtilValidate.isNotEmpty(mimeTypeId) && mimeTypeId.startsWith("text/")) {
+                            result.put("textData", new String(bytes, java.nio.charset.StandardCharsets.UTF_8));
+                        }
+                    } catch (Exception fileException) {
+                        Debug.logWarning("Unable to read delivered document file " + objectInfo
+                                + ": " + fileException.getMessage(), MODULE);
+                    }
+                } else {
+                    result.put("textData", objectInfo);
+                }
             } else {
                 result.put("mimeTypeId", null);
                 result.put("fileName", null);
                 result.put("textData", null);
+                result.put("contentBase64", null);
             }
 
             return result;
@@ -583,7 +632,173 @@ public final class EfContractServices {
         return m;
     }
 
-    private static void createDeliveredDocument(Delegator delegator, String draftId,
+    private static GenericValue loadAgreement(Delegator delegator, String agreementTypeId,
+            String agreementId) throws GenericEntityException {
+        if (QUOTE_TYPE_LEASE.equals(agreementTypeId)) {
+            return EntityQuery.use(delegator).from("LeaseAgreement")
+                    .where("leaseAgreementId", agreementId).queryOne();
+        }
+        return EntityQuery.use(delegator).from("LoanAgreement")
+                .where("loanAgreementId", agreementId).queryOne();
+    }
+
+    private static String createContractDocument(Delegator delegator, LocalDispatcher dispatcher,
+            GenericValue agreement, String agreementTypeId, String draftId,
+            String signingSessionId, Timestamp now) throws Exception {
+        if (agreement == null) {
+            return null;
+        }
+        List<String> lines = buildContractDocumentLines(delegator, agreement, agreementTypeId,
+                signingSessionId, now);
+        byte[] pdf = ContractDocumentPdf.build(lines);
+        String fileName = "contract-" + agreement.getString(
+                QUOTE_TYPE_LEASE.equals(agreementTypeId) ? "leaseAgreementId" : "loanAgreementId") + ".pdf";
+
+        GenericValue systemUser = getSystemUser(delegator);
+        Map<String, Object> contentCtx = new HashMap<>();
+        contentCtx.put("userLogin", systemUser);
+        contentCtx.put("dataResourceTypeId", "LOCAL_FILE");
+        contentCtx.put("dataTemplateTypeId", "NONE");
+        contentCtx.put("dataResourceName", fileName);
+        contentCtx.put("mimeTypeId", "application/pdf");
+        contentCtx.put("contentTypeId", "DOCUMENT");
+        contentCtx.put("contentName", "Electronic contract " + fileName);
+        contentCtx.put("uploadedFile", ByteBuffer.wrap(pdf));
+        contentCtx.put("_uploadedFile_fileName", fileName);
+        contentCtx.put("_uploadedFile_contentType", "application/pdf");
+
+        Map<String, Object> contentResult = dispatcher.runSync("createContentFromUploadedFile", contentCtx);
+        if (ServiceUtil.isSuccess(contentResult)) {
+            return (String) contentResult.get("contentId");
+        }
+        Debug.logWarning("createContentFromUploadedFile failed for " + draftId + ": "
+                + ServiceUtil.getErrorMessage(contentResult), MODULE);
+        return null;
+    }
+
+    private static List<String> buildContractDocumentLines(Delegator delegator, GenericValue agreement,
+            String agreementTypeId, String signingSessionId, Timestamp now) throws GenericEntityException {
+        List<String> lines = new ArrayList<>();
+        boolean lease = QUOTE_TYPE_LEASE.equals(agreementTypeId);
+        String agreementId = agreement.getString(lease ? "leaseAgreementId" : "loanAgreementId");
+        String customerPartyId = agreement.getString(lease ? "lesseePartyId" : "borrowerPartyId");
+
+        addWrapped(lines, "電子契約書（eFinance サンプル）", 80);
+        addWrapped(lines, "契約番号: " + agreementId, 90);
+        addWrapped(lines, "契約種別: " + (lease ? "リース" : "ローン"), 90);
+        addWrapped(lines, "契約日: " + formatContractDate(agreement.getTimestamp("agreementDate")), 90);
+        addWrapped(lines, "契約当事者: " + partyName(delegator, customerPartyId)
+                + " (" + customerPartyId + ")", 100);
+        if (lease) {
+            addWrapped(lines, "取得価額: " + formatAmount(agreement.getBigDecimal("acquisitionCost"))
+                    + " " + agreement.getString("currencyUomId"), 90);
+            addWrapped(lines, "月額リース料: " + formatAmount(agreement.getBigDecimal("monthlyLeaseAmount"))
+                    + " " + agreement.getString("currencyUomId"), 90);
+            addWrapped(lines, "リース期間: " + agreement.get("termMonths") + " ヶ月", 90);
+            addWrapped(lines, "リース開始日: " + formatContractDate(agreement.getTimestamp("leaseStartDate")), 90);
+            addWrapped(lines, "リース終了日: " + formatContractDate(agreement.getTimestamp("leaseEndDate")), 90);
+        } else {
+            addWrapped(lines, "借入元本: " + formatAmount(agreement.getBigDecimal("principalAmount"))
+                    + " " + agreement.getString("currencyUomId"), 90);
+            addWrapped(lines, "年利: " + agreement.getBigDecimal("annualInterestRate"), 90);
+            addWrapped(lines, "返済期間: " + agreement.get("termMonths") + " ヶ月", 90);
+            addWrapped(lines, "初回返済日: " + formatContractDate(agreement.getTimestamp("firstPaymentDate")), 90);
+        }
+        addWrapped(lines, "", 80);
+        addWrapped(lines, "返済・リース料予定表", 80);
+
+        if (lease) {
+            addWrapped(lines, "回 | 期日 | リース料 | 元本 | 利息 | 消費税 | 残元本", 100);
+            Long revision = latestRevision(delegator, "LeaseAgreementPaymentSchedule",
+                    "leaseAgreementId", agreementId);
+            if (revision != null) {
+                List<GenericValue> rows = EntityQuery.use(delegator)
+                        .from("LeaseAgreementPaymentSchedule")
+                        .where("leaseAgreementId", agreementId, "scheduleRevisionNumber", revision)
+                        .orderBy("installmentNumber").queryList();
+                for (GenericValue row : rows) {
+                    addWrapped(lines, String.format("%s | %s | %s | %s | %s | %s | %s",
+                            row.get("installmentNumber"),
+                            formatContractDate(row.getTimestamp("dueDate")),
+                            formatAmount(row.getBigDecimal("leaseAmount")),
+                            formatAmount(row.getBigDecimal("principalPortion")),
+                            formatAmount(row.getBigDecimal("interestPortion")),
+                            formatAmount(row.getBigDecimal("taxAmount")),
+                            formatAmount(row.getBigDecimal("remainingPrincipal"))), 120);
+                }
+            }
+        } else {
+            addWrapped(lines, "回 | 期日 | 返済額 | 元本 | 利息 | 残高", 100);
+            Long revision = latestRevision(delegator, "LoanAgreementRepaymentSchedule",
+                    "loanAgreementId", agreementId);
+            if (revision != null) {
+                List<GenericValue> rows = EntityQuery.use(delegator)
+                        .from("LoanAgreementRepaymentSchedule")
+                        .where("loanAgreementId", agreementId, "scheduleRevisionNumber", revision)
+                        .orderBy("installmentNumber").queryList();
+                for (GenericValue row : rows) {
+                    addWrapped(lines, String.format("%s | %s | %s | %s | %s | %s",
+                            row.get("installmentNumber"),
+                            formatContractDate(row.getTimestamp("dueDate")),
+                            formatAmount(row.getBigDecimal("paymentAmount")),
+                            formatAmount(row.getBigDecimal("principalAmount")),
+                            formatAmount(row.getBigDecimal("interestAmount")),
+                            formatAmount(row.getBigDecimal("remainingBalance"))), 120);
+                }
+            }
+        }
+
+        addWrapped(lines, "", 80);
+        addWrapped(lines, "署名日時: " + formatContractDate(now), 90);
+        addWrapped(lines, "署名セッション: " + signingSessionId, 90);
+        addWrapped(lines, "本書面は電子契約により交付されました。", 90);
+        return lines;
+    }
+
+    private static Long latestRevision(Delegator delegator, String entityName, String keyName,
+            String keyValue) throws GenericEntityException {
+        List<GenericValue> rows = EntityQuery.use(delegator).from(entityName)
+                .where(keyName, keyValue)
+                .orderBy("-scheduleRevisionNumber").queryList();
+        return rows.isEmpty() ? null : rows.get(0).getLong("scheduleRevisionNumber");
+    }
+
+    private static String partyName(Delegator delegator, String partyId) {
+        if (UtilValidate.isEmpty(partyId)) {
+            return "";
+        }
+        return PartyHelper.getPartyName(delegator, partyId, false);
+    }
+
+    private static String formatContractDate(Timestamp value) {
+        if (value == null) {
+            return "";
+        }
+        return new SimpleDateFormat("yyyy-MM-dd HH:mm").format(value);
+    }
+
+    private static String formatAmount(BigDecimal value) {
+        if (value == null) {
+            return "";
+        }
+        return new DecimalFormat("#,##0.00").format(value);
+    }
+
+    private static void addWrapped(List<String> lines, String text, int maxLength) {
+        if (text == null) {
+            lines.add("");
+            return;
+        }
+        if (text.length() <= maxLength) {
+            lines.add(text);
+            return;
+        }
+        for (int start = 0; start < text.length(); start += maxLength) {
+            lines.add(text.substring(start, Math.min(start + maxLength, text.length())));
+        }
+    }
+
+    private static String createDeliveredDocument(Delegator delegator, String draftId,
             String memberPartyId, String documentTypeEnumId, String contentId, Timestamp now) {
         try {
             String deliveredDocId = delegator.getNextSeqId("EfDeliveredDocument");
@@ -596,8 +811,10 @@ public final class EfContractServices {
             doc.set("deliveredDate", now);
             delegator.create(doc);
             writeAuditLog(delegator, memberPartyId, ACTION_DOC_DELIVER, "EfDeliveredDocument", deliveredDocId);
+            return deliveredDocId;
         } catch (GenericEntityException e) {
             Debug.logWarning("Failed to create delivered document: " + e.getMessage(), MODULE);
+            return null;
         }
     }
 

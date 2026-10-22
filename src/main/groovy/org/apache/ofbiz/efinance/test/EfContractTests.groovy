@@ -19,8 +19,12 @@
 package org.apache.ofbiz.efinance.test
 
 import java.math.BigDecimal
+import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
 import java.sql.Timestamp
+import java.util.Base64
 import org.apache.ofbiz.entity.GenericValue
+import org.apache.ofbiz.efinance.contract.ContractDocumentPdf
 import org.apache.ofbiz.service.ServiceUtil
 import org.apache.ofbiz.service.testtools.OFBizTestCase
 
@@ -248,5 +252,154 @@ class EfContractTests extends OFBizTestCase {
         GenericValue session = from('EfSigningSession')
                 .where('signingSessionId', signingSessionId).queryOne()
         assert session.statusId == 'EFSIG_PENDING'
+    }
+
+    void testCompleteSigningCreatesContractContent() {
+        Map data = createDraftWithLoanApp()
+        String draftId = data.draftId
+        String loanApplicationId = data.loanApplicationId
+        GenericValue systemUser = from('UserLogin').where('userLoginId', 'efinance-system').queryOne()
+
+        ok(dispatcher.runSync('setLoanApplicationStatus', [
+                loanApplicationId: loanApplicationId,
+                statusId: 'LOANAPP_SUBMITTED',
+                userLogin: systemUser
+        ]))
+        ok(dispatcher.runSync('setLoanApplicationStatus', [
+                loanApplicationId: loanApplicationId,
+                statusId: 'LOANAPP_APPROVED',
+                userLogin: systemUser
+        ]))
+
+        Map underwriting = dispatcher.runSync('createLoanUnderwriting', [
+                loanApplicationId: loanApplicationId,
+                statusId: 'LOANUW_IN_REVIEW',
+                creditScore: 700L,
+                decision: 'PENDING',
+                approvedPrincipalAmount: new BigDecimal('100000'),
+                approvedAnnualInterestRate: new BigDecimal('0.150000'),
+                userLogin: systemUser
+        ])
+        ok(underwriting)
+        ok(dispatcher.runSync('setLoanUnderwritingStatus', [
+                loanUnderwritingId: underwriting.loanUnderwritingId,
+                statusId: 'LOANUW_APPROVED',
+                userLogin: systemUser
+        ]))
+
+        Map quote = dispatcher.runSync('createLoanQuote', [
+                loanApplicationId: loanApplicationId,
+                principalAmount: new BigDecimal('100000'),
+                annualInterestRate: new BigDecimal('0.150000'),
+                termMonths: 12L,
+                userLogin: systemUser
+        ])
+        ok(quote)
+        ok(dispatcher.runSync('setLoanQuoteStatus', [
+                loanQuoteId: quote.loanQuoteId,
+                statusId: 'LOANQT_PRESENTED',
+                userLogin: systemUser
+        ]))
+
+        ok(dispatcher.runSync('efAcceptOffer', [
+                userLogin: apiUser(),
+                draftId: draftId,
+                quoteId: quote.loanQuoteId,
+                quoteTypeId: 'LOAN'
+        ]))
+        Map signStart = dispatcher.runSync('efStartSigning', [
+                userLogin: apiUser(),
+                draftId: draftId,
+                quoteId: quote.loanQuoteId,
+                quoteTypeId: 'LOAN'
+        ])
+        ok(signStart)
+
+        Map signComplete = dispatcher.runSync('efCompleteSigning', [
+                userLogin: apiUser(),
+                signingSessionId: signStart.signingSessionId,
+                confirmContent: Boolean.TRUE,
+                ipAddress: '127.0.0.1',
+                deviceId: 'test-device',
+                reauthToken: reauthToken()
+        ])
+        ok(signComplete)
+        assert signComplete.contentId
+        assert signComplete.deliveredDocId
+
+        GenericValue session = from('EfSigningSession')
+                .where('signingSessionId', signStart.signingSessionId).queryOne()
+        assert session.statusId == 'EFSIG_SIGNED'
+        assert session.signedContentId == signComplete.contentId
+
+        GenericValue delivered = from('EfDeliveredDocument')
+                .where('deliveredDocId', signComplete.deliveredDocId).queryOne()
+        assert delivered != null
+        assert delivered.contentId == signComplete.contentId
+
+        Map download = dispatcher.runSync('efDownloadDocument', [
+                userLogin: apiUser(), deliveredDocId: signComplete.deliveredDocId
+        ])
+        ok(download)
+        assert download.mimeTypeId == 'application/pdf'
+        assert download.contentBase64
+        byte[] bytes = Base64.decoder.decode(download.contentBase64)
+        assert new String(bytes, 0, 5, StandardCharsets.US_ASCII) == '%PDF-'
+    }
+
+    void testContractDocumentPdfAndContent() {
+        byte[] pdf = ContractDocumentPdf.build([
+                '電子契約書（テスト）',
+                '契約番号: TEST_CONTRACT_PDF',
+                '契約者: TEST_EF_CUST',
+                '本書面は電子契約により交付されました。'
+        ])
+        assert new String(pdf, 0, 5, StandardCharsets.US_ASCII) == '%PDF-'
+        assert new String(pdf, StandardCharsets.ISO_8859_1).contains('%%EOF')
+
+        GenericValue systemUser = from('UserLogin').where('userLoginId', 'system').queryOne()
+        Map contentResult = dispatcher.runSync('createContentFromUploadedFile', [
+                userLogin: systemUser,
+                dataResourceTypeId: 'LOCAL_FILE',
+                dataTemplateTypeId: 'NONE',
+                dataResourceName: 'test-contract.pdf',
+                mimeTypeId: 'application/pdf',
+                contentTypeId: 'DOCUMENT',
+                uploadedFile: ByteBuffer.wrap(pdf),
+                _uploadedFile_fileName: 'test-contract.pdf',
+                _uploadedFile_contentType: 'application/pdf'
+        ])
+        ok(contentResult)
+        assert contentResult.contentId
+
+        GenericValue contentData = from('ContentDataResourceView')
+                .where('contentId', contentResult.contentId).queryOne()
+        assert contentData != null
+        assert contentData.mimeTypeId == 'application/pdf'
+        assert contentData.drObjectInfo
+        byte[] stored = new File(contentData.drObjectInfo).bytes
+        assert new String(stored, 0, 5, StandardCharsets.US_ASCII) == '%PDF-'
+
+        Map draft = createDraftWithLoanApp()
+        Timestamp now = new Timestamp(System.currentTimeMillis())
+        String deliveredDocId = delegator.getNextSeqId('EfDeliveredDocument')
+        GenericValue delivered = delegator.makeValue('EfDeliveredDocument')
+        delivered.set('deliveredDocId', deliveredDocId)
+        delivered.set('draftId', draft.draftId)
+        delivered.set('memberPartyId', 'TEST_EF_CUST')
+        delivered.set('documentTypeEnumId', 'EFDELDOC_CONTRACT')
+        delivered.set('contentId', contentResult.contentId)
+        delivered.set('deliveredDate', now)
+        delegator.create(delivered)
+
+        Map download = dispatcher.runSync('efDownloadDocument', [
+                userLogin: apiUser(), deliveredDocId: deliveredDocId
+        ])
+        ok(download)
+        assert download.contentId == contentResult.contentId
+        assert download.mimeTypeId == 'application/pdf'
+        assert download.contentBase64
+        byte[] downloaded = Base64.decoder.decode(download.contentBase64)
+        assert new String(downloaded, 0, 5, StandardCharsets.US_ASCII) == '%PDF-'
     }
 }
