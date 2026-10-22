@@ -4,7 +4,7 @@
 
 - 要件：`REQUIREMENTS_EFINANCE.md`
 - 仕様：`SPEC_EFINANCE.md`
-- 状態：W0〜W6 の API・DB は実装済み（2026-10-22）。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、ポータル用デモデータ、JasperReports 契約 PDF・電子交付、`ESignatureAdapter` を追加。外部署名サービス、W7 は未実装。
+- 状態：W0〜W6 の API・DB は実装済み（2026-10-22）。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、ポータル用デモデータ、JasperReports 契約 PDF・電子交付、`ESignatureAdapter`、REST CORS・エラーチェーンテストを追加。外部署名サービス、W7 は未実装。
 - 依存：`efinance → finance`、`efinance → support`、OFBiz core、rest-api。ecommerce には依存しない。
 - 注意：`/ef/` のトークン失効検証に rest-api の `EfAuthFilter` を、公開 REST 操作の認証除外に `APIAuthFilter` を使うため、efinance プラグイン単体ではなく rest-api の差分もデプロイ対象とする。
 - 画面：`/efinanceadmin`（担当者向け管理）、`/portal`（顧客向けサンプル）。本番の顧客画面は別リポジトリで作成する。

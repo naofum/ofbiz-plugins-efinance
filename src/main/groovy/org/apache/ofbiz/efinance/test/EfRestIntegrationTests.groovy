@@ -48,7 +48,7 @@ class EfRestIntegrationTests extends OFBizTestCase {
         super(name)
     }
 
-    private Map request(String method, String path, String body, String token) {
+    private Map request(String method, String path, String body, String token, String origin = null) {
         TrustManager trustManager = [
                 checkClientTrusted: { X509Certificate[] chain, String authType -> },
                 checkServerTrusted: { X509Certificate[] chain, String authType -> },
@@ -71,6 +71,9 @@ class EfRestIntegrationTests extends OFBizTestCase {
         if (token != null) {
             connection.setRequestProperty('Authorization', 'Bearer ' + token)
         }
+        if (origin != null) {
+            connection.setRequestProperty('Origin', origin)
+        }
         if (body != null) {
             connection.setDoOutput(true)
             connection.setRequestProperty('Content-Type', 'application/json')
@@ -78,10 +81,15 @@ class EfRestIntegrationTests extends OFBizTestCase {
         }
 
         int status = connection.responseCode
+        Map<String, List<String>> responseHeaders = connection.getHeaderFields()
         InputStream stream = status >= 400 ? connection.errorStream : connection.inputStream
         String responseBody = stream == null ? '' : stream.getText('UTF-8')
         connection.disconnect()
-        return [status: status, body: responseBody]
+        return [status: status, body: responseBody, headers: responseHeaders]
+    }
+
+    private boolean hasHeader(Map<String, List<String>> headers, String name) {
+        return headers.any { key, value -> key != null && key.equalsIgnoreCase(name) && value != null }
     }
 
     private Map json(Map response) {
@@ -106,5 +114,26 @@ class EfRestIntegrationTests extends OFBizTestCase {
 
         Map invalid = request('GET', '/rest/ef/me', null, 'invalid-token')
         assert invalid.status == 401
+    }
+
+    void testErrorChainAndCorsHeaders() {
+        Map noToken = request('GET', '/rest/ef/me', null, null)
+        assert noToken.status == 401
+        assert json(noToken).statusCode == 401
+
+        Map malformed = request('POST', '/rest/ef/auth/login', '{', null)
+        assert malformed.status in [400, 422]
+
+        Map missingFields = request('POST', '/rest/ef/auth/login', '{}', null)
+        assert missingFields.status in [400, 422]
+
+        Map notFound = request('GET', '/rest/ef/no-such-endpoint', null, null)
+        assert notFound.status in [404, 405]
+
+        Map cors = request('GET', '/rest/ef/products', null, null, 'https://portal.example.com')
+        assert cors.status == 200
+        assert hasHeader(cors.headers, 'Access-Control-Allow-Credentials')
+        assert hasHeader(cors.headers, 'Access-Control-Allow-Headers')
+        assert hasHeader(cors.headers, 'Access-Control-Allow-Methods')
     }
 }

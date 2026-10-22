@@ -2,7 +2,7 @@
 
 ローン・リースを **Web で申込から契約・契約後の手続きまで完結** できるようにする、顧客向けのプラグイン `efinance` の要件定義。OFBiz の ecommerce（order・product の上に乗る顧客向けの店舗）と同じ考え方で、finance の上に乗る顧客向けの仕組みとする。詳細な設計は `SPEC_EFINANCE.md` を正とする。
 
-> **状態：W0〜W6 の API・DB は実装済み（2026-10-22 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト、JasperReports 契約 PDF・電子交付、`ESignatureAdapter` を追加した。テストは 69 件成功（errors="0" / failures="0"）。残作業は外部署名サービス連携、W7 口座振替。
+> **状態：W0〜W6 の API・DB は実装済み（2026-10-22 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト（CORS・エラーチェーンを含む）、JasperReports 契約 PDF・電子交付、`ESignatureAdapter` を追加した。テストは 70 件成功（errors="0" / failures="0"）。残作業は外部署名サービス連携、W7 口座振替。
 
 ---
 
@@ -662,10 +662,10 @@ flowchart LR
 
 **現在の結果（2026-10-22）**
 
-- `.\gradlew.bat "ofbiz --test component=efinance"`：69 テスト、`errors="0"` / `failures="0"`
-- REST 経由の JWT 取得・Authorization・公開 API・無効トークンは自動テスト済み。
+- `.\gradlew.bat "ofbiz --test component=efinance"`：70 テスト、`errors="0"` / `failures="0"`
+- REST 経由の JWT 取得・Authorization・公開 API・無効トークン・認証なし 401・不正 JSON・必須項目不足・404・CORS 応答ヘッダーは自動テスト済み。
 - finance 全体回帰は 217 テスト成功、support はユーザー実行で OK。
-- 未実施：CORS・エラーチェーンの網羅、外部署名サービス連携、W7。
+- 未実施：外部署名サービス連携、W7。
 
 ---
 
@@ -721,3 +721,4 @@ flowchart LR
 | 2026-10-22（Contract PDF） | 簡易契約 PDF を生成して `Content` に保存し、`EfDeliveredDocument.contentId` / `EfSigningSession.signedContentId` を実体化。`efDownloadDocument` で PDF を Base64 取得。67 テスト成功 |
 | 2026-10-22（ESignature Adapter） | `ESignatureAdapter` と `ClickWrapSignatureAdapter` を追加し、設定で署名実装を差し替え可能にした。署名方式・証跡ハッシュを署名セッションへ保存。68 テスト成功 |
 | 2026-10-22（JasperReports contract） | `EfinanceContractReport.jrxml` と JasperReports レンダラーを追加。jasperreports プラグインがある場合は本番テンプレートで契約 PDF を生成し、ない場合は簡易 PDF にフォールバック。69 テスト成功 |
+| 2026-10-22（REST error/CORS） | 認証なし 401、不正 JSON、必須項目不足、404、CORS 応答ヘッダーの REST テストを追加。70 テスト成功 |
