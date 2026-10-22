@@ -19,14 +19,19 @@
 package org.apache.ofbiz.efinance.test
 
 import java.math.BigDecimal
+import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.sql.Timestamp
 import java.util.Base64
+
+import com.sun.net.httpserver.HttpExchange
+import com.sun.net.httpserver.HttpServer
 import org.apache.ofbiz.entity.GenericValue
 import org.apache.ofbiz.efinance.contract.ContractDocumentPdf
 import org.apache.ofbiz.efinance.contract.JasperContractDocumentRenderer
 import org.apache.ofbiz.efinance.contract.signature.ClickWrapSignatureAdapter
+import org.apache.ofbiz.efinance.contract.signature.ExternalSignatureAdapter
 import org.apache.ofbiz.efinance.contract.signature.SignatureRequest
 import org.apache.ofbiz.service.ServiceUtil
 import org.apache.ofbiz.service.testtools.OFBizTestCase
@@ -304,6 +309,45 @@ class EfContractTests extends OFBizTestCase {
         byte[] pdf = JasperContractDocumentRenderer.render(parameters, rows)
         assert pdf != null
         assert new String(pdf, 0, 5, StandardCharsets.US_ASCII) == '%PDF-'
+    }
+
+    void testExternalSignatureAdapter() {
+        HttpServer server = HttpServer.create(new InetSocketAddress('127.0.0.1', 0), 0)
+        server.createContext('/sign') { HttpExchange exchange ->
+            String requestBody = exchange.requestBody.getText('UTF-8')
+            assert requestBody.contains('SIG_EXT_TEST')
+            byte[] response = '{"status":"SIGNED","signedAt":"2026-10-22T12:00:00Z","evidenceHash":"provider-evidence"}'
+                    .getBytes(StandardCharsets.UTF_8)
+            exchange.responseHeaders.add('Content-Type', 'application/json')
+            exchange.sendResponseHeaders(200, response.length)
+            exchange.responseBody.write(response)
+            exchange.responseBody.close()
+        }
+        server.createContext('/fail') { HttpExchange exchange ->
+            exchange.sendResponseHeaders(500, -1)
+            exchange.close()
+        }
+        server.start()
+        try {
+            String endpoint = 'http://127.0.0.1:' + server.address.port + '/sign'
+            ExternalSignatureAdapter adapter = new ExternalSignatureAdapter(endpoint, 'test-key', 5)
+            def result = adapter.sign(new SignatureRequest(
+                    'SIG_EXT_TEST', 'TEST_EF_CUST', 'DRAFT_EXT', 'QUOTE_EXT', 'LOAN',
+                    true, '127.0.0.1', 'test-device', Locale.JAPAN))
+            assert result.success
+            assert result.signatureMethodEnumId == 'EFSIG_METHOD_EXT'
+            assert result.evidenceHash
+            assert result.signedDate
+
+            String failEndpoint = 'http://127.0.0.1:' + server.address.port + '/fail'
+            ExternalSignatureAdapter failAdapter = new ExternalSignatureAdapter(failEndpoint, '', 5)
+            def failed = failAdapter.sign(new SignatureRequest(
+                    'SIG_EXT_TEST', 'TEST_EF_CUST', 'DRAFT_EXT', 'QUOTE_EXT', 'LOAN',
+                    true, '127.0.0.1', 'test-device', Locale.JAPAN))
+            assert !failed.success
+        } finally {
+            server.stop(0)
+        }
     }
 
     void testCompleteSigningCreatesContractContent() {

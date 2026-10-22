@@ -2,7 +2,7 @@
 
 ローン・リースを **Web で申込から契約・契約後の手続きまで完結** できるようにする、顧客向けのプラグイン `efinance` の要件定義。OFBiz の ecommerce（order・product の上に乗る顧客向けの店舗）と同じ考え方で、finance の上に乗る顧客向けの仕組みとする。詳細な設計は `SPEC_EFINANCE.md` を正とする。
 
-> **状態：W0〜W6 の API・DB は実装済み（2026-10-22 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト（CORS・エラーチェーンを含む）、JasperReports 契約 PDF・電子交付、`ESignatureAdapter` を追加した。テストは 70 件成功（errors="0" / failures="0"）。残作業は外部署名サービス連携、W7 口座振替。
+> **状態：W0〜W6 の API・DB は実装済み（2026-10-22 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト（CORS・エラーチェーンを含む）、JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）を追加した。テストは 71 件成功（errors="0" / failures="0"）。残作業は W7 口座振替。
 
 ---
 
@@ -161,7 +161,7 @@ flowchart LR
 | W2 | 実装済み | – | `EfFormField`、書類スキャン Adapter、住所・法人番号の照会 Adapter、重複下書きチェック、AI 読取 |
 | W3 | 実装済み | KYC 審査 | `FinUwExternalInfo` 連携、KYC 画像の暗号化は未実装 |
 | W4 | 実装済み | 管理画面の書類要請一覧 | `EfStageEvent` と `NotificationAdapter` を実装済み。ECA・バッチ通知は未実装 |
-| W5 | 実装済み | – | JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意）は実装済み。外部署名サービス連携、L21 承認連携は未実装 |
+| W5 | 実装済み | – | JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）は実装済み。プロバイダ固有の認証・L21 承認連携は未実装 |
 | W6 | 実装済み | 手続き依頼・監査ログの管理画面 | `FINWE_OTHER` タスク、`efSendMessage` の support ケース紐付け、契約残高の正確な照会、証明書 PDF は未実装 |
 | W7 | 未着手 | – | 口座振替・振込案内 |
 | W8・W9 | 未着手 | – | 販売店ポータル、提携先組込み、チャット |
@@ -579,7 +579,7 @@ flowchart LR
 | W2 | 申込下書き、書類、送信、不正検知 | 実装済み（2026-10-21）。フォーム定義・スキャン・重複防止は未完 |
 | W3 | 本人確認、同意 | API 実装済み（2026-10-22）。同意文書 seed・一覧 API を追加。U6 連携・審査画面は未完 |
 | W4 | 仮審査、進捗、追加書類 | API 実装済み（2026-10-21）。段階イベント・通知は未完 |
-| W5 | 見積受理、署名、契約作成、交付 | API 実装済み（2026-10-22）。KYC・同意ゲート、JasperReports PDF・電子交付、再認証、`ESignatureAdapter` を追加。外部署名サービス連携は未完 |
+| W5 | 見積受理、署名、契約作成、交付 | API 実装済み（2026-10-22）。KYC・同意ゲート、JasperReports PDF・電子交付、再認証、`ESignatureAdapter`（クリック同意・外部 HTTP）を追加。プロバイダ固有の認証・L21 連携は未完 |
 | W6 | マイページ、手続き、メッセージ、通知設定 | API 実装済み（2026-10-22）。support ブリッジと管理画面（KYC 審査・書類要請一覧・手続き依頼・ロック解除）を追加。タスク自動化は未実装 |
 | W7 | 口座振替、振込案内 | 設計（未着手） |
 | W8 | 販売店ポータル | 設計（未着手） |
@@ -662,10 +662,10 @@ flowchart LR
 
 **現在の結果（2026-10-22）**
 
-- `.\gradlew.bat "ofbiz --test component=efinance"`：70 テスト、`errors="0"` / `failures="0"`
+- `.\gradlew.bat "ofbiz --test component=efinance"`：71 テスト、`errors="0"` / `failures="0"`
 - REST 経由の JWT 取得・Authorization・公開 API・無効トークン・認証なし 401・不正 JSON・必須項目不足・404・CORS 応答ヘッダーは自動テスト済み。
 - finance 全体回帰は 217 テスト成功、support はユーザー実行で OK。
-- 未実施：外部署名サービス連携、W7。
+- 未実施：W7。
 
 ---
 
@@ -722,3 +722,4 @@ flowchart LR
 | 2026-10-22（ESignature Adapter） | `ESignatureAdapter` と `ClickWrapSignatureAdapter` を追加し、設定で署名実装を差し替え可能にした。署名方式・証跡ハッシュを署名セッションへ保存。68 テスト成功 |
 | 2026-10-22（JasperReports contract） | `EfinanceContractReport.jrxml` と JasperReports レンダラーを追加。jasperreports プラグインがある場合は本番テンプレートで契約 PDF を生成し、ない場合は簡易 PDF にフォールバック。69 テスト成功 |
 | 2026-10-22（REST error/CORS） | 認証なし 401、不正 JSON、必須項目不足、404、CORS 応答ヘッダーの REST テストを追加。70 テスト成功 |
+| 2026-10-22（External signature） | `ExternalSignatureAdapter` を追加し、設定された HTTP 署名 API と連携。成功・HTTP 失敗をモックサーバーで検証。71 テスト成功 |

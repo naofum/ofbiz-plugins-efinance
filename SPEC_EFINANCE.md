@@ -2,7 +2,7 @@
 
 `REQUIREMENTS_EFINANCE.md` の要件に対する設計。各 STEP の実装後に「実装」「テスト」「検証」を追記する。
 
-> **状態：W0〜W6 の API・DB は実装済み（2026-10-22 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト（CORS・エラーチェーンを含む）、JasperReports 契約 PDF・電子交付、`ESignatureAdapter` を追加した。最新のテストは **70 件成功（errors="0" / failures="0"）**。残る主要ギャップは外部電子署名サービス連携、W7 口座振替。
+> **状態：W0〜W6 の API・DB は実装済み（2026-10-22 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト（CORS・エラーチェーンを含む）、JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）を追加した。最新のテストは **71 件成功（errors="0" / failures="0"）**。残る主要ギャップは W7 口座振替。
 
 ## 進捗
 
@@ -13,7 +13,7 @@
 | W2 | Web での申込（4 章） | 実装済み（2026-10-21）。フォーム定義・スキャンは未完 |
 | W3 | 本人確認と同意（5 章） | API 実装済み（2026-10-22）。同意文書 seed・一覧 API を追加。U6 連携は未完 |
 | W4 | 仮審査と進み具合（6 章） | API 実装済み（2026-10-21）。段階イベント・通知は未完 |
-| W5 | 電子契約と電子交付（7 章） | API 実装済み（2026-10-22）。KYC・同意ゲート、JasperReports PDF・電子交付、再認証、`ESignatureAdapter` を追加。外部署名サービス連携は未完 |
+| W5 | 電子契約と電子交付（7 章） | API 実装済み（2026-10-22）。KYC・同意ゲート、JasperReports PDF・電子交付、再認証、`ESignatureAdapter`（クリック同意・外部 HTTP）を追加 |
 | W6 | マイページ（8 章） | API 実装済み（2026-10-22）。support ブリッジ、管理画面（KYC 審査・書類要請一覧・手続き依頼・ロック解除）を追加。タスク自動化は未実装 |
 | W7 | 支払（9 章） | 設計（未着手） |
 | W8 | 販売店のポータル（10 章） | 設計（未着手） |
@@ -31,10 +31,10 @@
 | W5 | `EfSigningSession` / `EfDeliveredDocument`、見積受理、署名、契約作成、交付書類、REST 6 本 | `EfContractTests` |
 | W6 | `EfServiceRequest` / `EfNotificationSetting`、申込・契約照会、繰上返済、手続き、メッセージ、通知設定、REST 10 本、support 顧客 API ブリッジ 8 サービス | `EfMyPageTests` / `EfSupportTests` |
 
-- 全体：**76 サービス**（`auth=true` 64、`auth=false` 12）、**23 entity**、**12 テストクラス / 70 テスト**。
-- 実行：`.\gradlew.bat compileJava compileGroovy` 成功。`.\gradlew.bat "ofbiz --test component=efinance"` で **70 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
+- 全体：**76 サービス**（`auth=true` 64、`auth=false` 12）、**23 entity**、**12 テストクラス / 71 テスト**。
+- 実行：`.\gradlew.bat compileJava compileGroovy` 成功。`.\gradlew.bat "ofbiz --test component=efinance"` で **71 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
 - seed/demo：`data/EfinanceTypeData.xml`（状態・列挙・権限・`efinance-system`・同意文書）、`data/EfinanceDemoData.xml`（公開商品・デモ会員・サンプル申込・契約）、`testdef/data/EfinanceTestData.xml`（テスト会員・KYC/同意フィクスチャ）。
-- **残作業**：外部電子署名サービス連携、W7。finance 全体回帰は 217 テスト成功、support はユーザー実行で OK。CORS・エラーチェーンは自動テスト済み。
+- **残作業**：W7。finance 全体回帰は 217 テスト成功、support はユーザー実行で OK。CORS・エラーチェーン・外部署名 HTTP アダプタは自動テスト済み。
 
 ### 既知のギャップ（重要度順）
 
@@ -146,6 +146,9 @@ flowchart LR
 | `efinance.upload.max.bytes` | 10485760 | アップロード上限（10MB） |
 | `efinance.kyc.retention.years` | 7 | 本人確認記録の保存期間 |
 | `esignature.adapter` | `ClickWrapSignatureAdapter` | 電子署名アダプタの実装クラス |
+| `esignature.external.endpoint` | 空 | `ExternalSignatureAdapter` の署名 API URL |
+| `esignature.external.apiKey` | 空 | 外部署名 API の `X-API-Key` |
+| `esignature.external.timeout.seconds` | 10 | 外部署名 API のタイムアウト |
 
 ### 1.5 seed / demo / test データ
 
@@ -837,7 +840,7 @@ sequenceDiagram
 - 署名セッションは 24 時間で失効。
 - `confirmContent=true` でなければ署名できない。
 - finance の契約作成が失敗した場合、セッションは `EFSIG_PENDING` のままにし、顧客に定型の案内を返す（担当者確認に回す）。
-- **現状（2026-10-22）**：`efCompleteSigning` は KYC の VERIFIED、電子契約同意、再認証を確認し、未確認なら契約を作成しない。契約作成後に `JasperContractDocumentRenderer` で `EfinanceContractReport.jrxml` を描画し、jasperreports プラグインがない場合は `ContractDocumentPdf` の簡易 PDF にフォールバックする。PDF は `Content` に保存し、`EfDeliveredDocument.contentId` と `EfSigningSession.signedContentId` を設定する。`efDownloadDocument` は PDF を Base64 で返す。署名は `ESignatureAdapter` 経由で実行し、既定の `ClickWrapSignatureAdapter` が署名方式と証跡ハッシュを返す。外部署名サービス連携は未実装。
+- **現状（2026-10-22）**：`efCompleteSigning` は KYC の VERIFIED、電子契約同意、再認証を確認し、未確認なら契約を作成しない。契約作成後に `JasperContractDocumentRenderer` で `EfinanceContractReport.jrxml` を描画し、jasperreports プラグインがない場合は `ContractDocumentPdf` の簡易 PDF にフォールバックする。PDF は `Content` に保存し、`EfDeliveredDocument.contentId` と `EfSigningSession.signedContentId` を設定する。`efDownloadDocument` は PDF を Base64 で返す。署名は `ESignatureAdapter` 経由で実行し、既定の `ClickWrapSignatureAdapter` が署名方式と証跡ハッシュを返す。`ExternalSignatureAdapter` は設定された HTTP 署名 API に署名要求を送り、成功応答の署名日時・証跡を保存する。
 
 ### 9.5 REST
 
@@ -852,14 +855,13 @@ sequenceDiagram
 
 ### 9.6 テスト
 
-- `EfContractTests`：見積なし、書類なし、ダウンロードなし、同意必須、JasperReports PDF・`contentId`・Base64 取得、クリック同意アダプタ、署名完了フロー。
+- `EfContractTests`：見積なし、書類なし、ダウンロードなし、同意必須、JasperReports PDF・`contentId`・Base64 取得、クリック同意アダプタ、外部署名 HTTP アダプタ（成功・HTTP 失敗）、署名完了フロー。
 
 ### 9.7 既知のギャップ
 
-- 外部電子署名サービスとの連携（既定はクリック同意）。
+- 外部電子署名プロバイダ固有の認証方式・タイムスタンプ・本人確認結果の取り込み。
 - L21 承認ワークフロー連携。
 - 電子交付の承諾がない場合の郵送タスク。
-- 外部電子署名サービス側のタイムスタンプ・本人確認結果の取り込み。
 
 ---
 
@@ -1094,13 +1096,11 @@ sequenceDiagram
 .\gradlew.bat "ofbiz --test component=efinance"
 ```
 
-- 2026-10-22：**70 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
+- 2026-10-22：**71 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
 - REST 経由の JWT 取得・Authorization・公開 API・無効トークン・認証なし 401・不正 JSON・必須項目不足・404・CORS 応答ヘッダーを `EfRestIntegrationTests` で確認済み。
 - finance 全体回帰は **217 テスト成功**、support はユーザー実行で OK。
-- JasperReports テンプレートの描画、`Content` 保存、`EfDeliveredDocument.contentId`、`efDownloadDocument` の Base64 取得、`ClickWrapSignatureAdapter` を `EfContractTests` で確認済み。
-- 以下のテストは未実装。
-  - 外部電子署名サービスとの連携
-  - W7 口座振替
+- JasperReports テンプレートの描画、`Content` 保存、`EfDeliveredDocument.contentId`、`efDownloadDocument` の Base64 取得、`ClickWrapSignatureAdapter`、`ExternalSignatureAdapter` の成功・HTTP 失敗を `EfContractTests` で確認済み。
+- 未実装のテストは W7 口座振替のみ。
 
 
 ### 15.3 受入シナリオ
@@ -1164,6 +1164,7 @@ sequenceDiagram
 | 2026-10-22（ESignature Adapter） | `ESignatureAdapter` / `ESignatureAdapterFactory` / `ClickWrapSignatureAdapter` を追加。`esignature.adapter` で差し替え可能にし、署名方式と証跡ハッシュを `EfSigningSession` に保存。**68 テスト成功** |
 | 2026-10-22（JasperReports contract） | `EfinanceContractReport.jrxml` と `JasperContractDocumentRenderer` を追加。jasperreports プラグインがあれば本番テンプレートで PDF を生成し、なければ簡易 PDF にフォールバック。**69 テスト成功** |
 | 2026-10-22（REST error/CORS） | `EfRestIntegrationTests` に認証なし 401、不正 JSON、必須項目不足、404、CORS 応答ヘッダーの検証を追加。**70 テスト成功** |
+| 2026-10-22（External signature） | `ExternalSignatureAdapter` を追加。設定された HTTP 署名 API と連携し、成功・HTTP 失敗をモックサーバーで検証。**71 テスト成功** |
 
 ---
 
@@ -1190,6 +1191,6 @@ sequenceDiagram
 - 配布：efinance プラグイン単体には含まれないため、rest-api の差分も同時にデプロイする。
 - 検証：
   - `EfAuthTests` で `EfRequestValidator` の有効トークン・失効トークン・ロック会員判定と再認証トークンのワンタイム性を確認。
-  - `compileJava compileGroovy` 成功、efinance 70 テスト成功。
+  - `compileJava compileGroovy` 成功、efinance 71 テスト成功。
   - REST 手動結合確認：`demo-ef-customer` でログイン 200、商品 2 件、申込 1 件、契約 1 件、契約詳細の返済表 2 行、メッセージ、通知設定、`/portal/control/main` 200 を確認。
   - `EfRestIntegrationTests` で公開商品、ログイン、Bearer 認証、無効トークン 401 を自動確認する。CORS とエラーチェーンの網羅は未整備。
