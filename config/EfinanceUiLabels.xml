@@ -386,9 +386,29 @@ under the License.
         <value xml:lang="en">eFinance Audit Logs</value>
         <value xml:lang="ja">eFinance 監査ログ</value>
     </property>
+    <property key="EfinanceFindDirectDebit">
+        <value xml:lang="en">eFinance Direct Debit Mandates</value>
+        <value xml:lang="ja">eFinance 口座振替一覧</value>
+    </property>
+    <property key="EfinanceViewDirectDebit">
+        <value xml:lang="en">eFinance Direct Debit Mandate</value>
+        <value xml:lang="ja">eFinance 口座振替詳細</value>
+    </property>
     <property key="EfinanceAuditLogError">
         <value xml:lang="en">Unable to load the audit log.</value>
         <value xml:lang="ja">監査ログを取得できませんでした。</value>
+    </property>
+    <property key="EfinanceDirectDebitRequested">
+        <value xml:lang="en">The direct debit request was accepted.</value>
+        <value xml:lang="ja">口座振替の依頼を受け付けました。</value>
+    </property>
+    <property key="EfinanceDirectDebitAccountInvalid">
+        <value xml:lang="en">Enter a valid account number (5 to 12 digits).</value>
+        <value xml:lang="ja">口座番号は5〜12桁の数字で入力してください。</value>
+    </property>
+    <property key="EfinanceDirectDebitNotFound">
+        <value xml:lang="en">Direct debit mandate not found.</value>
+        <value xml:lang="ja">口座振替の依頼が見つかりません。</value>
     </property>
 
     <!-- W6: MyPage labels -->

@@ -295,6 +295,20 @@ under the License.
     <Enumeration enumId="EFAUD_REAUTH" enumTypeId="EFAUDIT_ACTION" enumCode="REAUTH" sequenceId="55" description="Re-authentication for a sensitive operation"/>
     <Enumeration enumId="EFAUD_CORP_CREATE" enumTypeId="EFAUDIT_ACTION" enumCode="CORP_CREATE" sequenceId="56" description="Corporate account created or updated"/>
     <Enumeration enumId="EFAUD_CORP_USER_SAVE" enumTypeId="EFAUDIT_ACTION" enumCode="CORP_USER_SAVE" sequenceId="57" description="Corporate member role saved"/>
+    <Enumeration enumId="EFAUD_DD_REQUEST" enumTypeId="EFAUDIT_ACTION" enumCode="DD_REQUEST" sequenceId="58" description="Direct debit mandate requested"/>
+    <Enumeration enumId="EFAUD_DD_UPDATE" enumTypeId="EFAUDIT_ACTION" enumCode="DD_UPDATE" sequenceId="59" description="Direct debit mandate status updated"/>
+
+    <!-- W7 direct debit mandate status and account types -->
+    <StatusType statusTypeId="EFDD_STATUS" description="eFinance direct debit mandate status" hasTable="N"/>
+    <StatusItem statusId="EFDD_REQUESTED" statusTypeId="EFDD_STATUS" statusCode="REQUESTED" sequenceId="01" description="Requested"/>
+    <StatusItem statusId="EFDD_REGISTERED" statusTypeId="EFDD_STATUS" statusCode="REGISTERED" sequenceId="02" description="Registered"/>
+    <StatusItem statusId="EFDD_REJECTED" statusTypeId="EFDD_STATUS" statusCode="REJECTED" sequenceId="03" description="Rejected"/>
+    <StatusValidChange statusId="EFDD_REQUESTED" statusIdTo="EFDD_REGISTERED" transitionName="Register"/>
+    <StatusValidChange statusId="EFDD_REQUESTED" statusIdTo="EFDD_REJECTED" transitionName="Reject"/>
+
+    <EnumerationType enumTypeId="EFDD_ACCOUNT_TYPE" description="eFinance direct debit account type"/>
+    <Enumeration enumId="EFDD_ACC_ORDINARY" enumTypeId="EFDD_ACCOUNT_TYPE" enumCode="ORDINARY" sequenceId="01" description="Ordinary account"/>
+    <Enumeration enumId="EFDD_ACC_CHECKING" enumTypeId="EFDD_ACCOUNT_TYPE" enumCode="CHECKING" sequenceId="02" description="Checking account"/>
 
     <!-- ========================================================= -->
     <!-- System user for internal dispatcher calls                 -->

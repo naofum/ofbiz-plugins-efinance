@@ -574,6 +574,40 @@ under the License.
     </entity>
 
     <!-- ========================================================= -->
+    <!-- W7 Direct debit mandate                                   -->
+    <!-- ========================================================= -->
+    <entity entity-name="EfDirectDebitMandate" package-name="org.apache.ofbiz.efinance.payment"
+            title="eFinance direct debit mandate">
+        <field name="mandateId" type="id"><description>sequenced PK</description></field>
+        <field name="memberPartyId" type="id"><description>FK to Party</description></field>
+        <field name="agreementId" type="id"><description>loanAgreementId or leaseAgreementId</description></field>
+        <field name="agreementTypeId" type="id"><description>LOAN or LEASE</description></field>
+        <field name="financeContractId" type="id"><description>common finance contract id when known</description></field>
+        <field name="bankName" type="short-varchar"/>
+        <field name="branchName" type="short-varchar"/>
+        <field name="accountTypeEnumId" type="id"><description>EFDD_ACCOUNT_TYPE</description></field>
+        <field name="accountNumber" type="long-varchar" encrypt="true"/>
+        <field name="accountNumberLast4" type="short-varchar"/>
+        <field name="accountHolderName" type="short-varchar"/>
+        <field name="statusId" type="id"><description>EFDD_STATUS</description></field>
+        <field name="adapterResult" type="short-varchar"/>
+        <field name="startDate" type="date-time"/>
+        <field name="requestedDate" type="date-time"/>
+        <field name="createdDate" type="date-time"/>
+        <field name="lastModifiedDate" type="date-time"/>
+        <prim-key field="mandateId"/>
+        <relation type="one" fk-name="EFDD_MBR" rel-entity-name="Party">
+            <key-map field-name="memberPartyId" rel-field-name="partyId"/>
+        </relation>
+        <relation type="one" fk-name="EFDD_STS" rel-entity-name="StatusItem">
+            <key-map field-name="statusId"/>
+        </relation>
+        <index name="EFDD_MBR_IDX"><index-field name="memberPartyId"/></index>
+        <index name="EFDD_AGR_IDX"><index-field name="agreementId"/></index>
+        <index name="EFDD_STS_IDX"><index-field name="statusId"/></index>
+    </entity>
+
+    <!-- ========================================================= -->
     <!-- Audit log                                                 -->
     <!-- ========================================================= -->
     <entity entity-name="EfAuditLog" package-name="org.apache.ofbiz.efinance.audit"

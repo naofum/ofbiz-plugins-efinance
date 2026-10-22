@@ -2,7 +2,7 @@
 
 `REQUIREMENTS_EFINANCE.md` の要件に対する設計。各 STEP の実装後に「実装」「テスト」「検証」を追記する。
 
-> **状態：W0〜W6 の API・DB は実装済み（2026-10-22 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト（CORS・エラーチェーンを含む）、JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）を追加した。最新のテストは **71 件成功（errors="0" / failures="0"）**。残る主要ギャップは W7 口座振替。
+> **状態：W0〜W7 の API・DB は実装済み（2026-10-23 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト（CORS・エラーチェーンを含む）、JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）、口座振替・振込案内を追加した。最新のテストは **72 件成功（errors="0" / failures="0"）**。残る主要ギャップは W8 販売店ポータル、W9 提携先組込み・チャット。
 
 ## 進捗
 
@@ -15,7 +15,7 @@
 | W4 | 仮審査と進み具合（6 章） | API 実装済み（2026-10-21）。段階イベント・通知は未完 |
 | W5 | 電子契約と電子交付（7 章） | API 実装済み（2026-10-22）。KYC・同意ゲート、JasperReports PDF・電子交付、再認証、`ESignatureAdapter`（クリック同意・外部 HTTP）を追加 |
 | W6 | マイページ（8 章） | API 実装済み（2026-10-22）。support ブリッジ、管理画面（KYC 審査・書類要請一覧・手続き依頼・ロック解除）を追加。タスク自動化は未実装 |
-| W7 | 支払（9 章） | 設計（未着手） |
+| W7 | 支払（9 章） | API/DB 実装済み（2026-10-23） |
 | W8 | 販売店のポータル（10 章） | 設計（未着手） |
 | W9 | 組込み・チャット（10 章） | 設計（未着手） |
 
@@ -23,18 +23,19 @@
 
 | STEP | 実装した主なもの | テスト |
 |------|------------------|--------|
-| W0 | 23 entity のうち会員・法人・OTP・トークン・同意・監査 9 entity、20 サービス（同意文書一覧を含む）、REST 認証、法人サービス、管理画面の会員一覧・詳細・ロック解除 | `EfMemberTests` / `EfCorporateTests` / `EfAuthTests` |
+| W0 | 24 entity のうち会員・法人・OTP・トークン・同意・監査 9 entity、20 サービス（同意文書一覧を含む）、REST 認証、法人サービス、管理画面の会員一覧・詳細・ロック解除 | `EfMemberTests` / `EfCorporateTests` / `EfAuthTests` |
 | W1 | `EfProductPublication`、商品一覧・詳細、ローン・リースシミュレーション、REST 4 本 | `EfCatalogTests` |
 | W2 | `EfApplicationDraft` / `EfDraftDocument` / `EfApplicationLink` / `EfFraudCheck`、下書き CRUD、書類、申込送信、REST 6 本 | `EfApplicationTests` |
 | W3 | `EfKycCheck` / `EfKycImage`、KYC 開始・画像・提出・審査・確認判定、REST 4 本 | `EfKycTests` |
 | W4 | `EfPreScreenResult` / `EfStageEvent` / `EfDocumentRequest`、仮審査、進捗、書類要請、REST 4 本 | `EfPreScreenTests` |
 | W5 | `EfSigningSession` / `EfDeliveredDocument`、見積受理、署名、契約作成、交付書類、REST 6 本 | `EfContractTests` |
 | W6 | `EfServiceRequest` / `EfNotificationSetting`、申込・契約照会、繰上返済、手続き、メッセージ、通知設定、REST 10 本、support 顧客 API ブリッジ 8 サービス | `EfMyPageTests` / `EfSupportTests` |
+| W7 | `EfDirectDebitMandate`、口座振替依頼・照会、振込案内、担当者登録、REST 2 本、管理画面 | `EfPaymentTests` |
 
-- 全体：**76 サービス**（`auth=true` 64、`auth=false` 12）、**23 entity**、**12 テストクラス / 71 テスト**。
-- 実行：`.\gradlew.bat compileJava compileGroovy` 成功。`.\gradlew.bat "ofbiz --test component=efinance"` で **71 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
+- 全体：**80 サービス**（`auth=true` 68、`auth=false` 12）、**24 entity**、**13 テストクラス / 72 テスト**。
+- 実行：`.\gradlew.bat compileJava compileGroovy` 成功。`.\gradlew.bat "ofbiz --test component=efinance"` で **72 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
 - seed/demo：`data/EfinanceTypeData.xml`（状態・列挙・権限・`efinance-system`・同意文書）、`data/EfinanceDemoData.xml`（公開商品・デモ会員・サンプル申込・契約）、`testdef/data/EfinanceTestData.xml`（テスト会員・KYC/同意フィクスチャ）。
-- **残作業**：W7。finance 全体回帰は 217 テスト成功、support はユーザー実行で OK。CORS・エラーチェーン・外部署名 HTTP アダプタは自動テスト済み。
+- **残作業**：W8 販売店ポータル、W9 提携先組込み・チャット。finance 全体回帰は 217 テスト成功、support はユーザー実行で OK。CORS・エラーチェーン・外部署名 HTTP アダプタ・W7 は自動テスト済み。
 
 ### 既知のギャップ（重要度順）
 
@@ -149,6 +150,8 @@ flowchart LR
 | `esignature.external.endpoint` | 空 | `ExternalSignatureAdapter` の署名 API URL |
 | `esignature.external.apiKey` | 空 | 外部署名 API の `X-API-Key` |
 | `esignature.external.timeout.seconds` | 10 | 外部署名 API のタイムアウト |
+| `directdebit.adapter` | `ManualDirectDebitAdapter` | 口座振替アダプタ |
+| `efinance.payment.bank.*` | サンプル銀行設定 | 振込先の銀行名・支店・口座種別・番号・名義 |
 
 ### 1.5 seed / demo / test データ
 
@@ -227,6 +230,7 @@ rest-api の応答形式（`statusCode`・`statusDescription`・`errorMessage`�
 | `EfDocumentRequest` | application | `docRequestId` | `draftId`、`memberPartyId`、`documentTypeEnumId`、`reason`、`dueDate`、`statusId`、`requestedByPartyId`、`requestedDate`、`submittedContentId`、`submittedDate` |
 | `EfSigningSession` | contract | `signingSessionId` | `draftId`、`memberPartyId`、`quoteId`、`quoteTypeId`、`statusId`、`consentIpAddress`、`consentDeviceId`、`consentDate`、`signatureMethodEnumId`、`signatureEvidenceHash`、`signedContentId`、`agreementId`、`agreementTypeId`、`expiresAt` |
 | `EfDeliveredDocument` | contract | `deliveredDocId` | `draftId`、`memberPartyId`、`documentTypeEnumId`、`contentId`、`deliveredDate`、`consentId`、`viewedDate` |
+| `EfDirectDebitMandate` | payment | `mandateId` | `memberPartyId`、`agreementId`、`agreementTypeId`、`financeContractId`、`bankName`、`branchName`、`accountTypeEnumId`、`accountNumber`（暗号化）、`accountNumberLast4`、`accountHolderName`、`statusId`、`adapterResult`、`startDate` |
 | `EfServiceRequest` | mypage | `serviceRequestId` | `memberPartyId`、`draftId`、`agreementId`、`agreementTypeId`、`requestTypeEnumId`、`statusId`、`subject`、`content`、`requestData`、`requestedByPartyId`、`assignedToPartyId`、`requestedDate`、`completedDate`、`staffNotes` |
 | `EfNotificationSetting` | mypage | `memberPartyId` + `notificationTypeEnumId` | `emailEnabled`、`smsEnabled`、`pushEnabled`、`lastModifiedDate` |
 | `EfAuditLog` | audit | `auditLogId` | `partyId`、`actionEnumId`、`targetEntityName`、`targetEntityId`、`resultEnumId`、`ipAddress`、`deviceId`、`actionDate`、`detail` |
@@ -508,7 +512,7 @@ sequenceDiagram
 
 - `/portal`：`PortalHome`。商品一覧・シミュレーション・ログイン/登録・申込・KYC・見積/署名・マイページを確認できるサンプル SPA。
 
-- 管理画面：会員一覧・詳細・ロック解除、KYC 一覧・審査、追加書類要請一覧、手続き依頼一覧・更新、監査ログ一覧（`/efinanceadmin/control/FindEfAuditLog`）。
+- 管理画面：会員一覧・詳細・ロック解除、KYC 一覧・審査、追加書類要請一覧、手続き依頼一覧・更新、口座振替一覧・登録、監査ログ一覧（`/efinanceadmin/control/FindEfAuditLog`）。
 
 ### 4.5 テスト
 
@@ -931,6 +935,8 @@ sequenceDiagram
 | POST | `/ef/me/contracts/{agreementId}/certificate` | `efRequestCertificate` |
 | GET/POST | `/ef/me/messages` | `efListMessages` / `efSendMessage` |
 | GET/PUT | `/ef/me/notification-settings` | `efGetNotificationSettings` / `efUpdateNotificationSettings` |
+| GET/POST | `/ef/me/direct-debit` | `efGetDirectDebit` / `efRequestDirectDebit` |
+| GET | `/ef/me/payment-instructions` | `efGetPaymentInstructions` |
 
 ### 10.7 テスト
 
@@ -948,17 +954,20 @@ sequenceDiagram
 
 ---
 
-## 11. STEP W7 — 支払（設計）
+## 11. STEP W7 — 支払（実装済み）
 
 | エンティティ・API | 内容 |
 |-------------------|------|
 | `EfDirectDebitMandate` | 口座振替の依頼：会員・契約、金融機関・支店・口座種別・番号（暗号化、表示は下 4 桁）・名義、状態（`EFDD_REQUESTED` → `EFDD_REGISTERED` / `EFDD_REJECTED`）、Adapter の結果、開始予定日 |
 | `efRequestDirectDebit` / `efGetDirectDebit` | 顧客の操作（再認証）。`ManualDirectDebitAdapter` で担当者が登録 |
 | `efGetPaymentInstructions` | 振込先・契約番号・期日・金額 |
+| `efUpdateDirectDebitStatus` | 担当者が口座振替を登録／却下 |
 | 入金 | finance の `receiveLoanPayment` / `receiveLeasePayment`。口座振替結果ファイルの取込みは将来 |
 
-- 口座番号は `EntityCrypto` の `encrypt="true"` を利用する（要確認）。
-- W7 は未実装。
+- 口座番号は `EntityCrypto` の `encrypt="true"` を利用する。API 応答は下 4 桁だけを返す。
+- 顧客 REST は `GET/POST /ef/me/direct-debit`、`GET /ef/me/payment-instructions`。
+- 管理画面は `FindEfDirectDebit` / `ViewEfDirectDebit`。
+- `EfPaymentTests` で依頼、暗号化保存、マスク表示、振込案内、担当者登録を確認する。
 
 ---
 
@@ -1038,7 +1047,7 @@ sequenceDiagram
 | `FindEfApplication` / `ViewEfApplication` | 申込の検索、finance 画面へのリンク | W6 追加 |
 | `FindEfContract` / `ViewEfContract` | 契約の検索、finance 画面へのリンク | W6 追加 |
 | `FindEfFraudCheck` | 要確認一覧、対応記録 | W4 追加 |
-| `FindEfDirectDebit` | 口座振替の登録結果 | W7 |
+| `FindEfDirectDebit` | 口座振替の登録結果 | W7 追加 → 実装済み |
 
 - 管理画面の操作は `EfAuditLog` に記録する。
 - 個人情報・口座番号・本人確認画像は権限ある担当者だけが閲覧できる。
@@ -1096,11 +1105,12 @@ sequenceDiagram
 .\gradlew.bat "ofbiz --test component=efinance"
 ```
 
-- 2026-10-22：**71 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
+- 2026-10-23：**72 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
 - REST 経由の JWT 取得・Authorization・公開 API・無効トークン・認証なし 401・不正 JSON・必須項目不足・404・CORS 応答ヘッダーを `EfRestIntegrationTests` で確認済み。
 - finance 全体回帰は **217 テスト成功**、support はユーザー実行で OK。
-- JasperReports テンプレートの描画、`Content` 保存、`EfDeliveredDocument.contentId`、`efDownloadDocument` の Base64 取得、`ClickWrapSignatureAdapter`、`ExternalSignatureAdapter` の成功・HTTP 失敗を `EfContractTests` で確認済み。
-- 未実装のテストは W7 口座振替のみ。
+- JasperReports テンプレート、PDF の `Content` 保存、`EfDeliveredDocument.contentId`、Base64 ダウンロード、クリック同意・外部署名 HTTP アダプタを `EfContractTests` で確認済み。
+- 口座振替依頼、暗号化保存、下4桁表示、振込案内、担当者登録を `EfPaymentTests` で確認済み。
+- 未実装のテストは W8/W9 の設計機能のみ。
 
 
 ### 15.3 受入シナリオ
@@ -1140,7 +1150,7 @@ sequenceDiagram
 | 6 | 電子署名の方式 | クリック同意。電子署名法の電子署名ではない |
 | 7 | PDF 生成 | finance の帳票／jasperreports を利用予定。未実装 |
 | 8 | support 連携 | 顧客 API の 8 サービスを実装済み。`efSendMessage` のケース紐付け・管理画面は未実装 |
-| 9 | 口座番号の暗号化 | W7 で決定 |
+| 9 | 口座番号の暗号化 | 決定・実装済み。`EntityCrypto`（`encrypt="true"`）で保存し、API は下 4 桁のみ返す |
 | 10 | 監査ログの統合 | 各プラグイン独立（決定済み） |
 
 ---
@@ -1165,6 +1175,7 @@ sequenceDiagram
 | 2026-10-22（JasperReports contract） | `EfinanceContractReport.jrxml` と `JasperContractDocumentRenderer` を追加。jasperreports プラグインがあれば本番テンプレートで PDF を生成し、なければ簡易 PDF にフォールバック。**69 テスト成功** |
 | 2026-10-22（REST error/CORS） | `EfRestIntegrationTests` に認証なし 401、不正 JSON、必須項目不足、404、CORS 応答ヘッダーの検証を追加。**70 テスト成功** |
 | 2026-10-22（External signature） | `ExternalSignatureAdapter` を追加。設定された HTTP 署名 API と連携し、成功・HTTP 失敗をモックサーバーで検証。**71 テスト成功** |
+| 2026-10-23（W7） | `EfDirectDebitMandate`、口座振替依頼・照会、振込案内、担当者登録、管理画面、REST を追加。口座番号は暗号化し、表示は下4桁のみ。**72 テスト成功** |
 
 ---
 
@@ -1191,6 +1202,6 @@ sequenceDiagram
 - 配布：efinance プラグイン単体には含まれないため、rest-api の差分も同時にデプロイする。
 - 検証：
   - `EfAuthTests` で `EfRequestValidator` の有効トークン・失効トークン・ロック会員判定と再認証トークンのワンタイム性を確認。
-  - `compileJava compileGroovy` 成功、efinance 71 テスト成功。
+  - `compileJava compileGroovy` 成功、efinance 72 テスト成功。
   - REST 手動結合確認：`demo-ef-customer` でログイン 200、商品 2 件、申込 1 件、契約 1 件、契約詳細の返済表 2 行、メッセージ、通知設定、`/portal/control/main` 200 を確認。
   - `EfRestIntegrationTests` で公開商品、ログイン、Bearer 認証、無効トークン 401 を自動確認する。CORS とエラーチェーンの網羅は未整備。

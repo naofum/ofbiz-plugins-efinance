@@ -593,6 +593,55 @@ under the License.
     </service>
 
     <!-- ========================================================= -->
+    <!-- W7: payment and direct debit                              -->
+    <!-- ========================================================= -->
+    <service name="efRequestDirectDebit" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.payment.EfPaymentServices" invoke="efRequestDirectDebit">
+        <description>Request a direct debit mandate for the customer's contract.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
+        <attribute name="agreementId" type="String" mode="IN" optional="false"/>
+        <attribute name="agreementTypeId" type="String" mode="IN" optional="false"/>
+        <attribute name="bankName" type="String" mode="IN" optional="false"/>
+        <attribute name="branchName" type="String" mode="IN" optional="false"/>
+        <attribute name="accountTypeEnumId" type="String" mode="IN" optional="false"/>
+        <attribute name="accountNumber" type="String" mode="IN" optional="false"/>
+        <attribute name="accountHolderName" type="String" mode="IN" optional="false"/>
+        <attribute name="startDate" type="Timestamp" mode="IN" optional="true"/>
+        <attribute name="reauthToken" type="String" mode="IN" optional="false"/>
+        <attribute name="mandateId" type="String" mode="OUT" optional="true"/>
+        <attribute name="statusId" type="String" mode="OUT" optional="true"/>
+        <attribute name="accountNumberLast4" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efGetDirectDebit" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.payment.EfPaymentServices" invoke="efGetDirectDebit">
+        <description>List the customer's direct debit mandates with masked account numbers.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
+        <attribute name="agreementId" type="String" mode="IN" optional="true"/>
+        <attribute name="mandates" type="List" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efGetPaymentInstructions" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.payment.EfPaymentServices" invoke="efGetPaymentInstructions">
+        <description>Get the bank transfer destination and installment amounts for a contract.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
+        <attribute name="agreementId" type="String" mode="IN" optional="false"/>
+        <attribute name="agreementTypeId" type="String" mode="IN" optional="false"/>
+        <attribute name="contractNo" type="String" mode="OUT" optional="true"/>
+        <attribute name="bank" type="Map" mode="OUT" optional="true"/>
+        <attribute name="instructions" type="List" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efUpdateDirectDebitStatus" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.payment.EfPaymentServices" invoke="efUpdateDirectDebitStatus">
+        <description>Staff registers or rejects a direct debit mandate.</description>
+        <permission-service service-name="efinanceAdminPermission"/>
+        <attribute name="mandateId" type="String" mode="IN" optional="false"/>
+        <attribute name="statusId" type="String" mode="IN" optional="false"/>
+        <attribute name="staffNote" type="String" mode="IN" optional="true"/>
+    </service>
+
+    <!-- ========================================================= -->
     <!-- W6: support customer API bridge                           -->
     <!-- ========================================================= -->
     <service name="efListSupportCases" engine="java" auth="true" export="true"

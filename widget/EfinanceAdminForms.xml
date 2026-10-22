@@ -219,6 +219,52 @@ under the License.
         </field>
     </form>
 
+    <!-- W7 direct debit mandates -->
+    <form name="ListEfDirectDebits" type="list" list-name="efDirectDebits"
+          target="ViewEfDirectDebit">
+        <field name="mandateId" title="Mandate ID">
+            <hyperlink description="${mandateId}" target="ViewEfDirectDebit">
+                <parameter param-name="mandateId" from-field="mandateId"/>
+            </hyperlink>
+        </field>
+        <field name="memberPartyId" title="Member"><display/></field>
+        <field name="agreementId" title="Contract"><display/></field>
+        <field name="bankName" title="Bank"><display/></field>
+        <field name="branchName" title="Branch"><display/></field>
+        <field name="accountNumberLast4" title="Account"><display/></field>
+        <field name="statusId" title="Status"><display/></field>
+        <field name="requestedDate" title="Requested"><display type="date-time"/></field>
+    </form>
+
+    <form name="UpdateEfDirectDebit" type="single" default-map-name="efDirectDebit"
+          target="updateEfDirectDebit">
+        <field name="mandateId" title="Mandate ID"><hidden/></field>
+        <field name="memberPartyId" title="Member"><display/></field>
+        <field name="agreementId" title="Contract"><display/></field>
+        <field name="agreementTypeId" title="Contract Type"><display/></field>
+        <field name="bankName" title="Bank"><display/></field>
+        <field name="branchName" title="Branch"><display/></field>
+        <field name="accountTypeEnumId" title="Account Type"><display/></field>
+        <field name="accountNumberLast4" title="Account Last 4"><display/></field>
+        <field name="accountHolderName" title="Account Holder"><display/></field>
+        <field name="currentStatus" title="Current Status">
+            <display description="${efDirectDebit.statusId}"/>
+        </field>
+        <field name="statusId" title="New Status">
+            <drop-down allow-empty="true">
+                <entity-options entity-name="StatusItem" key-field-name="statusId"
+                                description="${description}">
+                    <entity-constraint name="statusTypeId" operator="equals" value="EFDD_STATUS"/>
+                    <entity-order-by field-name="sequenceId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="staffNote" title="Staff Note"><text-line size="80"/></field>
+        <field name="submitButton" title="Update Mandate" widget-style="smallSubmit">
+            <submit button-type="button"/>
+        </field>
+    </form>
+
     <form name="ListEfAuditLogs" type="list" list-name="auditLogs"
           paginate-target="FindEfAuditLog">
         <field name="auditLogId" title="Audit ID"><display/></field>

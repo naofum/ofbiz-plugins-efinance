@@ -315,6 +315,21 @@ under the License.
     </resource>
 
     <!-- corporate accounts -->
+    <resource name="directDebit" path="/ef/me/direct-debit" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efGetDirectDebit"/>
+        </operation>
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efRequestDirectDebit"/>
+        </operation>
+    </resource>
+
+    <resource name="paymentInstructions" path="/ef/me/payment-instructions" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efGetPaymentInstructions"/>
+        </operation>
+    </resource>
+
     <resource name="corporateAccounts" path="/ef/corporate/accounts" auth="true">
         <operation verb="get" produces="application/json">
             <service name="efListCorporateAccounts"/>

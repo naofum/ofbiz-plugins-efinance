@@ -38,6 +38,7 @@ under the License.
                             <include-form name="ListEfMembers"
                                           location="component://efinance/widget/EfinanceAdminForms.xml"/>
                             <container style="button-bar">
+                                <link target="FindEfDirectDebit" text="Direct Debits" style="buttontext"/>
                                 <link target="FindEfAuditLog" text="Audit Log" style="buttontext"/>
                             </container>
                         </screenlet>
@@ -195,6 +196,49 @@ under the License.
                     <decorator-section name="body">
                         <screenlet title="eFinance Service Request">
                             <include-form name="ViewEfServiceRequest"
+                                          location="component://efinance/widget/EfinanceAdminForms.xml"/>
+                        </screenlet>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <!-- ===== Admin: direct debit mandates ===== -->
+    <screen name="FindEfDirectDebit">
+        <section>
+            <actions>
+                <set field="titleProperty" value="EfinanceFindDirectDebit"/>
+                <entity-condition entity-name="EfDirectDebitMandate" list="efDirectDebits">
+                    <order-by field-name="-requestedDate"/>
+                </entity-condition>
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                        <screenlet title="eFinance Direct Debit Mandates">
+                            <include-form name="ListEfDirectDebits"
+                                          location="component://efinance/widget/EfinanceAdminForms.xml"/>
+                        </screenlet>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="ViewEfDirectDebit">
+        <section>
+            <actions>
+                <set field="titleProperty" value="EfinanceViewDirectDebit"/>
+                <entity-one entity-name="EfDirectDebitMandate" value-field="efDirectDebit">
+                    <field-map field-name="mandateId" from-field="parameters.mandateId"/>
+                </entity-one>
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                        <screenlet title="eFinance Direct Debit Mandate">
+                            <include-form name="UpdateEfDirectDebit"
                                           location="component://efinance/widget/EfinanceAdminForms.xml"/>
                         </screenlet>
                     </decorator-section>

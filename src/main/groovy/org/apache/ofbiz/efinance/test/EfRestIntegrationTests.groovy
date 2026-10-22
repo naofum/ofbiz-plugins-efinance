@@ -112,6 +112,11 @@ class EfRestIntegrationTests extends OFBizTestCase {
         assert profile.status == 200
         assert json(profile).data.member.partyId == 'TEST_EF_CUST'
 
+        Map directDebit = request('GET', '/rest/ef/me/direct-debit', null,
+                loginData.accessToken as String)
+        assert directDebit.status == 200
+        assert json(directDebit).data.mandates != null
+
         Map invalid = request('GET', '/rest/ef/me', null, 'invalid-token')
         assert invalid.status == 401
     }
@@ -120,6 +125,13 @@ class EfRestIntegrationTests extends OFBizTestCase {
         Map noToken = request('GET', '/rest/ef/me', null, null)
         assert noToken.status == 401
         assert json(noToken).statusCode == 401
+
+        Map noTokenDirectDebit = request('GET', '/rest/ef/me/direct-debit', null, null)
+        assert noTokenDirectDebit.status == 401
+
+        Map noTokenPaymentInstructions = request('GET',
+                '/rest/ef/me/payment-instructions', null, null)
+        assert noTokenPaymentInstructions.status == 401
 
         Map malformed = request('POST', '/rest/ef/auth/login', '{', null)
         assert malformed.status in [400, 422]

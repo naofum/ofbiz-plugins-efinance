@@ -86,6 +86,23 @@ under the License.
         <response name="error" type="view" value="ViewEfServiceRequest"/>
     </request-map>
 
+    <request-map uri="FindEfDirectDebit">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="FindEfDirectDebit"/>
+    </request-map>
+
+    <request-map uri="ViewEfDirectDebit">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="ViewEfDirectDebit"/>
+    </request-map>
+
+    <request-map uri="updateEfDirectDebit">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="efUpdateDirectDebitStatus"/>
+        <response name="success" type="view" value="ViewEfDirectDebit"/>
+        <response name="error" type="view" value="ViewEfDirectDebit"/>
+    </request-map>
+
     <request-map uri="FindEfAuditLog">
         <security https="true" auth="true"/>
         <response name="success" type="view" value="FindEfAuditLog"/>
@@ -99,5 +116,7 @@ under the License.
     <view-map name="FindEfDocumentRequest" type="screen" page="component://efinance/widget/EfinanceAdminScreens.xml#FindEfDocumentRequest"/>
     <view-map name="FindEfServiceRequest" type="screen" page="component://efinance/widget/EfinanceAdminScreens.xml#FindEfServiceRequest"/>
     <view-map name="ViewEfServiceRequest" type="screen" page="component://efinance/widget/EfinanceAdminScreens.xml#ViewEfServiceRequest"/>
+    <view-map name="FindEfDirectDebit" type="screen" page="component://efinance/widget/EfinanceAdminScreens.xml#FindEfDirectDebit"/>
+    <view-map name="ViewEfDirectDebit" type="screen" page="component://efinance/widget/EfinanceAdminScreens.xml#ViewEfDirectDebit"/>
     <view-map name="FindEfAuditLog" type="screen" page="component://efinance/widget/EfinanceAdminScreens.xml#FindEfAuditLog"/>
 </site-conf>

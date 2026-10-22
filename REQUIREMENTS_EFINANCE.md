@@ -2,7 +2,7 @@
 
 ローン・リースを **Web で申込から契約・契約後の手続きまで完結** できるようにする、顧客向けのプラグイン `efinance` の要件定義。OFBiz の ecommerce（order・product の上に乗る顧客向けの店舗）と同じ考え方で、finance の上に乗る顧客向けの仕組みとする。詳細な設計は `SPEC_EFINANCE.md` を正とする。
 
-> **状態：W0〜W6 の API・DB は実装済み（2026-10-22 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト（CORS・エラーチェーンを含む）、JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）を追加した。テストは 71 件成功（errors="0" / failures="0"）。残作業は W7 口座振替。
+> **状態：W0〜W7 の API・DB は実装済み（2026-10-23 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト（CORS・エラーチェーンを含む）、JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）、口座振替・振込案内を追加した。テストは 72 件成功（errors="0" / failures="0"）。残作業は W8 販売店ポータル、W9 提携先組込み・チャット。
 
 ---
 
@@ -163,7 +163,7 @@ flowchart LR
 | W4 | 実装済み | 管理画面の書類要請一覧 | `EfStageEvent` と `NotificationAdapter` を実装済み。ECA・バッチ通知は未実装 |
 | W5 | 実装済み | – | JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）は実装済み。プロバイダ固有の認証・L21 承認連携は未実装 |
 | W6 | 実装済み | 手続き依頼・監査ログの管理画面 | `FINWE_OTHER` タスク、`efSendMessage` の support ケース紐付け、契約残高の正確な照会、証明書 PDF は未実装 |
-| W7 | 未着手 | – | 口座振替・振込案内 |
+| W7 | 実装済み | 管理画面（口座振替） | 口座振替依頼・照会、振込案内、担当者登録（2026-10-23）。口座振替結果ファイル取込みは将来 |
 | W8・W9 | 未着手 | – | 販売店ポータル、提携先組込み、チャット |
 
 ---
@@ -581,7 +581,7 @@ flowchart LR
 | W4 | 仮審査、進捗、追加書類 | API 実装済み（2026-10-21）。段階イベント・通知は未完 |
 | W5 | 見積受理、署名、契約作成、交付 | API 実装済み（2026-10-22）。KYC・同意ゲート、JasperReports PDF・電子交付、再認証、`ESignatureAdapter`（クリック同意・外部 HTTP）を追加。プロバイダ固有の認証・L21 連携は未完 |
 | W6 | マイページ、手続き、メッセージ、通知設定 | API 実装済み（2026-10-22）。support ブリッジと管理画面（KYC 審査・書類要請一覧・手続き依頼・ロック解除）を追加。タスク自動化は未実装 |
-| W7 | 口座振替、振込案内 | 設計（未着手） |
+| W7 | 口座振替、振込案内 | API 実装済み（2026-10-23）。口座振替依頼・照会、振込案内、管理画面、REST。結果ファイル取込みは将来 |
 | W8 | 販売店ポータル | 設計（未着手） |
 | W9 | 提携先組込み、チャット | 設計（未着手） |
 
@@ -603,7 +603,7 @@ flowchart LR
 
 ## 10. 受入基準
 
-### 10.1 W0〜W6 の API 受入
+### 10.1 W0〜W7 の API 受入
 
 1. 会員が登録し、メール確認後にログインできる。誤ったパスワードは拒否される。
 2. MFA が必要な会員は、OTP 確認後にアクセストークンを得る。更新トークンで再発行できる。
@@ -619,6 +619,9 @@ flowchart LR
 12. 繰上返済・条件変更・満了・住所変更・証明書の依頼が `EfServiceRequest` として記録される。
 13. メッセージを送信し、自分のメッセージだけを参照できる。
 14. 通知設定を参照・更新できる。
+15. 契約に口座振替を依頼でき、口座番号は暗号化して保存され、API では下 4 桁だけが表示される。
+16. 契約の振込先・契約番号・期日・金額を参照できる。
+17. 担当者が口座振替の依頼を登録済みまたは却下に更新できる。
 
 ### 10.2 セキュリティ・監査の受入（未達を含む）
 
@@ -660,12 +663,13 @@ flowchart LR
 | Adapter | 各口の手動・テスト実装 |
 | 回帰 | finance・support の全体テスト |
 
-**現在の結果（2026-10-22）**
+**現在の結果（2026-10-23）**
 
-- `.\gradlew.bat "ofbiz --test component=efinance"`：71 テスト、`errors="0"` / `failures="0"`
+- `.\gradlew.bat "ofbiz --test component=efinance"`：72 テスト、`errors="0"` / `failures="0"`
 - REST 経由の JWT 取得・Authorization・公開 API・無効トークン・認証なし 401・不正 JSON・必須項目不足・404・CORS 応答ヘッダーは自動テスト済み。
 - finance 全体回帰は 217 テスト成功、support はユーザー実行で OK。
-- 未実施：W7。
+- W7 口座振替・振込案内は自動テスト済み。
+- 未実施：W8 販売店ポータル、W9 提携先組込み・チャット。
 
 ---
 
@@ -699,7 +703,7 @@ flowchart LR
 | 8 | PDF 生成 | finance の帳票／jasperreports を利用予定。未実装 |
 | 9 | support 連携 | 顧客 API の 8 サービスを実装済み。`efSendMessage` のケース紐付け・管理画面は未実装 |
 | 10 | 監査ログの統合 | 各プラグイン独立（決定済み） |
-| 11 | 口座番号の暗号化方式 | W7 で決定（`EntityCrypto` 利用候補） |
+| 11 | 口座番号の暗号化方式 | 決定・実装済み。`EfDirectDebitMandate.accountNumber` を `EntityCrypto`（`encrypt="true"`）で保存し、API は下 4 桁のみ返す |
 | 12 | 販売店・提携先の権限 | W8・W9 で設計 |
 
 ---
@@ -723,3 +727,4 @@ flowchart LR
 | 2026-10-22（JasperReports contract） | `EfinanceContractReport.jrxml` と JasperReports レンダラーを追加。jasperreports プラグインがある場合は本番テンプレートで契約 PDF を生成し、ない場合は簡易 PDF にフォールバック。69 テスト成功 |
 | 2026-10-22（REST error/CORS） | 認証なし 401、不正 JSON、必須項目不足、404、CORS 応答ヘッダーの REST テストを追加。70 テスト成功 |
 | 2026-10-22（External signature） | `ExternalSignatureAdapter` を追加し、設定された HTTP 署名 API と連携。成功・HTTP 失敗をモックサーバーで検証。71 テスト成功 |
+| 2026-10-23（W7） | 口座振替（`EfDirectDebitMandate`・依頼・照会・担当者登録）と振込案内、管理画面、REST を実装。口座番号は暗号化し、表示は下 4 桁のみ。72 テスト成功 |
