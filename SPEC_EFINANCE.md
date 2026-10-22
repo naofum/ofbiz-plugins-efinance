@@ -1148,6 +1148,7 @@ sequenceDiagram
 | 2026-10-21 | support との整合性レビューを反映。実装記録、既知ギャップ、データモデル、認証・認可、support 連携、管理画面、テスト、core 影響、未決事項を追記 |
 | 2026-10-22 | セキュリティ修正。顧客サービスへの権限チェック、JWT `jti`、OTP 非公開、同意文書、KYC・同意ゲート、support 顧客 API ブリッジ、`EfAccessGuard`。**57 テスト成功** |
 | 2026-10-22（追加） | 法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面（KYC 審査・書類要請・手続き依頼・ロック解除）を実装。**57 テスト成功** |
+| 2026-10-22（ログ修正） | `efinance.rest.xml` のスキーマ参照を `rest-api.xsd` に修正し、`EfinancePermissionServices.xml` の minilang 名前空間を修正。`ofbiz-rest.xsd` Warning と `TargetNamespace.2` Error を 0 件にした。**57 テスト成功** |
 
 ---
 

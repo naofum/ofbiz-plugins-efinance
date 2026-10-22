@@ -18,8 +18,9 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-<simple-methods xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:noNamespaceSchemaLocation="https://ofbiz.apache.org/dtds/simple-methods.xsd">
+<simple-methods xmlns="http://ofbiz.apache.org/Simple-Method"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://ofbiz.apache.org/Simple-Method http://ofbiz.apache.org/dtds/simple-methods.xsd">
 
     <simple-method method-name="efinanceCustomerPermission" short-description="eFinance customer permission check">
         <if-has-permission permission="EFINANCE" action="_ADMIN">

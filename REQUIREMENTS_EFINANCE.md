@@ -709,3 +709,4 @@ flowchart LR
 | 2026-10-21 | W0〜W6 の実装を反映。JWT・REST・スタッフ画面・顧客サンプル画面・監査ログの方針を追記。実装済み範囲と未実装範囲、FR-ID、非機能、統合、受入基準を追加 |
 | 2026-10-22 | セキュリティと support 連携を反映。顧客サービスの権限チェック、JWT `jti`、OTP 非公開、同意文書 seed・一覧 API、KYC・同意ゲート、support 顧客 API ブリッジを追加。未実装範囲を更新 |
 | 2026-10-22（追加） | 法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面を実装。57 テスト成功 |
+| 2026-10-22（ログ修正） | `efinance.rest.xml` のスキーマ参照と `EfinancePermissionServices.xml` の minilang 名前空間を修正し、DTD/Schema Warning・Error を 0 件にした。57 テスト成功 |

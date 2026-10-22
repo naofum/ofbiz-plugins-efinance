@@ -22,7 +22,7 @@ under the License.
      description="eFinance customer portal REST API"
      publish="true"
      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-     xsi:noNamespaceSchemaLocation="https://ofbiz.apache.org/dtds/ofbiz-rest.xsd">
+     xsi:noNamespaceSchemaLocation="https://ofbiz.apache.org/dtds/rest-api.xsd">
 
     <!-- Authentication -->
     <resource name="register" path="/ef/auth/register" auth="false">
