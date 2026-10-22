@@ -287,6 +287,9 @@ under the License.
     <Enumeration enumId="EFAUD_MSG_SEND" enumTypeId="EFAUDIT_ACTION" enumCode="MSG_SEND" sequenceId="52" description="Message sent"/>
     <Enumeration enumId="EFAUD_SVCREQ_UPDATE" enumTypeId="EFAUDIT_ACTION" enumCode="SVCREQ_UPDATE" sequenceId="53" description="Service request updated by staff"/>
     <Enumeration enumId="EFAUD_MEMBER_UNLOCK" enumTypeId="EFAUDIT_ACTION" enumCode="MEMBER_UNLOCK" sequenceId="54" description="Member account unlocked"/>
+    <Enumeration enumId="EFAUD_REAUTH" enumTypeId="EFAUDIT_ACTION" enumCode="REAUTH" sequenceId="55" description="Re-authentication for a sensitive operation"/>
+    <Enumeration enumId="EFAUD_CORP_CREATE" enumTypeId="EFAUDIT_ACTION" enumCode="CORP_CREATE" sequenceId="56" description="Corporate account created or updated"/>
+    <Enumeration enumId="EFAUD_CORP_USER_SAVE" enumTypeId="EFAUDIT_ACTION" enumCode="CORP_USER_SAVE" sequenceId="57" description="Corporate member role saved"/>
 
     <!-- ========================================================= -->
     <!-- System user for internal dispatcher calls                 -->

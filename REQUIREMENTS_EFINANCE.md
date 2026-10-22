@@ -156,12 +156,12 @@ flowchart LR
 
 | STEP | API・DB | 画面 | 主な未実装 |
 |------|:---:|:---:|-----------|
-| W0 | 実装済み | 管理画面・法人・認証 | リクエスト単位の `EfAuthFilter`、法人ロール管理と申込下書きの所有確認、管理画面（KYC 審査・書類要請・手続き依頼・ロック解除）を 2026-10-22 に実装。法人契約の照会所有確認、再認証、同意文書の版一致は未実装 |
+| W0 | 実装済み | 管理画面・法人・認証 | リクエスト単位の `EfAuthFilter`、法人ロール管理と申込下書きの所有確認、再認証、管理画面（KYC 審査・書類要請・手続き依頼・ロック解除）を 2026-10-22 に実装。法人契約の照会所有確認は未実装 |
 | W1 | 実装済み | – | IP レート制限、公開商品の管理画面 |
 | W2 | 実装済み | – | `EfFormField`、書類スキャン Adapter、住所・法人番号の照会 Adapter、重複下書きチェック、AI 読取 |
-| W3 | 実装済み | KYC 審査 | 申込送信時の必須同意チェック、`FinUwExternalInfo` 連携、KYC 画像の暗号化は未実装 |
+| W3 | 実装済み | KYC 審査 | `FinUwExternalInfo` 連携、KYC 画像の暗号化は未実装 |
 | W4 | 実装済み | 管理画面の書類要請一覧 | `EfStageEvent` と `NotificationAdapter` を実装済み。ECA・バッチ通知は未実装 |
-| W5 | 実装済み | – | PDF 生成、`ESignatureAdapter` の抽象化、再認証、L21 承認連携 |
+| W5 | 実装済み | – | PDF 生成、`ESignatureAdapter` の抽象化、L21 承認連携 |
 | W6 | 実装済み | 手続き依頼の管理画面 | `FINWE_OTHER` タスク、`efSendMessage` の support ケース紐付け、契約残高の正確な照会、証明書 PDF は未実装 |
 | W7 | 未着手 | – | 口座振替・振込案内 |
 | W8・W9 | 未着手 | – | 販売店ポータル、提携先組込み、チャット |
@@ -470,7 +470,7 @@ flowchart LR
 
 | 群 | 例 | 認証 | 状態 |
 |----|----|:---:|------|
-| 認証 | `/ef/auth/register`、`/ef/auth/login`、`/ef/auth/refresh`、`/ef/auth/logout` | 不要/要 | 実装済み |
+| 認証 | `/ef/auth/register`、`/ef/auth/login`、`/ef/auth/refresh`、`/ef/auth/reauth`、`/ef/auth/logout` | 不要/要 | 実装済み |
 | 同意 | `/ef/consents`、`/ef/consent-documents`（追加予定） | 要 | 一部 |
 | 商品 | `/ef/products`、`/ef/simulate/loan`、`/ef/simulate/lease` | 不要 | 実装済み |
 | 申込 | `/ef/applications/form`、`/ef/applications/drafts`、`/ef/applications/drafts/{id}/submit` | 不要/要 | 実装済み |
@@ -661,7 +661,7 @@ flowchart LR
 
 **現在の結果（2026-10-22）**
 
-- `.\gradlew.bat "ofbiz --test component=efinance"`：57 テスト、`errors="0"` / `failures="0"`
+- `.\gradlew.bat "ofbiz --test component=efinance"`：62 テスト、`errors="0"` / `failures="0"`
 - 未実施：REST 経由の結合テスト、finance・support の全体回帰、契約 PDF・電子署名、W7。
 
 ---
@@ -710,3 +710,4 @@ flowchart LR
 | 2026-10-22 | セキュリティと support 連携を反映。顧客サービスの権限チェック、JWT `jti`、OTP 非公開、同意文書 seed・一覧 API、KYC・同意ゲート、support 顧客 API ブリッジを追加。未実装範囲を更新 |
 | 2026-10-22（追加） | 法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面を実装。57 テスト成功 |
 | 2026-10-22（ログ修正） | `efinance.rest.xml` のスキーマ参照と `EfinancePermissionServices.xml` の minilang 名前空間を修正し、DTD/Schema Warning・Error を 0 件にした。57 テスト成功 |
+| 2026-10-22（P1追加） | 同意文書の版一致・必須同意チェック、再認証、法人管理の監査ログを実装。62 テスト成功 |

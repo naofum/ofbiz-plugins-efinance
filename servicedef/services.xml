@@ -95,6 +95,18 @@ under the License.
         <attribute name="refreshToken" type="String" mode="OUT" optional="true"/>
     </service>
 
+    <service name="efReauthenticate" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.account.EfMemberServices"
+             invoke="efReauthenticate">
+        <description>Issue a short-lived one-time token for a sensitive operation.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
+        <attribute name="password" type="String" mode="IN" optional="false"/>
+        <attribute name="deviceId" type="String" mode="IN" optional="true"/>
+        <attribute name="ipAddress" type="String" mode="IN" optional="true"/>
+        <attribute name="reauthToken" type="String" mode="OUT" optional="true"/>
+        <attribute name="expiresAt" type="Timestamp" mode="OUT" optional="true"/>
+    </service>
+
     <service name="efRefreshToken" engine="java" auth="false" export="true"
              location="org.apache.ofbiz.efinance.account.EfMemberServices"
              invoke="efRefreshToken">
@@ -539,6 +551,7 @@ under the License.
         <attribute name="confirmContent" type="Boolean" mode="IN" optional="false"/>
         <attribute name="ipAddress" type="String" mode="IN" optional="true"/>
         <attribute name="deviceId" type="String" mode="IN" optional="true"/>
+        <attribute name="reauthToken" type="String" mode="IN" optional="true"/>
         <attribute name="agreementId" type="String" mode="OUT" optional="true"/>
         <attribute name="agreementTypeId" type="String" mode="OUT" optional="true"/>
     </service>
@@ -708,6 +721,7 @@ under the License.
         <attribute name="agreementId" type="String" mode="IN" optional="false"/>
         <attribute name="prepaymentAmount" type="BigDecimal" mode="IN" optional="true"/>
         <attribute name="prepaymentTypeEnumId" type="String" mode="IN" optional="true"/>
+        <attribute name="reauthToken" type="String" mode="IN" optional="true"/>
         <attribute name="serviceRequestId" type="String" mode="OUT" optional="true"/>
     </service>
 
@@ -718,6 +732,7 @@ under the License.
         <attribute name="agreementId" type="String" mode="IN" optional="false"/>
         <attribute name="agreementTypeId" type="String" mode="IN" optional="false"/>
         <attribute name="requestContent" type="String" mode="IN" optional="false"/>
+        <attribute name="reauthToken" type="String" mode="IN" optional="true"/>
         <attribute name="serviceRequestId" type="String" mode="OUT" optional="true"/>
     </service>
 
@@ -727,6 +742,7 @@ under the License.
         <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="agreementId" type="String" mode="IN" optional="false"/>
         <attribute name="expiryOptionEnumId" type="String" mode="IN" optional="false"/>
+        <attribute name="reauthToken" type="String" mode="IN" optional="true"/>
         <attribute name="serviceRequestId" type="String" mode="OUT" optional="true"/>
     </service>
 
@@ -736,6 +752,7 @@ under the License.
         <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="changeType" type="String" mode="IN" optional="false"/>
         <attribute name="changeData" type="Map" mode="IN" optional="false"/>
+        <attribute name="reauthToken" type="String" mode="IN" optional="true"/>
         <attribute name="serviceRequestId" type="String" mode="OUT" optional="true"/>
     </service>
 

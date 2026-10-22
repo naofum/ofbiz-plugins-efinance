@@ -40,6 +40,17 @@ class EfMyPageTests extends OFBizTestCase {
         assert ServiceUtil.isSuccess(r), ServiceUtil.getErrorMessage(r)
     }
 
+    private String reauthToken() {
+        Map r = dispatcher.runSync('efReauthenticate', [
+                userLogin: apiUser(),
+                password: 'ofbiz',
+                ipAddress: '127.0.0.1',
+                deviceId: 'test-device'
+        ])
+        ok(r)
+        return r.reauthToken
+    }
+
     void testListApplicationsEmpty() {
         Map result = dispatcher.runSync('efListApplications', [userLogin: apiUser()])
         ok(result)
@@ -201,7 +212,8 @@ class EfMyPageTests extends OFBizTestCase {
             userLogin: apiUser(),
             agreementId: loanAgreementId,
             prepaymentTypeEnumId: 'FULL',
-            prepaymentAmount: new BigDecimal('100000')
+            prepaymentAmount: new BigDecimal('100000'),
+            reauthToken: reauthToken()
         ])
         ok(prepay)
         assert prepay.serviceRequestId
@@ -211,7 +223,8 @@ class EfMyPageTests extends OFBizTestCase {
             userLogin: apiUser(),
             agreementId: loanAgreementId,
             agreementTypeId: 'LOAN',
-            requestContent: 'Please reduce the interest rate'
+            requestContent: 'Please reduce the interest rate',
+            reauthToken: reauthToken()
         ])
         ok(modify)
         assert modify.serviceRequestId
@@ -229,7 +242,8 @@ class EfMyPageTests extends OFBizTestCase {
         Map profile = dispatcher.runSync('efRequestProfileChange', [
             userLogin: apiUser(),
             changeType: 'ADDRESS',
-            changeData: [postalCode: '100-0002', address: 'New address']
+            changeData: [postalCode: '100-0002', address: 'New address'],
+            reauthToken: reauthToken()
         ])
         ok(profile)
         assert profile.serviceRequestId

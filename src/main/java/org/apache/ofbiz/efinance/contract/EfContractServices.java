@@ -347,6 +347,12 @@ public final class EfContractServices {
                         UtilProperties.getMessage(RESOURCE, "EfinanceSigningNotConfirmed", locale));
             }
 
+            if (!EfAccessGuard.consumeReauthToken(delegator, partyId,
+                    (String) context.get("reauthToken"))) {
+                return ServiceUtil.returnError(
+                        UtilProperties.getMessage(RESOURCE, "EfinanceReauthRequired", locale));
+            }
+
             // Contract prerequisites: verified KYC and electronic-contract consent.
             if (!isKycVerified(delegator, partyId)) {
                 return ServiceUtil.returnError(

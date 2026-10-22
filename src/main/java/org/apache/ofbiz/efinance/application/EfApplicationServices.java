@@ -599,6 +599,11 @@ public final class EfApplicationServices {
                 return err;
             }
 
+            String consentError = validateRequiredConsents(delegator, partyId, locale);
+            if (consentError != null) {
+                return ServiceUtil.returnError(consentError);
+            }
+
             // Fraud check
             String fraudResult = performFraudCheck(delegator, draftId, partyId, ipAddress, deviceId);
             if (FRAUD_BLOCK.equals(fraudResult)) {
@@ -863,6 +868,69 @@ public final class EfApplicationServices {
     private static GenericValue getSystemUser(Delegator delegator) throws GenericEntityException {
         String sysLoginId = UtilProperties.getPropertyValue(PROPS, "efinance.system.userlogin", "efinance-system");
         return EntityQuery.use(delegator).from("UserLogin").where("userLoginId", sysLoginId).queryOne();
+    }
+
+    /**
+     * Require an active consent to the latest effective version of each
+     * configured consent document type. The default set covers the terms,
+     * privacy policy and credit-information consent needed to submit.
+     */
+    private static String validateRequiredConsents(Delegator delegator, String partyId, Locale locale)
+            throws GenericEntityException {
+        String requiredTypes = UtilProperties.getPropertyValue(PROPS,
+                "efinance.consent.required", "EFCONS_TERMS,EFCONS_PRIVACY,EFCONS_CREDIT");
+        if (UtilValidate.isEmpty(requiredTypes)) {
+            return null;
+        }
+        Timestamp now = UtilDateTime.nowTimestamp();
+        for (String rawType : requiredTypes.split(",")) {
+            String documentType = rawType.trim();
+            if (UtilValidate.isEmpty(documentType)) {
+                continue;
+            }
+            GenericValue document = EntityQuery.use(delegator).from("EfConsentDocument")
+                    .where(EntityCondition.makeCondition(EntityOperator.AND,
+                            EntityCondition.makeCondition("documentTypeEnumId", documentType),
+                            EntityCondition.makeCondition("effectiveDate",
+                                    EntityOperator.LESS_THAN_EQUAL_TO, now),
+                            EntityCondition.makeCondition(EntityOperator.OR,
+                                    EntityCondition.makeCondition("expiresDate", EntityOperator.EQUALS, null),
+                                    EntityCondition.makeCondition("expiresDate",
+                                            EntityOperator.GREATER_THAN_EQUAL_TO, now))))
+                    .orderBy("-effectiveDate")
+                    .queryFirst();
+            if (document == null) {
+                return UtilProperties.getMessage(RESOURCE, "EfinanceConsentDocumentMissing",
+                        new Object[] {documentType}, locale);
+            }
+            GenericValue consent = EntityQuery.use(delegator).from("EfConsent")
+                    .where(EntityCondition.makeCondition(EntityOperator.AND,
+                            EntityCondition.makeCondition("partyId", partyId),
+                            EntityCondition.makeCondition("documentId", document.getString("documentId")),
+                            EntityCondition.makeCondition("revokedDate", EntityOperator.EQUALS, null)))
+                    .queryFirst();
+            if (consent == null) {
+                return consentRequiredMessage(delegator, document, documentType, locale);
+            }
+            Timestamp consentDate = consent.getTimestamp("consentDate");
+            Timestamp effectiveDate = document.getTimestamp("effectiveDate");
+            if (consentDate != null && effectiveDate != null && consentDate.before(effectiveDate)) {
+                return consentRequiredMessage(delegator, document, documentType, locale);
+            }
+        }
+        return null;
+    }
+
+    private static String consentRequiredMessage(Delegator delegator, GenericValue document,
+            String documentType, Locale locale) throws GenericEntityException {
+        String label = documentType;
+        GenericValue enumeration = EntityQuery.use(delegator).from("Enumeration")
+                .where("enumId", documentType).queryOne();
+        if (enumeration != null && UtilValidate.isNotEmpty(enumeration.getString("description"))) {
+            label = enumeration.getString("description");
+        }
+        return UtilProperties.getMessage(RESOURCE, "EfinanceConsentDocumentRequired",
+                new Object[] {label, document.getString("version")}, locale);
     }
 
     private static void writeAuditLog(Delegator delegator, String partyId, String action,

@@ -90,6 +90,26 @@ under the License.
         <value xml:lang="en">Your consent has been recorded.</value>
         <value xml:lang="ja">同意を記録しました。</value>
     </property>
+    <property key="EfinanceConsentDocumentRequired">
+        <value xml:lang="en">Consent to the current {0} document (version {1}) is required before submitting.</value>
+        <value xml:lang="ja">送信前に、最新の「{0}」（版 {1}）への同意が必要です。</value>
+    </property>
+    <property key="EfinanceConsentDocumentMissing">
+        <value xml:lang="en">The required consent document {0} is not configured.</value>
+        <value xml:lang="ja">必須同意文書「{0}」が設定されていません。</value>
+    </property>
+    <property key="EfinanceReauthSuccess">
+        <value xml:lang="en">Re-authentication successful.</value>
+        <value xml:lang="ja">再認証に成功しました。</value>
+    </property>
+    <property key="EfinanceReauthFailed">
+        <value xml:lang="en">Re-authentication failed.</value>
+        <value xml:lang="ja">再認証に失敗しました。</value>
+    </property>
+    <property key="EfinanceReauthRequired">
+        <value xml:lang="en">Re-authentication is required for this operation.</value>
+        <value xml:lang="ja">この操作には再認証が必要です。</value>
+    </property>
 
     <property key="EfinanceEmailAlreadyRegistered">
         <value xml:lang="en">This email address is already registered.</value>

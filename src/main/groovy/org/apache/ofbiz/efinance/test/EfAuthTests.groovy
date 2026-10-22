@@ -73,6 +73,27 @@ class EfAuthTests extends OFBizTestCase {
         assert error.contains('revoked')
     }
 
+    void testReauthenticateIssuesOneTimeToken() {
+        GenericValue user = apiUser()
+        Map result = dispatcher.runSync('efReauthenticate', [
+                userLogin: user,
+                password : 'ofbiz',
+                ipAddress: '127.0.0.1',
+                deviceId : 'test-device'
+        ])
+        ok(result)
+        assert result.reauthToken
+        assert EfAccessGuard.isReauthTokenActive(delegator, user.partyId, result.reauthToken)
+        assert EfAccessGuard.consumeReauthToken(delegator, user.partyId, result.reauthToken)
+        assert !EfAccessGuard.isReauthTokenActive(delegator, user.partyId, result.reauthToken)
+
+        Map failed = dispatcher.runSync('efReauthenticate', [
+                userLogin: user,
+                password : 'wrong-password'
+        ])
+        assert !ServiceUtil.isSuccess(failed)
+    }
+
     void testLockedMemberIsRejected() {
         Map result = login()
         String jwt = result.accessToken

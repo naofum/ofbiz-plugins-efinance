@@ -31,10 +31,10 @@
 | W5 | `EfSigningSession` / `EfDeliveredDocument`、見積受理、署名、契約作成、交付書類、REST 6 本 | `EfContractTests` |
 | W6 | `EfServiceRequest` / `EfNotificationSetting`、申込・契約照会、繰上返済、手続き、メッセージ、通知設定、REST 10 本、support 顧客 API ブリッジ 8 サービス | `EfMyPageTests` / `EfSupportTests` |
 
-- 全体：**74 サービス**（`auth=true` 62、`auth=false` 12）、**23 entity**、**11 テストクラス / 57 テスト**。
-- 実行：`.\gradlew.bat compileJava compileGroovy` 成功。`.\gradlew.bat "ofbiz --test component=efinance"` で **57 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
+- 全体：**75 サービス**（`auth=true` 63、`auth=false` 12）、**23 entity**、**11 テストクラス / 62 テスト**。
+- 実行：`.\gradlew.bat compileJava compileGroovy` 成功。`.\gradlew.bat "ofbiz --test component=efinance"` で **62 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
 - seed/demo：`data/EfinanceTypeData.xml`（状態・列挙・権限・`efinance-system`・同意文書）、`data/EfinanceDemoData.xml`（公開商品）、`testdef/data/EfinanceTestData.xml`（テスト会員・KYC/同意フィクスチャ）。
-- **残作業**：REST 経由の結合テスト、finance・support の全体回帰、`/portal` 顧客サンプル画面、契約 PDF・電子署名、W7。
+- **残作業**：REST 経由の結合テスト、finance・support の全体回帰、`/portal` 顧客サンプル画面、契約 PDF・電子署名、法人契約の照会所有確認、W7。
 
 ### 既知のギャップ（重要度順）
 
@@ -43,7 +43,7 @@
 | 1 | P0 | 法人アカウントのサービス・画面・所有確認が不十分 | 法人の申込・契約の権限管理ができない | W0 追加 → 2026-10-22 `EfCorporateServices` と管理画面で実装済み |
 | 2 | P1 | `EfAuthFilter` によるリクエスト単位のトークン失効検証がない | 失効済みアクセストークンが期限まで使える | W0 追加 → 2026-10-22 rest-api 統合フィルタで実装済み |
 | 3 | P1 | `EfStageEvent` が作成されていない | 進捗通知ができない | W4 追加 → 2026-10-22 `efGetApplicationStatus` から記録し、通知アダプタを実装済み |
-| 4 | P1 | 監査ログの適用が一部サービスに限られる | 操作証跡が不足 | 全 STEP |
+| 4 | P1 | 監査ログの適用が一部サービスに限られる | 操作証跡が不足 | 2026-10-22 主要な業務サービス・法人・管理操作に適用済み。support 連携は support 側の監査に委ねる |
 | 5 | P1 | 管理画面は会員と KYC 一覧のみ | 運用業務ができない | W6 追加 → 2026-10-22 KYC 審査・書類要請・手続き依頼・ロック解除を実装済み |
 | 6 | P1 | `/portal` は仮ページのみ | 顧客サンプル画面の要件を満たさない | W6 追加 |
 | 7 | P1 | 契約 PDF・交付書類の `contentId` が常に null | 電子交付が実運用できない | W5 追加 |
@@ -56,7 +56,7 @@
 **2026-10-22 に解消した項目**
 
 - support 顧客 API ブリッジ（8 サービス・テスト付き）を追加した。
-- 全顧客向けサービスに `efinanceCustomerPermission` を適用した（`permission-service` 55 件）。
+- 全顧客向けサービスに `efinanceCustomerPermission` を適用した（`permission-service` 56 件）。
 - `EfToken` に JWT の `jti` を保存し、JWT の SHA-256 を `tokenHash` に保存するよう修正した。`efLogout` はアクセストークンも失効できる。
 - `efRegisterMember` / `efRequestPasswordReset` の OTP・リセットトークンは system ユーザーにだけ返すよう修正した。
 - 同意文書の seed と `efListConsentDocuments` を追加した。
@@ -177,7 +177,7 @@ flowchart LR
 | 管理者 | true | `efinanceAdminPermission` | `reviewEfKycCheck`、`efCreateDocumentRequest` |
 | 内部バッチ | true | なし（システム） | 将来の段階判定・通知 |
 
-- 2026-10-22 時点で、顧客向け・support ブリッジのサービスに `efinanceCustomerPermission` を適用済み（`permission-service` 55 件）。`EfAuthFilter` によるリクエスト単位のトークン失効・会員ロック検証も実装済み。
+- 2026-10-22 時点で、顧客向け・support ブリッジのサービスに `efinanceCustomerPermission` を適用済み（`permission-service` 56 件）。`EfAuthFilter` によるリクエスト単位のトークン失効・会員ロック検証も実装済み。
 
 ### 1.7 エラーの形
 
@@ -392,6 +392,7 @@ sequenceDiagram
 - `isDocumentRequestOwned(...)`
 - `hasCorporateRole(...)` / `isCorporateAdmin(...)`
 - `isDraftAccessible(...)`
+- `isReauthTokenActive(...)` / `consumeReauthToken(...)`
 - `sha256(String)`
 
 - 法人の `EfCorporateUser` ロール確認は `isDraftAccessible` で実装済み。法人契約の照会所有確認は未実装。
@@ -416,8 +417,8 @@ sequenceDiagram
 | パスワード変更・リセット | 必須（現在のパスワードまたは OTP） |
 | 通常の参照・下書き保存 | 不要 |
 
-- 再認証は MFA OTP またはパスワードで行い、短命（5 分）の再認証トークンを発行する。
-- 現在は未実装。`efCompleteSigning` / `efRequestPrepayment` / `efRequestProfileChange` は再認証なしで実行できる。
+- 実装済み。`efReauthenticate` が 5 分間のワンタイム再認証トークンを発行し、`efCompleteSigning` / `efRequestPrepayment` / `efRequestModification` / `efRequestExpiryOption` / `efRequestProfileChange` が検証・消費する。
+- トークンは `EfToken.detail=REAUTH` として保存し、アクセストークンとしては利用できない。
 
 ### 3.6 ロックとレート制限
 
@@ -490,6 +491,7 @@ sequenceDiagram
 | POST | `/ef/auth/login` | `efLogin` | false |
 | POST | `/ef/auth/verify-mfa` | `efVerifyMfa` | false |
 | POST | `/ef/auth/refresh` | `efRefreshToken` | false |
+| POST | `/ef/auth/reauth` | `efReauthenticate` | true |
 | POST | `/ef/auth/logout` | `efLogout` | true |
 | POST | `/ef/auth/logout-all` | `efLogoutAll` | true |
 | POST | `/ef/auth/password-reset` | `efRequestPasswordReset` | false |
@@ -513,9 +515,9 @@ sequenceDiagram
 
 - 法人のサービス・画面・申込下書きの所有確認は実装済み。法人契約の照会所有確認、法人単位の集計は未実装。
 - `EfAuthFilter` によるリクエスト単位のトークン失効・会員ロック検証は実装済み。
-- 再認証が未実装。
-- 同意文書の版検証（申込送信時の必須同意チェック）が未実装。
-- 会員ロック解除・監査ログ閲覧の画面がない。
+- 再認証は実装済み。`efReauthenticate` と `EfToken.detail=REAUTH` を使う。
+- 同意文書の版検証（申込送信時の必須同意チェック）は実装済み。
+- 会員ロック解除、KYC 審査、手続き依頼は管理画面に実装済み。監査ログ閲覧画面は未実装。
 
 ---
 
@@ -1079,7 +1081,7 @@ sequenceDiagram
 | `EfMyPageTests` | 申込・契約・繰上返済・手続き・メッセージ・通知設定 |
 | `EfSupportTests` | support ケースの作成・一覧・詳細・返信・クローズ・選択肢 |
 | `EfCorporateTests` | 法人作成・担当者権限・一覧 |
-| `EfAuthTests` | 有効トークン・失効トークン・ロック会員 |
+| `EfAuthTests` | 有効トークン・失効トークン・ロック会員・再認証トークン |
 | `EfAdminTests` | 会員ロック解除・手続き依頼の状態更新 |
 
 ### 15.2 実行結果
@@ -1089,13 +1091,13 @@ sequenceDiagram
 .\gradlew.bat "ofbiz --test component=efinance"
 ```
 
-- 2026-10-22：**57 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
+- 2026-10-22：**62 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
 - ただし、以下のテストは未実装。
   - REST 経由の JWT 取得・Authorization・CORS・エラーチェーン
   - finance・support の全体回帰
   - 契約 PDF・電子署名・電子交付
   - W7 口座振替
-  - finance・support の全体回帰
+
 
 ### 15.3 受入シナリオ
 
@@ -1129,7 +1131,7 @@ sequenceDiagram
 | 1 | `EfToken` と JWT の対応付け | 実装済み。`jti` を付与し、JWT の SHA-256 を `EfToken.tokenHash` に保存。`EfAuthFilter` がリクエスト単位で検証する |
 | 2 | `EfAuthFilter` の実装場所 | 実装済み。rest-api の `EfAuthFilter` が `/ef/` を検証し、efinance の `EfRequestValidator` をリフレクションで呼ぶ |
 | 3 | 法人アカウントの実装範囲 | 実装済み。`EfCorporateServices`、法人ロール判定、管理画面を追加 |
-| 4 | 同意文書の版管理 | seed・一覧 API は実装済み。申込送信時の版一致・必須同意チェックは未実装 |
+| 4 | 同意文書の版管理 | 実装済み。申込送信時に最新版への同意と必須同意を検証する |
 | 5 | 本人確認の保存期間 | 既定 7 年。法務確認が必要 |
 | 6 | 電子署名の方式 | クリック同意。電子署名法の電子署名ではない |
 | 7 | PDF 生成 | finance の帳票／jasperreports を利用予定。未実装 |
@@ -1149,6 +1151,7 @@ sequenceDiagram
 | 2026-10-22 | セキュリティ修正。顧客サービスへの権限チェック、JWT `jti`、OTP 非公開、同意文書、KYC・同意ゲート、support 顧客 API ブリッジ、`EfAccessGuard`。**57 テスト成功** |
 | 2026-10-22（追加） | 法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面（KYC 審査・書類要請・手続き依頼・ロック解除）を実装。**57 テスト成功** |
 | 2026-10-22（ログ修正） | `efinance.rest.xml` のスキーマ参照を `rest-api.xsd` に修正し、`EfinancePermissionServices.xml` の minilang 名前空間を修正。`ofbiz-rest.xsd` Warning と `TargetNamespace.2` Error を 0 件にした。**57 テスト成功** |
+| 2026-10-22（P1追加） | 同意文書の版一致・必須同意チェック、再認証（`efReauthenticate` / `EfToken.detail=REAUTH`）、法人管理の監査ログを実装。**62 テスト成功** |
 
 ---
 
@@ -1160,4 +1163,4 @@ sequenceDiagram
 - 実装：rest-api の `EfAuthFilter` が `EfRequestValidator` をリフレクションで呼ぶ。efinance から rest-api へのコンパイル依存は追加していない。
 - 代替案：各サービス先頭で `EfAccessGuard` を呼ぶ方式は修正漏れが多く、全 REST を一括で守れないため不採用。
 - 配布：efinance プラグイン単体には含まれないため、rest-api の差分も同時にデプロイする。
-- 検証：`EfAuthTests` で `EfRequestValidator` の有効トークン・失効トークン・ロック会員判定を確認。`compileJava compileGroovy` 成功、efinance 57 テスト成功。REST 経由の結合テストは未実施。
+- 検証：`EfAuthTests` で `EfRequestValidator` の有効トークン・失効トークン・ロック会員判定と再認証トークンのワンタイム性を確認。`compileJava compileGroovy` 成功、efinance 62 テスト成功。REST 経由の結合テストは未実施。

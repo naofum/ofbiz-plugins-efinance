@@ -75,6 +75,8 @@ public final class EfMemberServices {
     private static final String ACTION_PWD_RESET = "EFAUD_PWD_RESET";
     private static final String ACTION_TOKEN_ISSUE = "EFAUD_TKN_ISSUE";
     private static final String ACTION_CONSENT = "EFAUD_CONSENT";
+    private static final String ACTION_REAUTH = "EFAUD_REAUTH";
+    private static final String TOKEN_DETAIL_REAUTH = "REAUTH";
 
     private static final String RESULT_SUCCESS = "EFAUDRES_SUCCESS";
     private static final String RESULT_FAILURE = "EFAUDRES_FAILURE";
@@ -431,6 +433,77 @@ public final class EfMemberServices {
         } catch (GenericEntityException e) {
             Debug.logError(e, "efVerifyMfa failed", MODULE);
             return ServiceUtil.returnError(e.getMessage());
+        }
+    }
+
+    // =========================================================================
+    // Re-authentication for sensitive operations
+    // =========================================================================
+
+    public static Map<String, Object> efReauthenticate(DispatchContext dctx, Map<String, Object> context) {
+        Delegator delegator = dctx.getDelegator();
+        Locale locale = (Locale) context.get("locale");
+        GenericValue userLogin = (GenericValue) context.get("userLogin");
+        String password = (String) context.get("password");
+        String ipAddress = (String) context.get("ipAddress");
+        String deviceId = (String) context.get("deviceId");
+
+        if (userLogin == null || UtilValidate.isEmpty(password)) {
+            return ServiceUtil.returnError(UtilProperties.getMessage(RESOURCE, "EfinanceReauthFailed", locale));
+        }
+        String userLoginId = userLogin.getString("userLoginId");
+        try {
+            GenericValue currentLogin = EntityQuery.use(delegator).from("UserLogin")
+                    .where("userLoginId", userLoginId).queryOne();
+            String partyId = currentLogin == null ? null : currentLogin.getString("partyId");
+            GenericValue member = partyId == null ? null : EntityQuery.use(delegator)
+                    .from("EfMember").where("partyId", partyId).queryOne();
+            if (currentLogin == null || member == null || !STATUS_ACTIVE.equals(member.getString("statusId"))
+                    || !HashCrypt.comparePassword(currentLogin.getString("currentPassword"), "SHA", password)) {
+                logAudit(delegator, partyId, ACTION_REAUTH, "EfMember", partyId,
+                        RESULT_FAILURE, ipAddress, deviceId, "invalid credentials");
+                return ServiceUtil.returnError(UtilProperties.getMessage(RESOURCE, "EfinanceReauthFailed", locale));
+            }
+
+            Timestamp now = UtilDateTime.nowTimestamp();
+            // Only one active re-authentication token per member.
+            List<GenericValue> oldTokens = EntityQuery.use(delegator).from("EfToken")
+                    .where(EntityCondition.makeCondition("partyId", partyId),
+                            EntityCondition.makeCondition("detail", TOKEN_DETAIL_REAUTH),
+                            EntityCondition.makeCondition("revokedDate", EntityOperator.EQUALS, null))
+                    .queryList();
+            for (GenericValue oldToken : oldTokens) {
+                oldToken.set("revokedDate", now);
+                delegator.store(oldToken);
+            }
+
+            int expireMinutes = Integer.parseInt(UtilProperties.getPropertyValue("efinance",
+                    "efinance.reauth.expire.minutes", "5"));
+            Timestamp expiresAt = new Timestamp(now.getTime() + (long) expireMinutes * 60 * 1000);
+            String rawToken = generateSecureToken();
+            String tokenId = delegator.getNextSeqId("EfToken");
+            GenericValue token = delegator.makeValue("EfToken");
+            token.set("tokenId", tokenId);
+            token.set("tokenHash", sha256(rawToken));
+            token.set("partyId", partyId);
+            token.set("userLoginId", userLoginId);
+            token.set("deviceId", deviceId);
+            token.set("ipAddress", ipAddress);
+            token.set("issuedAt", now);
+            token.set("expiresAt", expiresAt);
+            token.set("detail", TOKEN_DETAIL_REAUTH);
+            delegator.create(token);
+            logAudit(delegator, partyId, ACTION_REAUTH, "EfToken", tokenId,
+                    RESULT_SUCCESS, ipAddress, deviceId, null);
+
+            Map<String, Object> result = ServiceUtil.returnSuccess(
+                    UtilProperties.getMessage(RESOURCE, "EfinanceReauthSuccess", locale));
+            result.put("reauthToken", rawToken);
+            result.put("expiresAt", expiresAt);
+            return result;
+        } catch (GenericEntityException e) {
+            Debug.logError(e, "efReauthenticate failed", MODULE);
+            return ServiceUtil.returnError(UtilProperties.getMessage(RESOURCE, "EfinanceReauthFailed", locale));
         }
     }
 

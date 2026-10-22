@@ -71,11 +71,40 @@ public final class EfAccessGuard {
         }
         GenericValue token = EntityQuery.use(delegator).from("EfToken")
                 .where("tokenHash", sha256(jwt)).queryOne();
-        if (token == null || token.getTimestamp("revokedDate") != null) {
+        if (token == null || token.getTimestamp("revokedDate") != null
+                || !"ACCESS".equals(token.getString("detail"))) {
             return false;
         }
         Timestamp expiresAt = token.getTimestamp("expiresAt");
         return expiresAt == null || !expiresAt.before(UtilDateTime.nowTimestamp());
+    }
+
+    /** True when the short-lived re-authentication token is still valid. */
+    public static boolean isReauthTokenActive(Delegator delegator, String partyId, String rawToken)
+            throws GenericEntityException {
+        if (UtilValidate.isEmpty(partyId) || UtilValidate.isEmpty(rawToken)) {
+            return false;
+        }
+        GenericValue token = EntityQuery.use(delegator).from("EfToken")
+                .where("tokenHash", sha256(rawToken), "partyId", partyId, "detail", "REAUTH").queryOne();
+        if (token == null || token.getTimestamp("revokedDate") != null) {
+            return false;
+        }
+        Timestamp expiresAt = token.getTimestamp("expiresAt");
+        return expiresAt != null && !expiresAt.before(UtilDateTime.nowTimestamp());
+    }
+
+    /** Validate and consume a one-time re-authentication token. */
+    public static boolean consumeReauthToken(Delegator delegator, String partyId, String rawToken)
+            throws GenericEntityException {
+        if (!isReauthTokenActive(delegator, partyId, rawToken)) {
+            return false;
+        }
+        GenericValue token = EntityQuery.use(delegator).from("EfToken")
+                .where("tokenHash", sha256(rawToken), "partyId", partyId, "detail", "REAUTH").queryOne();
+        token.set("revokedDate", UtilDateTime.nowTimestamp());
+        delegator.store(token);
+        return true;
     }
 
     /** True when the member has the given corporate role in an active corporate account. */

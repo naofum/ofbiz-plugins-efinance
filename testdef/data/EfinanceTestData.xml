@@ -50,4 +50,10 @@ under the License.
                 expiresDate="2033-10-21 00:00:00.0"/>
     <EfConsent consentId="TEST_EF_CONSENT_EC" partyId="TEST_EF_CUST"
                documentId="EFCDOC_ELEC_CTR_V1" consentDate="2026-10-21 00:00:00.0"/>
+    <EfConsent consentId="TEST_EF_CTERMS" partyId="TEST_EF_CUST"
+               documentId="EFCDOC_TERMS_V1" consentDate="2026-10-21 00:00:00.0"/>
+    <EfConsent consentId="TEST_EF_CPRIVACY" partyId="TEST_EF_CUST"
+               documentId="EFCDOC_PRIVACY_V1" consentDate="2026-10-21 00:00:00.0"/>
+    <EfConsent consentId="TEST_EF_CCREDIT" partyId="TEST_EF_CUST"
+               documentId="EFCDOC_CREDIT_V1" consentDate="2026-10-21 00:00:00.0"/>
 </entity-engine-xml>

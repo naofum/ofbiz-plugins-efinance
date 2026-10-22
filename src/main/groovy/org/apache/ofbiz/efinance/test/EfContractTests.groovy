@@ -40,6 +40,17 @@ class EfContractTests extends OFBizTestCase {
         assert ServiceUtil.isSuccess(r), ServiceUtil.getErrorMessage(r)
     }
 
+    private String reauthToken() {
+        Map r = dispatcher.runSync('efReauthenticate', [
+                userLogin: apiUser(),
+                password: 'ofbiz',
+                ipAddress: '127.0.0.1',
+                deviceId: 'test-device'
+        ])
+        ok(r)
+        return r.reauthToken
+    }
+
     /**
      * Create a draft in SUBMITTED state with a LoanApplication directly, bypassing
      * efSubmitApplication (and its fraud rate-limit). Used by W5 tests where submission
@@ -181,7 +192,8 @@ class EfContractTests extends OFBizTestCase {
             signingSessionId: signingSessionId,
             confirmContent: Boolean.TRUE,
             ipAddress: '127.0.0.1',
-            deviceId: 'test-device'
+            deviceId: 'test-device',
+            reauthToken: reauthToken()
         ])
         assert signComplete != null
         // If finance service failed, session stays PENDING; if succeeded, it is SIGNED
@@ -228,7 +240,8 @@ class EfContractTests extends OFBizTestCase {
             signingSessionId: signingSessionId,
             confirmContent: Boolean.FALSE,
             ipAddress: '127.0.0.1',
-            deviceId: 'test-device'
+            deviceId: 'test-device',
+            reauthToken: reauthToken()
         ])
         assert !ServiceUtil.isSuccess(signComplete)
         // Session must still be PENDING (not changed on validation error)

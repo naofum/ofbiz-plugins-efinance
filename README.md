@@ -4,7 +4,7 @@
 
 - 要件：`REQUIREMENTS_EFINANCE.md`
 - 仕様：`SPEC_EFINANCE.md`
-- 状態：W0〜W6 の API・DB は実装済み（2026-10-22）。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面（KYC 審査・書類要請・手続き依頼・会員ロック解除）を追加。顧客サンプル画面 `/portal`、PDF・電子署名、W7 は未実装。
+- 状態：W0〜W6 の API・DB は実装済み（2026-10-22）。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面（KYC 審査・書類要請・手続き依頼・会員ロック解除）、同意文書の版検証、再認証を追加。顧客サンプル画面 `/portal`、契約 PDF・電子署名、W7 は未実装。
 - 依存：`efinance → finance`、`efinance → support`、OFBiz core、rest-api。ecommerce には依存しない。
 - 注意：`/ef/` のトークン失効検証に rest-api の `EfAuthFilter` を使うため、efinance プラグイン単体ではなく rest-api の差分もデプロイ対象とする。
 - 画面：`/efinanceadmin`（担当者向け管理）、`/portal`（顧客向けサンプル）。本番の顧客画面は別リポジトリで作成する。

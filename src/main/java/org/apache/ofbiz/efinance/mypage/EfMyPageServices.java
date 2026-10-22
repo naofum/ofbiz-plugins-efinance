@@ -38,6 +38,7 @@ import org.apache.ofbiz.entity.GenericValue;
 import org.apache.ofbiz.entity.condition.EntityCondition;
 import org.apache.ofbiz.entity.condition.EntityOperator;
 import org.apache.ofbiz.entity.util.EntityQuery;
+import org.apache.ofbiz.efinance.security.EfAccessGuard;
 import org.apache.ofbiz.service.DispatchContext;
 import org.apache.ofbiz.service.LocalDispatcher;
 import org.apache.ofbiz.service.ServiceUtil;
@@ -408,6 +409,11 @@ public final class EfMyPageServices {
         BigDecimal prepaymentAmount = (BigDecimal) context.get("prepaymentAmount");
         String prepaymentTypeEnumId = (String) context.get("prepaymentTypeEnumId");
 
+        if (!consumeReauth(delegator, partyId, context)) {
+            return ServiceUtil.returnError(
+                    UtilProperties.getMessage(RESOURCE, "EfinanceReauthRequired", locale));
+        }
+
         try {
             GenericValue agr = EntityQuery.use(delegator).from("LoanAgreement")
                     .where("loanAgreementId", agreementId).queryOne();
@@ -456,6 +462,11 @@ public final class EfMyPageServices {
         String agreementTypeId = (String) context.get("agreementTypeId");
         String requestContent = (String) context.get("requestContent");
 
+        if (!consumeReauth(delegator, partyId, context)) {
+            return ServiceUtil.returnError(
+                    UtilProperties.getMessage(RESOURCE, "EfinanceReauthRequired", locale));
+        }
+
         try {
             if (!ownsAgreement(delegator, agreementId, agreementTypeId, partyId)) {
                 return ServiceUtil.returnError(
@@ -491,6 +502,11 @@ public final class EfMyPageServices {
         String partyId = getPartyIdFromContext(context);
         String agreementId = (String) context.get("agreementId");
         String expiryOptionEnumId = (String) context.get("expiryOptionEnumId");
+
+        if (!consumeReauth(delegator, partyId, context)) {
+            return ServiceUtil.returnError(
+                    UtilProperties.getMessage(RESOURCE, "EfinanceReauthRequired", locale));
+        }
 
         try {
             GenericValue agr = EntityQuery.use(delegator).from("LeaseAgreement")
@@ -530,6 +546,11 @@ public final class EfMyPageServices {
         String changeType = (String) context.get("changeType");
         @SuppressWarnings("unchecked")
         Map<String, Object> changeData = (Map<String, Object>) context.get("changeData");
+
+        if (!consumeReauth(delegator, partyId, context)) {
+            return ServiceUtil.returnError(
+                    UtilProperties.getMessage(RESOURCE, "EfinanceReauthRequired", locale));
+        }
 
         try {
             StringBuilder requestData = new StringBuilder("{\"changeType\":\"");
@@ -863,6 +884,16 @@ public final class EfMyPageServices {
         req.set("requestedDate", UtilDateTime.nowTimestamp());
         delegator.create(req);
         return serviceRequestId;
+    }
+
+    private static boolean consumeReauth(Delegator delegator, String partyId, Map<String, Object> context) {
+        try {
+            return EfAccessGuard.consumeReauthToken(delegator, partyId,
+                    (String) context.get("reauthToken"));
+        } catch (GenericEntityException e) {
+            Debug.logError(e, "Unable to validate re-authentication token", MODULE);
+            return false;
+        }
     }
 
     private static void writeAuditLog(Delegator delegator, String partyId, String action,

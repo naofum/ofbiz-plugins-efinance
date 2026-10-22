@@ -46,6 +46,9 @@ public final class EfCorporateServices {
 
     private static final String RESOURCE = "EfinanceUiLabels";
     private static final String STATUS_ACTIVE = "EFCORP_ACTIVE";
+    private static final String ACTION_CORP_CREATE = "EFAUD_CORP_CREATE";
+    private static final String ACTION_CORP_USER_SAVE = "EFAUD_CORP_USER_SAVE";
+    private static final String RESULT_SUCCESS = "EFAUDRES_SUCCESS";
 
     private EfCorporateServices() {
     }
@@ -98,6 +101,8 @@ public final class EfCorporateServices {
             }
             upsertCorporateUser(delegator, corporatePartyId, adminMemberPartyId,
                     "Y", "Y", "Y", "Y", now, null);
+            writeAudit(delegator, getPartyIdFromContext(context), ACTION_CORP_CREATE,
+                    "EfCorporateAccount", corporatePartyId);
             Map<String, Object> result = ServiceUtil.returnSuccess(message(locale, "EfinanceCorporateCreated"));
             result.put("corporatePartyId", corporatePartyId);
             result.put("adminMemberPartyId", adminMemberPartyId);
@@ -125,6 +130,8 @@ public final class EfCorporateServices {
                     indicator(context, "roleApply"), indicator(context, "roleView"),
                     indicator(context, "rolePayment"), indicator(context, "roleAdmin"), now,
                     timestamp(context, "thruDate"));
+            writeAudit(delegator, getPartyIdFromContext(context), ACTION_CORP_USER_SAVE,
+                    "EfCorporateUser", memberPartyId);
             Map<String, Object> result = ServiceUtil.returnSuccess(message(locale, "EfinanceCorporateUserSaved"));
             result.put("corporatePartyId", corporatePartyId);
             result.put("memberPartyId", memberPartyId);
@@ -164,6 +171,8 @@ public final class EfCorporateServices {
                 user.set("thruDate", timestamp(context, "thruDate"));
             }
             delegator.store(user);
+            writeAudit(delegator, getPartyIdFromContext(context), ACTION_CORP_USER_SAVE,
+                    "EfCorporateUser", memberPartyId);
             Map<String, Object> result = ServiceUtil.returnSuccess(message(locale, "EfinanceCorporateUserSaved"));
             result.put("corporatePartyId", corporatePartyId);
             result.put("memberPartyId", memberPartyId);
@@ -285,6 +294,23 @@ public final class EfCorporateServices {
                                 EntityCondition.makeCondition("thruDate", EntityOperator.EQUALS, null),
                                 EntityCondition.makeCondition("thruDate", EntityOperator.GREATER_THAN_EQUAL_TO, now))))
                 .queryFirst();
+    }
+
+    private static void writeAudit(Delegator delegator, String partyId, String action,
+            String entityName, String entityId) {
+        try {
+            GenericValue audit = delegator.makeValue("EfAuditLog");
+            audit.set("auditLogId", delegator.getNextSeqId("EfAuditLog"));
+            audit.set("partyId", partyId);
+            audit.set("actionEnumId", action);
+            audit.set("targetEntityName", entityName);
+            audit.set("targetEntityId", entityId);
+            audit.set("resultEnumId", RESULT_SUCCESS);
+            audit.set("actionDate", UtilDateTime.nowTimestamp());
+            delegator.create(audit);
+        } catch (GenericEntityException e) {
+            Debug.logWarning("Failed to write corporate audit log: " + e.getMessage(), RESOURCE);
+        }
     }
 
     private static boolean canManageCorporate(Delegator delegator, Map<String, Object> context,

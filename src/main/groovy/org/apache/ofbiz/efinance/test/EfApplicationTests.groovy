@@ -39,6 +39,32 @@ class EfApplicationTests extends OFBizTestCase {
         assert ServiceUtil.isSuccess(r), ServiceUtil.getErrorMessage(r)
     }
 
+    private String createCompleteLoanDraft() {
+        Map create = dispatcher.runSync('efCreateDraft', [
+                userLogin: apiUser(),
+                productId: 'DEMO_LOANPROD1',
+                applicationTypeId: 'LOAN'
+        ])
+        ok(create)
+        String draftId = create.draftId
+        dispatcher.runSync('efSaveDraft', [
+                userLogin: apiUser(), draftId: draftId, step: 1,
+                stepData: [principalAmount: '300000', termMonths: '24', repaymentMethod: 'EQUAL_PAYMENT']
+        ])
+        dispatcher.runSync('efSaveDraft', [
+                userLogin: apiUser(), draftId: draftId, step: 2,
+                stepData: [firstName: 'Test', lastName: 'Customer', birthDate: '1980-01-01',
+                           postalCode: '100-0001', prefecture: 'Tokyo', city: 'Chiyoda',
+                           address1: '1-1-1', employerName: 'Test Corp', annualIncome: '5000000',
+                           residenceType: 'RENT']
+        ])
+        dispatcher.runSync('efSaveDraft', [
+                userLogin: apiUser(), draftId: draftId, step: 3,
+                stepData: [confirmTerms: 'Y', confirmPrivacy: 'Y']
+        ])
+        return draftId
+    }
+
     void testGetApplicationForm() {
         Map r = dispatcher.runSync('efGetApplicationForm', [
             productId: 'DEMO_LOANPROD1',
@@ -197,6 +223,27 @@ class EfApplicationTests extends OFBizTestCase {
         // Check draft is now SUBMITTED
         GenericValue draft = from('EfApplicationDraft').where('draftId', draftId).queryOne()
         assert draft.statusId == 'EFDRF_SUBMITTED'
+    }
+
+    void testSubmitRequiresCurrentConsents() {
+        String draftId = createCompleteLoanDraft()
+        GenericValue terms = from('EfConsent')
+                .where('partyId', 'TEST_EF_CUST', 'documentId', 'EFCDOC_TERMS_V1').queryOne()
+        assert terms != null
+        def originalRevokedDate = terms.revokedDate
+        try {
+            terms.revokedDate = new java.sql.Timestamp(System.currentTimeMillis())
+            terms.store()
+
+            Map submit = dispatcher.runSync('efSubmitApplication', [
+                    userLogin: apiUser(), draftId: draftId,
+                    ipAddress: '127.0.0.1', deviceId: 'test-device'
+            ])
+            assert !ServiceUtil.isSuccess(submit), 'Expected missing-consent failure'
+        } finally {
+            terms.revokedDate = originalRevokedDate
+            terms.store()
+        }
     }
 
     void testSubmitFailsIfRequiredFieldsMissing() {
