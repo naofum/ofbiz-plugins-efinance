@@ -255,6 +255,17 @@ under the License.
         <attribute name="partyId" type="String" mode="IN" optional="false"/>
     </service>
 
+    <service name="efListAuditLogs" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.admin.EfAdminServices" invoke="efListAuditLogs">
+        <description>Staff lists audit logs (read-only, newest first).</description>
+        <permission-service service-name="efinanceAdminPermission"/>
+        <attribute name="partyId" type="String" mode="IN" optional="true"/>
+        <attribute name="actionEnumId" type="String" mode="IN" optional="true"/>
+        <attribute name="viewIndex" type="Integer" mode="IN" optional="true"/>
+        <attribute name="viewSize" type="Integer" mode="IN" optional="true"/>
+        <attribute name="auditLogs" type="List" mode="OUT" optional="true"/>
+    </service>
+
     <!-- ========================================================= -->
     <!-- W1: Product catalog (no auth)                            -->
     <!-- ========================================================= -->

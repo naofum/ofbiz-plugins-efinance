@@ -101,4 +101,16 @@ class EfAdminTests extends OFBizTestCase {
         ])
         assert !ServiceUtil.isSuccess(invalid)
     }
+
+    void testListAuditLogs() {
+        Map result = dispatcher.runSync('efListAuditLogs', [
+                userLogin: admin(),
+                partyId: 'TEST_EF_CUST',
+                viewIndex: 0,
+                viewSize: 50
+        ])
+        ok(result)
+        assert result.auditLogs != null
+        assert result.auditLogs.every { it.partyId == 'TEST_EF_CUST' }
+    }
 }

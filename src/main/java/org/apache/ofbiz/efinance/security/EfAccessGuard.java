@@ -21,6 +21,10 @@ package org.apache.ofbiz.efinance.security;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.ofbiz.base.util.UtilDateTime;
 import org.apache.ofbiz.base.util.UtilValidate;
@@ -114,6 +118,11 @@ public final class EfAccessGuard {
                 || UtilValidate.isEmpty(roleField)) {
             return false;
         }
+        GenericValue account = EntityQuery.use(delegator).from("EfCorporateAccount")
+                .where("corporatePartyId", corporatePartyId, "statusId", "EFCORP_ACTIVE").queryOne();
+        if (account == null) {
+            return false;
+        }
         Timestamp now = UtilDateTime.nowTimestamp();
         return EntityQuery.use(delegator).from("EfCorporateUser")
                 .where(EntityCondition.makeCondition(EntityOperator.AND,
@@ -127,6 +136,39 @@ public final class EfAccessGuard {
                                 EntityCondition.makeCondition("thruDate",
                                         EntityOperator.GREATER_THAN_EQUAL_TO, now))))
                 .queryFirst() != null;
+    }
+
+    /**
+     * Active corporate accounts in which the member has the requested role.
+     * The result is used to widen contract queries to corporate contracts.
+     */
+    public static List<String> getCorporatePartyIds(Delegator delegator, String memberPartyId,
+            String roleField) throws GenericEntityException {
+        if (UtilValidate.isEmpty(memberPartyId) || UtilValidate.isEmpty(roleField)) {
+            return new ArrayList<>();
+        }
+        Timestamp now = UtilDateTime.nowTimestamp();
+        List<GenericValue> users = EntityQuery.use(delegator).from("EfCorporateUser")
+                .where(EntityCondition.makeCondition(EntityOperator.AND,
+                        EntityCondition.makeCondition("memberPartyId", memberPartyId),
+                        EntityCondition.makeCondition(roleField, "Y"),
+                        EntityCondition.makeCondition("fromDate",
+                                EntityOperator.LESS_THAN_EQUAL_TO, now),
+                        EntityCondition.makeCondition(EntityOperator.OR,
+                                EntityCondition.makeCondition("thruDate", EntityOperator.EQUALS, null),
+                                EntityCondition.makeCondition("thruDate",
+                                        EntityOperator.GREATER_THAN_EQUAL_TO, now))))
+                .queryList();
+        Set<String> corporatePartyIds = new LinkedHashSet<>();
+        for (GenericValue user : users) {
+            String corporatePartyId = user.getString("corporatePartyId");
+            GenericValue account = EntityQuery.use(delegator).from("EfCorporateAccount")
+                    .where("corporatePartyId", corporatePartyId, "statusId", "EFCORP_ACTIVE").queryOne();
+            if (account != null) {
+                corporatePartyIds.add(corporatePartyId);
+            }
+        }
+        return new ArrayList<>(corporatePartyIds);
     }
 
     public static boolean isCorporateAdmin(Delegator delegator, String corporatePartyId, String memberPartyId)
@@ -164,6 +206,27 @@ public final class EfAccessGuard {
         return isDraftAccessible(delegator, draft, userLogin.getString("partyId"), "roleView");
     }
 
+    /**
+     * True when the member may access a contract personally, or through an
+     * active corporate account with the requested role.
+     */
+    public static boolean isContractAccessible(Delegator delegator, GenericValue agreement,
+            String partyId, String roleField) throws GenericEntityException {
+        if (agreement == null || UtilValidate.isEmpty(partyId)) {
+            return false;
+        }
+        String ownerPartyId = "LeaseAgreement".equals(agreement.getEntityName())
+                ? agreement.getString("lesseePartyId")
+                : agreement.getString("borrowerPartyId");
+        if (UtilValidate.isEmpty(ownerPartyId)) {
+            return false;
+        }
+        if (partyId.equals(ownerPartyId)) {
+            return true;
+        }
+        return hasCorporateRole(delegator, ownerPartyId, partyId, roleField);
+    }
+
     /** True when the loan or lease agreement belongs to the logged-in member. */
     public static boolean isContractOwned(Delegator delegator, String agreementId, String agreementTypeId,
             GenericValue userLogin) throws GenericEntityException {
@@ -171,14 +234,15 @@ public final class EfAccessGuard {
             return false;
         }
         String partyId = userLogin.getString("partyId");
+        GenericValue agreement;
         if ("LEASE".equals(agreementTypeId)) {
-            GenericValue agreement = EntityQuery.use(delegator).from("LeaseAgreement")
+            agreement = EntityQuery.use(delegator).from("LeaseAgreement")
                     .where("leaseAgreementId", agreementId).queryOne();
-            return agreement != null && partyId.equals(agreement.getString("lesseePartyId"));
+        } else {
+            agreement = EntityQuery.use(delegator).from("LoanAgreement")
+                    .where("loanAgreementId", agreementId).queryOne();
         }
-        GenericValue agreement = EntityQuery.use(delegator).from("LoanAgreement")
-                .where("loanAgreementId", agreementId).queryOne();
-        return agreement != null && partyId.equals(agreement.getString("borrowerPartyId"));
+        return isContractAccessible(delegator, agreement, partyId, "roleView");
     }
 
     /** True when the KYC check belongs to the logged-in member. */

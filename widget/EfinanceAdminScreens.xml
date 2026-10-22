@@ -37,6 +37,9 @@ under the License.
                         <screenlet title="eFinance Members">
                             <include-form name="ListEfMembers"
                                           location="component://efinance/widget/EfinanceAdminForms.xml"/>
+                            <container style="button-bar">
+                                <link target="FindEfAuditLog" text="Audit Log" style="buttontext"/>
+                            </container>
                         </screenlet>
                     </decorator-section>
                 </decorator-screen>
@@ -192,6 +195,29 @@ under the License.
                     <decorator-section name="body">
                         <screenlet title="eFinance Service Request">
                             <include-form name="ViewEfServiceRequest"
+                                          location="component://efinance/widget/EfinanceAdminForms.xml"/>
+                        </screenlet>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <!-- ===== Admin: read-only audit log ===== -->
+    <screen name="FindEfAuditLog">
+        <section>
+            <actions>
+                <set field="titleProperty" value="EfinanceFindAuditLog"/>
+                <service service-name="efListAuditLogs" result-map="auditLogResult" auto-field-map="true"/>
+                <set field="auditLogs" type="List" from-field="auditLogResult.auditLogs"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                        <screenlet title="eFinance Audit Logs">
+                            <include-form name="FindEfAuditLog"
+                                          location="component://efinance/widget/EfinanceAdminForms.xml"/>
+                            <include-form name="ListEfAuditLogs"
                                           location="component://efinance/widget/EfinanceAdminForms.xml"/>
                         </screenlet>
                     </decorator-section>

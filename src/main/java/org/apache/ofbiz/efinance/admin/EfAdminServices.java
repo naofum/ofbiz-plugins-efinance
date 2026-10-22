@@ -19,6 +19,9 @@
 package org.apache.ofbiz.efinance.admin;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -29,6 +32,8 @@ import org.apache.ofbiz.base.util.UtilValidate;
 import org.apache.ofbiz.entity.Delegator;
 import org.apache.ofbiz.entity.GenericEntityException;
 import org.apache.ofbiz.entity.GenericValue;
+import org.apache.ofbiz.entity.condition.EntityCondition;
+import org.apache.ofbiz.entity.condition.EntityOperator;
 import org.apache.ofbiz.entity.util.EntityQuery;
 import org.apache.ofbiz.service.DispatchContext;
 import org.apache.ofbiz.service.ServiceUtil;
@@ -123,6 +128,58 @@ public final class EfAdminServices {
         } catch (GenericEntityException e) {
             Debug.logError(e, "efUnlockMember failed", MODULE);
             return ServiceUtil.returnError(e.getMessage());
+        }
+    }
+
+    public static Map<String, Object> efListAuditLogs(DispatchContext dctx, Map<String, Object> context) {
+        Delegator delegator = dctx.getDelegator();
+        Locale locale = (Locale) context.get("locale");
+        String partyId = (String) context.get("partyId");
+        String actionEnumId = (String) context.get("actionEnumId");
+        Integer viewIndex = (Integer) context.get("viewIndex");
+        Integer viewSize = (Integer) context.get("viewSize");
+
+        try {
+            List<EntityCondition> conditions = new ArrayList<>();
+            if (UtilValidate.isNotEmpty(partyId)) {
+                conditions.add(EntityCondition.makeCondition("partyId", partyId));
+            }
+            if (UtilValidate.isNotEmpty(actionEnumId)) {
+                conditions.add(EntityCondition.makeCondition("actionEnumId", actionEnumId));
+            }
+
+            int offset = viewIndex == null || viewIndex < 0 ? 0 : viewIndex;
+            int size = viewSize == null || viewSize <= 0 ? 100 : Math.min(viewSize, 500);
+            EntityQuery query = EntityQuery.use(delegator).from("EfAuditLog");
+            if (!conditions.isEmpty()) {
+                query.where(EntityCondition.makeCondition(conditions, EntityOperator.AND));
+            }
+            List<GenericValue> logs = query.orderBy("-actionDate").offset(offset * size).limit(size).queryList();
+
+            List<Map<String, Object>> rows = new ArrayList<>();
+            for (GenericValue log : logs) {
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("auditLogId", log.getString("auditLogId"));
+                row.put("partyId", log.getString("partyId"));
+                row.put("actionEnumId", log.getString("actionEnumId"));
+                row.put("targetEntityName", log.getString("targetEntityName"));
+                row.put("targetEntityId", log.getString("targetEntityId"));
+                row.put("resultEnumId", log.getString("resultEnumId"));
+                row.put("ipAddress", log.getString("ipAddress"));
+                row.put("deviceId", log.getString("deviceId"));
+                row.put("actionDate", log.getTimestamp("actionDate"));
+                row.put("detail", log.getString("detail"));
+                rows.add(row);
+            }
+
+            Map<String, Object> result = ServiceUtil.returnSuccess();
+            result.put("auditLogs", rows);
+            result.put("viewIndex", offset);
+            result.put("viewSize", size);
+            return result;
+        } catch (GenericEntityException e) {
+            Debug.logError(e, "efListAuditLogs failed", MODULE);
+            return ServiceUtil.returnError(UtilProperties.getMessage(RESOURCE, "EfinanceAuditLogError", locale));
         }
     }
 

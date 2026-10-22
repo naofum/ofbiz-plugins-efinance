@@ -2,7 +2,7 @@
 
 ローン・リースを **Web で申込から契約・契約後の手続きまで完結** できるようにする、顧客向けのプラグイン `efinance` の要件定義。OFBiz の ecommerce（order・product の上に乗る顧客向けの店舗）と同じ考え方で、finance の上に乗る顧客向けの仕組みとする。詳細な設計は `SPEC_EFINANCE.md` を正とする。
 
-> **状態：W0〜W6 の API・DB は実装済み（2026-10-22 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA を追加した。テストは 62 件成功（errors="0" / failures="0"）。残作業は PDF・電子署名、W7 口座振替、法人契約の照会所有確認。
+> **状態：W0〜W6 の API・DB は実装済み（2026-10-22 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧を追加した。テストは 64 件成功（errors="0" / failures="0"）。残作業は PDF・電子署名、W7 口座振替。
 
 ---
 
@@ -156,13 +156,13 @@ flowchart LR
 
 | STEP | API・DB | 画面 | 主な未実装 |
 |------|:---:|:---:|-----------|
-| W0 | 実装済み | 管理画面・法人・認証 | リクエスト単位の `EfAuthFilter`、法人ロール管理と申込下書きの所有確認、再認証、管理画面（KYC 審査・書類要請・手続き依頼・ロック解除）を 2026-10-22 に実装。法人契約の照会所有確認は未実装 |
+| W0 | 実装済み | 管理画面・法人・認証 | リクエスト単位の `EfAuthFilter`、法人ロール管理、申込下書き・法人契約の所有確認、再認証、管理画面（KYC 審査・書類要請・手続き依頼・ロック解除・監査ログ）を 2026-10-22 に実装 |
 | W1 | 実装済み | – | IP レート制限、公開商品の管理画面 |
 | W2 | 実装済み | – | `EfFormField`、書類スキャン Adapter、住所・法人番号の照会 Adapter、重複下書きチェック、AI 読取 |
 | W3 | 実装済み | KYC 審査 | `FinUwExternalInfo` 連携、KYC 画像の暗号化は未実装 |
 | W4 | 実装済み | 管理画面の書類要請一覧 | `EfStageEvent` と `NotificationAdapter` を実装済み。ECA・バッチ通知は未実装 |
 | W5 | 実装済み | – | PDF 生成、`ESignatureAdapter` の抽象化、L21 承認連携 |
-| W6 | 実装済み | 手続き依頼の管理画面 | `FINWE_OTHER` タスク、`efSendMessage` の support ケース紐付け、契約残高の正確な照会、証明書 PDF は未実装 |
+| W6 | 実装済み | 手続き依頼・監査ログの管理画面 | `FINWE_OTHER` タスク、`efSendMessage` の support ケース紐付け、契約残高の正確な照会、証明書 PDF は未実装 |
 | W7 | 未着手 | – | 口座振替・振込案内 |
 | W8・W9 | 未着手 | – | 販売店ポータル、提携先組込み、チャット |
 
@@ -662,7 +662,7 @@ flowchart LR
 
 **現在の結果（2026-10-22）**
 
-- `.\gradlew.bat "ofbiz --test component=efinance"`：62 テスト、`errors="0"` / `failures="0"`
+- `.\gradlew.bat "ofbiz --test component=efinance"`：64 テスト、`errors="0"` / `failures="0"`
 - 未実施：REST 経由の結合テスト、finance・support の全体回帰、契約 PDF・電子署名、W7。
 
 ---
@@ -714,3 +714,4 @@ flowchart LR
 | 2026-10-22（P1追加） | 同意文書の版一致・必須同意チェック、再認証、法人管理の監査ログを実装。62 テスト成功 |
 | 2026-10-22（Portal） | `/portal` をサンプル SPA に置き換え。商品一覧・シミュレーション・ログイン/登録・申込・KYC・見積/署名・マイページ・support を実装。62 テスト成功 |
 | 2026-10-22（Portal demo） | デモ会員 `demo-ef-customer`、サンプル申込、有効なローン契約、メッセージ、通知設定を追加。公開 REST 操作の 401 を修正。REST 手動結合確認済み。62 テスト成功 |
+| 2026-10-22（Corporate/Audit） | 法人契約の照会所有確認（`roleView` / `rolePayment`）と管理画面の監査ログ一覧を実装。64 テスト成功 |

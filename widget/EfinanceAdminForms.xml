@@ -202,4 +202,34 @@ under the License.
         </field>
     </form>
 
+    <!-- Audit log filter and list (read-only) -->
+    <form name="FindEfAuditLog" type="single" target="FindEfAuditLog">
+        <field name="partyId" title="Party ID"><text-line size="40"/></field>
+        <field name="actionEnumId" title="Action">
+            <drop-down allow-empty="true">
+                <entity-options entity-name="Enumeration" key-field-name="enumId"
+                                description="${description}">
+                    <entity-constraint name="enumTypeId" operator="equals" value="EFAUDIT_ACTION"/>
+                    <entity-order-by field-name="sequenceId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="submitButton" title="Search" widget-style="smallSubmit">
+            <submit button-type="button"/>
+        </field>
+    </form>
+
+    <form name="ListEfAuditLogs" type="list" list-name="auditLogs"
+          paginate-target="FindEfAuditLog">
+        <field name="auditLogId" title="Audit ID"><display/></field>
+        <field name="actionDate" title="Date"><display type="date-time"/></field>
+        <field name="partyId" title="Party"><display/></field>
+        <field name="actionEnumId" title="Action"><display/></field>
+        <field name="targetEntityName" title="Target"><display/></field>
+        <field name="targetEntityId" title="Target ID"><display/></field>
+        <field name="resultEnumId" title="Result"><display/></field>
+        <field name="ipAddress" title="IP"><display/></field>
+        <field name="detail" title="Detail"><display/></field>
+    </form>
+
 </forms>

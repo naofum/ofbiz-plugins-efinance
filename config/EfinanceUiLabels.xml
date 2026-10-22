@@ -382,6 +382,14 @@ under the License.
         <value xml:lang="en">eFinance Service Request</value>
         <value xml:lang="ja">eFinance 手続き依頼詳細</value>
     </property>
+    <property key="EfinanceFindAuditLog">
+        <value xml:lang="en">eFinance Audit Logs</value>
+        <value xml:lang="ja">eFinance 監査ログ</value>
+    </property>
+    <property key="EfinanceAuditLogError">
+        <value xml:lang="en">Unable to load the audit log.</value>
+        <value xml:lang="ja">監査ログを取得できませんでした。</value>
+    </property>
 
     <!-- W6: MyPage labels -->
     <property key="EfinanceContractNotFound">

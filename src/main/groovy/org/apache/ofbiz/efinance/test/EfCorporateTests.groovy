@@ -18,7 +18,9 @@
  */
 package org.apache.ofbiz.efinance.test
 
+import org.apache.ofbiz.base.util.UtilDateTime
 import org.apache.ofbiz.entity.GenericValue
+import org.apache.ofbiz.efinance.security.EfAccessGuard
 import org.apache.ofbiz.service.ServiceUtil
 import org.apache.ofbiz.service.testtools.OFBizTestCase
 
@@ -87,5 +89,45 @@ class EfCorporateTests extends OFBizTestCase {
         user.refresh()
         assert user.roleApply == 'N'
         assert user.roleAdmin == 'Y'
+    }
+
+    void testCorporateContractAccess() {
+        String corporatePartyId = 'TEST_EF_CORP_' + (System.currentTimeMillis() % 100000)
+        Map created = dispatcher.runSync('efCreateCorporateAccount', [
+                userLogin: admin(),
+                corporatePartyId: corporatePartyId,
+                adminMemberPartyId: 'TEST_EF_CUST',
+                companyName: 'Test eFinance Corporate Contract'
+        ])
+        ok(created)
+
+        String loanAgreementId = 'TEST_EF_CAGR_' + (System.currentTimeMillis() % 100000)
+        GenericValue agreement = delegator.makeValue('LoanAgreement')
+        agreement.set('loanAgreementId', loanAgreementId)
+        agreement.set('statusId', 'LOANAGR_ACTIVE')
+        agreement.set('borrowerPartyId', corporatePartyId)
+        agreement.set('currencyUomId', 'JPY')
+        agreement.set('principalAmount', new java.math.BigDecimal('100000'))
+        agreement.set('annualInterestRate', new java.math.BigDecimal('0.120000'))
+        agreement.set('termMonths', 12L)
+        agreement.set('agreementDate', UtilDateTime.nowTimestamp())
+        agreement.set('firstPaymentDate', UtilDateTime.nowTimestamp())
+        delegator.create(agreement)
+
+        assert EfAccessGuard.isContractAccessible(delegator, agreement, 'TEST_EF_CUST', 'roleView')
+        assert !EfAccessGuard.isContractAccessible(delegator, agreement, 'NOT_A_MEMBER', 'roleView')
+
+        Map contracts = dispatcher.runSync('efListContracts', [userLogin: apiUser()])
+        ok(contracts)
+        assert contracts.contracts.any { it.agreementId == loanAgreementId }
+
+        Map detail = dispatcher.runSync('efGetContract', [
+                userLogin: apiUser(),
+                agreementId: loanAgreementId,
+                agreementTypeId: 'LOAN'
+        ])
+        ok(detail)
+        assert detail.contract.agreementId == loanAgreementId
+        assert detail.contract.principalAmount == new java.math.BigDecimal('100000')
     }
 }

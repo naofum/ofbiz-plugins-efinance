@@ -132,10 +132,13 @@ public final class EfMyPageServices {
 
         try {
             List<Map<String, Object>> contracts = new ArrayList<>();
+            List<String> ownerPartyIds = new ArrayList<>();
+            ownerPartyIds.add(partyId);
+            ownerPartyIds.addAll(EfAccessGuard.getCorporatePartyIds(delegator, partyId, "roleView"));
 
-            // Loan agreements
+            // Personal and corporate loan agreements
             List<GenericValue> loanAgreements = EntityQuery.use(delegator).from("LoanAgreement")
-                    .where("borrowerPartyId", partyId)
+                    .where(EntityCondition.makeCondition("borrowerPartyId", EntityOperator.IN, ownerPartyIds))
                     .orderBy("-agreementDate")
                     .queryList();
             for (GenericValue agr : loanAgreements) {
@@ -152,9 +155,9 @@ public final class EfMyPageServices {
                 contracts.add(m);
             }
 
-            // Lease agreements
+            // Personal and corporate lease agreements
             List<GenericValue> leaseAgreements = EntityQuery.use(delegator).from("LeaseAgreement")
-                    .where("lesseePartyId", partyId)
+                    .where(EntityCondition.makeCondition("lesseePartyId", EntityOperator.IN, ownerPartyIds))
                     .orderBy("-agreementDate")
                     .queryList();
             for (GenericValue agr : leaseAgreements) {
@@ -202,7 +205,7 @@ public final class EfMyPageServices {
             if (AGMT_TYPE_LEASE.equals(agreementTypeId)) {
                 GenericValue agr = EntityQuery.use(delegator).from("LeaseAgreement")
                         .where("leaseAgreementId", agreementId).queryOne();
-                if (agr == null || !partyId.equals(agr.getString("lesseePartyId"))) {
+                if (!EfAccessGuard.isContractAccessible(delegator, agr, partyId, "roleView")) {
                     return ServiceUtil.returnError(
                             UtilProperties.getMessage(RESOURCE, "EfinanceContractNotFound", locale));
                 }
@@ -265,7 +268,7 @@ public final class EfMyPageServices {
                 // LOAN
                 GenericValue agr = EntityQuery.use(delegator).from("LoanAgreement")
                         .where("loanAgreementId", agreementId).queryOne();
-                if (agr == null || !partyId.equals(agr.getString("borrowerPartyId"))) {
+                if (!EfAccessGuard.isContractAccessible(delegator, agr, partyId, "roleView")) {
                     return ServiceUtil.returnError(
                             UtilProperties.getMessage(RESOURCE, "EfinanceContractNotFound", locale));
                 }
@@ -339,7 +342,7 @@ public final class EfMyPageServices {
         try {
             GenericValue agr = EntityQuery.use(delegator).from("LoanAgreement")
                     .where("loanAgreementId", agreementId).queryOne();
-            if (agr == null || !partyId.equals(agr.getString("borrowerPartyId"))) {
+            if (!EfAccessGuard.isContractAccessible(delegator, agr, partyId, "roleView")) {
                 return ServiceUtil.returnError(
                         UtilProperties.getMessage(RESOURCE, "EfinanceContractNotFound", locale));
             }
@@ -417,7 +420,7 @@ public final class EfMyPageServices {
         try {
             GenericValue agr = EntityQuery.use(delegator).from("LoanAgreement")
                     .where("loanAgreementId", agreementId).queryOne();
-            if (agr == null || !partyId.equals(agr.getString("borrowerPartyId"))) {
+            if (!EfAccessGuard.isContractAccessible(delegator, agr, partyId, "rolePayment")) {
                 return ServiceUtil.returnError(
                         UtilProperties.getMessage(RESOURCE, "EfinanceContractNotFound", locale));
             }
@@ -511,7 +514,7 @@ public final class EfMyPageServices {
         try {
             GenericValue agr = EntityQuery.use(delegator).from("LeaseAgreement")
                     .where("leaseAgreementId", agreementId).queryOne();
-            if (agr == null || !partyId.equals(agr.getString("lesseePartyId"))) {
+            if (!EfAccessGuard.isContractAccessible(delegator, agr, partyId, "roleView")) {
                 return ServiceUtil.returnError(
                         UtilProperties.getMessage(RESOURCE, "EfinanceContractNotFound", locale));
             }
@@ -836,15 +839,15 @@ public final class EfMyPageServices {
 
     private static boolean ownsAgreement(Delegator delegator, String agreementId,
             String agreementTypeId, String partyId) throws GenericEntityException {
+        GenericValue agreement;
         if (AGMT_TYPE_LEASE.equals(agreementTypeId)) {
-            GenericValue agr = EntityQuery.use(delegator).from("LeaseAgreement")
+            agreement = EntityQuery.use(delegator).from("LeaseAgreement")
                     .where("leaseAgreementId", agreementId).queryOne();
-            return agr != null && partyId.equals(agr.getString("lesseePartyId"));
         } else {
-            GenericValue agr = EntityQuery.use(delegator).from("LoanAgreement")
+            agreement = EntityQuery.use(delegator).from("LoanAgreement")
                     .where("loanAgreementId", agreementId).queryOne();
-            return agr != null && partyId.equals(agr.getString("borrowerPartyId"));
         }
+        return EfAccessGuard.isContractAccessible(delegator, agreement, partyId, "roleView");
     }
 
     private static Long getMaxLoanScheduleRevision(Delegator delegator, String loanAgreementId)
