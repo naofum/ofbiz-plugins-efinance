@@ -4,9 +4,9 @@
 
 - 要件：`REQUIREMENTS_EFINANCE.md`
 - 仕様：`SPEC_EFINANCE.md`
-- 状態：W0〜W6 の API・DB は実装済み（2026-10-22）。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面（KYC 審査・書類要請・手続き依頼・会員ロック解除）、同意文書の版検証、再認証を追加。顧客サンプル画面 `/portal`、契約 PDF・電子署名、W7 は未実装。
+- 状態：W0〜W6 の API・DB は実装済み（2026-10-22）。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、ポータル用デモデータを追加。契約 PDF・電子署名、W7 は未実装。
 - 依存：`efinance → finance`、`efinance → support`、OFBiz core、rest-api。ecommerce には依存しない。
-- 注意：`/ef/` のトークン失効検証に rest-api の `EfAuthFilter` を使うため、efinance プラグイン単体ではなく rest-api の差分もデプロイ対象とする。
+- 注意：`/ef/` のトークン失効検証に rest-api の `EfAuthFilter` を、公開 REST 操作の認証除外に `APIAuthFilter` を使うため、efinance プラグイン単体ではなく rest-api の差分もデプロイ対象とする。
 - 画面：`/efinanceadmin`（担当者向け管理）、`/portal`（顧客向けサンプル）。本番の顧客画面は別リポジトリで作成する。
 
 ## 主な機能
@@ -23,6 +23,21 @@
 | W7 | 口座振替・振込照会 | 設計 |
 | W8 | 販売店ポータル | 設計 |
 | W9 | 提携先組込み・チャット | 設計 |
+
+## デモ
+
+デモデータを投入すると、`/portal` から次のアカウントでログインできる。
+
+- ログインID：`demo-ef-customer`
+- パスワード：`ofbiz`
+- 内容：KYC・同意済み。サンプル申込 1 件、有効なローン契約 1 件、メッセージ、通知設定あり。
+
+```powershell
+.\gradlew.bat "ofbiz --load-data readers=demo --load-data component=finance"
+.\gradlew.bat "ofbiz --load-data readers=demo --load-data component=efinance"
+```
+
+`test-ef-customer` は `testdef/data/EfinanceTestData.xml` のテスト専用データで、demo には投入されない。
 
 ## 検証
 

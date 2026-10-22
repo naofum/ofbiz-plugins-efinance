@@ -45,6 +45,6 @@ under the License.
         <response name="success" type="view" value="PortalHome"/>
     </request-map>
 
-    <view-map name="main" type="screen" page="component://efinance/widget/EfinanceAdminScreens.xml#PortalHome"/>
-    <view-map name="PortalHome" type="screen" page="component://efinance/widget/EfinanceAdminScreens.xml#PortalHome"/>
+    <view-map name="main" type="screen" auth="false" page="component://efinance/widget/EfinanceAdminScreens.xml#PortalHome"/>
+    <view-map name="PortalHome" type="screen" auth="false" page="component://efinance/widget/EfinanceAdminScreens.xml#PortalHome"/>
 </site-conf>

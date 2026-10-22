@@ -26,9 +26,152 @@ under the License.
     <EfProductPublication publicationId="EFPUB2" productId="DEMO_LEASEPROD1"
                           fromDate="2026-01-01 00:00:00.0"
                           displayOrder="2" targetEnumId="EFPROD_TGT_CORP" active="Y"/>
-    <!-- Add defaultCalcInterestRate to the lease product for simulation service -->
-    <FinancialProductLease productId="DEMO_LEASEPROD1" leaseClassEnumId="LEASE_CLS_FIN_NONTR"
-                           defaultMonthlyRateFactor="0.018000" defaultCalcInterestRate="0.030000"
-                           paymentTimingEnumId="LEASE_PAY_ADVANCE"
-                           residualValueRate="0" revenueMethodEnumId="LEASE_REV_AT_START" taxable="Y"/>
+    <!-- ========================================================= -->
+    <!-- Portal demo member                                         -->
+    <!-- Login: demo-ef-customer / ofbiz (demo environment only)   -->
+    <!-- ========================================================= -->
+    <Party partyId="DEMO_EF_CUST" partyTypeId="PERSON"/>
+    <Person partyId="DEMO_EF_CUST" firstName="太郎" lastName="eFinance"
+            birthDate="1985-01-01" gender="M"/>
+    <ContactMech contactMechId="DEMO_EF_EMAIL" contactMechTypeId="EMAIL_ADDRESS"
+                 infoString="demo-ef@example.com"/>
+    <PartyContactMech partyId="DEMO_EF_CUST" contactMechId="DEMO_EF_EMAIL"
+                      fromDate="2026-10-01 00:00:00.0"/>
+    <PartyContactMechPurpose partyId="DEMO_EF_CUST" contactMechId="DEMO_EF_EMAIL"
+                             contactMechPurposeTypeId="PRIMARY_EMAIL"
+                             fromDate="2026-10-01 00:00:00.0"/>
+    <UserLogin userLoginId="demo-ef-customer" partyId="DEMO_EF_CUST"
+               currentPassword="{SHA}47b56994cbc2b6d10aa1be30f70165adb305a41a"
+               enabled="Y" hasLoggedOut="N"/>
+    <UserLoginSecurityGroup userLoginId="demo-ef-customer" groupId="EF_CUSTOMER_GROUP"
+                            fromDate="2026-10-01 00:00:00.0"/>
+    <EfMember partyId="DEMO_EF_CUST" userLoginId="demo-ef-customer"
+              memberTypeEnumId="EFMBR_PERSONAL" statusId="EFMBR_ACTIVE"
+              mfaMethodEnumId="EFMFA_NONE" createdDate="2026-10-01 00:00:00.0"
+              emailVerifiedDate="2026-10-01 00:00:00.0"/>
+
+    <!-- Verified KYC and consent so the demo can reach contract signing. -->
+    <EfKycCheck kycCheckId="DEMO_EF_KYC1" memberPartyId="DEMO_EF_CUST"
+                kycSubjectPartyId="DEMO_EF_CUST" kycMethodEnumId="EFKYC_M_IMAGE_FACE"
+                statusId="EFKYC_VERIFIED" confirmedDate="2026-10-01 00:00:00.0"
+                confirmerNote="Portal demo fixture" createdDate="2026-10-01 00:00:00.0"
+                expiresDate="2033-10-01 00:00:00.0"/>
+    <EfConsent consentId="DEMO_EF_CONS_TERMS" partyId="DEMO_EF_CUST"
+               documentId="EFCDOC_TERMS_V1" consentDate="2026-10-01 00:00:00.0"/>
+    <EfConsent consentId="DEMO_EF_CONS_PRIV" partyId="DEMO_EF_CUST"
+               documentId="EFCDOC_PRIVACY_V1" consentDate="2026-10-01 00:00:00.0"/>
+    <EfConsent consentId="DEMO_EF_CONS_CREDIT" partyId="DEMO_EF_CUST"
+               documentId="EFCDOC_CREDIT_V1" consentDate="2026-10-01 00:00:00.0"/>
+    <EfConsent consentId="DEMO_EF_CONS_EDEL" partyId="DEMO_EF_CUST"
+               documentId="EFCDOC_ELEC_DEL_V1" consentDate="2026-10-01 00:00:00.0"/>
+    <EfConsent consentId="DEMO_EF_CONS_ECTR" partyId="DEMO_EF_CUST"
+               documentId="EFCDOC_ELEC_CTR_V1" consentDate="2026-10-01 00:00:00.0"/>
+
+    <!-- ========================================================= -->
+    <!-- Portal demo application and contract                       -->
+    <!-- The contract is a completed business snapshot for MyPage.  -->
+    <!-- ========================================================= -->
+    <LoanApplication loanApplicationId="DEMO_EF_LOANAPP1" productId="DEMO_LOANPROD1"
+                     applicantPartyId="DEMO_EF_CUST" statusId="LOANAPP_CONTRACTED"
+                     currencyUomId="JPY" requestedPrincipalAmount="400000"
+                     requestedTermMonths="2" applicationDate="2026-09-01 10:00:00.0"
+                     purpose="Portal demo application"/>
+    <LoanApplicationStatus loanApplicationId="DEMO_EF_LOANAPP1"
+                           statusId="LOANAPP_CONTRACTED" statusDate="2026-10-05 10:00:00.0"
+                           changeByUserLoginId="admin"/>
+    <LoanQuote loanQuoteId="DEMO_EF_LOANQT1" loanApplicationId="DEMO_EF_LOANAPP1"
+               statusId="LOANQT_ACCEPTED" currencyUomId="JPY" principalAmount="400000"
+               annualInterestRate="0.120000" termMonths="2"
+               repaymentMethodEnumId="LOAN_RPM_EQUAL_PRIN" monthlyPaymentAmount="203000"
+               totalPaymentAmount="406000" totalInterestAmount="6000"
+               firstPaymentDate="2026-12-15 00:00:00.0" createdDate="2026-09-03 10:00:00.0"/>
+    <LoanRepaymentSchedule loanQuoteId="DEMO_EF_LOANQT1" installmentNumber="1"
+                          dueDate="2026-12-15 00:00:00.0" paymentAmount="204000"
+                          principalAmount="200000" interestAmount="4000"
+                          remainingBalance="200000"/>
+    <LoanRepaymentSchedule loanQuoteId="DEMO_EF_LOANQT1" installmentNumber="2"
+                          dueDate="2027-01-15 00:00:00.0" paymentAmount="202000"
+                          principalAmount="200000" interestAmount="2000"
+                          remainingBalance="0"/>
+    <LoanUnderwriting loanUnderwritingId="DEMO_EF_LOANUW1"
+                      loanApplicationId="DEMO_EF_LOANAPP1" statusId="LOANUW_APPROVED"
+                      creditScore="740" decision="APPROVED" approvedPrincipalAmount="400000"
+                      approvedAnnualInterestRate="0.120000" reviewerPartyId="Company"
+                      reviewDate="2026-09-05 15:00:00.0" applicationTypeId="LOAN"
+                      applicationId="DEMO_EF_LOANAPP1"/>
+    <FinAccount finAccountId="DEMO_EF_FIN1" finAccountTypeId="LOAN_ACCOUNT"
+                statusId="FNACT_ACTIVE" finAccountName="Portal Demo Loan"
+                currencyUomId="JPY" organizationPartyId="Company"
+                ownerPartyId="DEMO_EF_CUST" postToGlAccountId="120000"
+                fromDate="2026-10-05 00:00:00.0" actualBalance="0" availableBalance="0"/>
+    <FinanceContract financeContractId="DEMO_EF_FINCTR1" contractTypeId="LOAN"
+                     customerPartyId="DEMO_EF_CUST" productId="DEMO_LOANPROD1"
+                     statusId="FINCTR_ACTIVE" currencyUomId="JPY" principalAmount="400000"
+                     contractDate="2026-10-05 00:00:00.0" processingLockVersion="0"
+                     createdDate="2026-10-05 00:00:00.0"/>
+    <FinanceContractParty financeContractId="DEMO_EF_FINCTR1" partyId="DEMO_EF_CUST"
+                          roleTypeId="FIN_BORROWER" fromDate="2026-10-05 00:00:00.0"
+                          shareRate="1" isPrimary="Y" createdDate="2026-10-05 00:00:00.0"/>
+    <FinanceContractParty financeContractId="DEMO_EF_FINCTR1" partyId="Company"
+                          roleTypeId="FIN_LENDER" fromDate="2026-10-05 00:00:00.0"
+                          shareRate="1" isPrimary="Y" createdDate="2026-10-05 00:00:00.0"/>
+    <LoanAgreement loanAgreementId="DEMO_EF_LOANAGR1"
+                   loanApplicationId="DEMO_EF_LOANAPP1" loanQuoteId="DEMO_EF_LOANQT1"
+                   finAccountId="DEMO_EF_FIN1" statusId="LOANAGR_ACTIVE"
+                   borrowerPartyId="DEMO_EF_CUST" currencyUomId="JPY"
+                   principalAmount="400000" annualInterestRate="0.120000" termMonths="2"
+                   agreementDate="2026-10-05 00:00:00.0"
+                   firstPaymentDate="2026-12-15 00:00:00.0"
+                   processingLockVersion="0" financeContractId="DEMO_EF_FINCTR1"/>
+    <LoanAgreementRepaymentSchedule scheduleRevisionNumber="1"
+                                    loanAgreementId="DEMO_EF_LOANAGR1" installmentNumber="1"
+                                    loanQuoteId="DEMO_EF_LOANQT1" dueDate="2026-12-15 00:00:00.0"
+                                    interestFromDate="2026-10-05 00:00:00.0"
+                                    interestThruDate="2026-12-15 00:00:00.0"
+                                    paymentAmount="204000" principalAmount="200000"
+                                    interestAmount="4000" remainingBalance="200000"/>
+    <LoanAgreementRepaymentSchedule scheduleRevisionNumber="1"
+                                    loanAgreementId="DEMO_EF_LOANAGR1" installmentNumber="2"
+                                    loanQuoteId="DEMO_EF_LOANQT1" dueDate="2027-01-15 00:00:00.0"
+                                    interestFromDate="2026-12-15 00:00:00.0"
+                                    interestThruDate="2027-01-15 00:00:00.0"
+                                    paymentAmount="202000" principalAmount="200000"
+                                    interestAmount="2000" remainingBalance="0"/>
+
+    <!-- A submitted portal draft so /ef/me/applications has a visible row. -->
+    <EfApplicationDraft draftId="DEMO_EF_DRAFT1" memberPartyId="DEMO_EF_CUST"
+                        productId="DEMO_LOANPROD1" applicationTypeId="LOAN"
+                        currentStep="3" totalSteps="3" draftJson="{}"
+                        statusId="EFDRF_SUBMITTED" sourceEnumId="EFSRC_DIRECT"
+                        submittedApplicationId="DEMO_EF_LOANAPP1"
+                        submittedApplicationTypeId="LOAN"
+                        expiresAt="2027-10-01 00:00:00.0"
+                        createdDate="2026-09-01 10:00:00.0"
+                        lastModifiedDate="2026-10-05 10:00:00.0"/>
+    <EfApplicationLink linkId="DEMO_EF_LINK1" draftId="DEMO_EF_DRAFT1"
+                       memberPartyId="DEMO_EF_CUST"
+                       financeApplicationId="DEMO_EF_LOANAPP1"
+                       financeApplicationTypeId="LOAN"
+                       linkedDate="2026-10-05 10:00:00.0"/>
+
+    <!-- Demo message and notification settings for MyPage. -->
+    <CommunicationEvent communicationEventId="DEMO_EF_MSG1"
+                        communicationEventTypeId="WEB_SITE_COMMUNICATI"
+                        statusId="COM_COMPLETE" partyIdFrom="Company"
+                        partyIdTo="DEMO_EF_CUST" roleTypeIdFrom="_NA_"
+                        roleTypeIdTo="_NA_" subject="ローン契約締結のお知らせ"
+                        content="デモ用のローン契約が締結されました。マイページから契約内容をご確認いただけます。"
+                        entryDate="2026-10-05 10:05:00.0"/>
+    <EfNotificationSetting memberPartyId="DEMO_EF_CUST"
+                           notificationTypeEnumId="EFNOTIF_PAYMENT"
+                           emailEnabled="Y" smsEnabled="N" pushEnabled="N"
+                           lastModifiedDate="2026-10-01 00:00:00.0"/>
+    <EfNotificationSetting memberPartyId="DEMO_EF_CUST"
+                           notificationTypeEnumId="EFNOTIF_RECEIPT"
+                           emailEnabled="Y" smsEnabled="N" pushEnabled="N"
+                           lastModifiedDate="2026-10-01 00:00:00.0"/>
+    <EfNotificationSetting memberPartyId="DEMO_EF_CUST"
+                           notificationTypeEnumId="EFNOTIF_INFO"
+                           emailEnabled="Y" smsEnabled="Y" pushEnabled="N"
+                           lastModifiedDate="2026-10-01 00:00:00.0"/>
 </entity-engine-xml>

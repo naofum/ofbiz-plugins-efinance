@@ -2,7 +2,7 @@
 
 `REQUIREMENTS_EFINANCE.md` の要件に対する設計。各 STEP の実装後に「実装」「テスト」「検証」を追記する。
 
-> **状態：W0〜W6 の API・DB は実装済み（2026-10-22 更新）**。法人アカウント（ロール管理・申込下書きの所有確認）、リクエスト単位の `EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面（KYC 審査・書類要請・手続き依頼・会員ロック解除）を追加した。最新のテストは **57 件成功（errors="0" / failures="0"）**。残る主要ギャップは `/portal` 顧客サンプル画面、契約 PDF・電子署名、W7 口座振替。
+> **状態：W0〜W6 の API・DB は実装済み（2026-10-22 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA を追加した。最新のテストは **62 件成功（errors="0" / failures="0"）**。残る主要ギャップは契約 PDF・電子署名、W7 口座振替、法人契約の照会所有確認。
 
 ## 進捗
 
@@ -34,7 +34,7 @@
 - 全体：**75 サービス**（`auth=true` 63、`auth=false` 12）、**23 entity**、**11 テストクラス / 62 テスト**。
 - 実行：`.\gradlew.bat compileJava compileGroovy` 成功。`.\gradlew.bat "ofbiz --test component=efinance"` で **62 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
 - seed/demo：`data/EfinanceTypeData.xml`（状態・列挙・権限・`efinance-system`・同意文書）、`data/EfinanceDemoData.xml`（公開商品）、`testdef/data/EfinanceTestData.xml`（テスト会員・KYC/同意フィクスチャ）。
-- **残作業**：REST 経由の結合テスト、finance・support の全体回帰、`/portal` 顧客サンプル画面、契約 PDF・電子署名、法人契約の照会所有確認、W7。
+- **残作業**：REST 経由の結合テスト、finance・support の全体回帰、契約 PDF・電子署名、法人契約の照会所有確認、W7。
 
 ### 既知のギャップ（重要度順）
 
@@ -45,7 +45,7 @@
 | 3 | P1 | `EfStageEvent` が作成されていない | 進捗通知ができない | W4 追加 → 2026-10-22 `efGetApplicationStatus` から記録し、通知アダプタを実装済み |
 | 4 | P1 | 監査ログの適用が一部サービスに限られる | 操作証跡が不足 | 2026-10-22 主要な業務サービス・法人・管理操作に適用済み。support 連携は support 側の監査に委ねる |
 | 5 | P1 | 管理画面は会員と KYC 一覧のみ | 運用業務ができない | W6 追加 → 2026-10-22 KYC 審査・書類要請・手続き依頼・ロック解除を実装済み |
-| 6 | P1 | `/portal` は仮ページのみ | 顧客サンプル画面の要件を満たさない | W6 追加 |
+| 6 | P1 | `/portal` は仮ページのみ | 顧客サンプル画面の要件を満たさない | W6 追加 → 2026-10-22 サンプル SPA を実装済み |
 | 7 | P1 | 契約 PDF・交付書類の `contentId` が常に null | 電子交付が実運用できない | W5 追加 |
 | 8 | P2 | `EfFormField` が未実装でフォーム定義が Java 固定 | 商品別の項目定義ができない | W2 追加 |
 | 9 | P2 | ファイルスキャン Adapter がない | アップロードの安全性が保証できない | W2 追加 |
@@ -151,8 +151,8 @@ flowchart LR
 | ファイル | 用途 | 内容 |
 |----------|------|------|
 | `data/EfinanceTypeData.xml` | seed | 会員・法人・KYC・下書き・書類・署名・手続きの状態、列挙、権限、`efinance-system` |
-| `data/EfinanceDemoData.xml` | demo | `EFPUB1`（`DEMO_LOANPROD1`）、`EFPUB2`（`DEMO_LEASEPROD1`）の公開設定 |
-| `testdef/data/EfinanceTestData.xml` | test | テスト会員 `TEST_EF_CUST` / `test-ef-customer`（パスワード `ofbiz`） |
+| `data/EfinanceDemoData.xml` | demo | `EFPUB1`（`DEMO_LOANPROD1`）、`EFPUB2`（`DEMO_LEASEPROD1`）の公開設定。デモ会員 `DEMO_EF_CUST` / `demo-ef-customer`（パスワード `ofbiz`、KYC・同意済み）、サンプル申込、有効なローン契約、メッセージ、通知設定 |
+| `testdef/data/EfinanceTestData.xml` | test | テスト会員 `TEST_EF_CUST` / `test-ef-customer`（パスワード `ofbiz`）。demo とは分離する |
 
 - `efinance-system` は `SUPER` グループに所属し、finance・support の内部サービスを呼ぶ。
 - システムユーザーのパスワードハッシュは seed に固定されている。本番では資格情報をローテーションする。
@@ -502,8 +502,8 @@ sequenceDiagram
 
 ### 4.4 画面
 
-- `/efinanceadmin`：`FindEfMember`（会員一覧）、`ViewEfMember`（会員詳細）。
-- `/portal`：`PortalHome`（仮ページ）。
+- `/portal`：`PortalHome`。商品一覧・シミュレーション・ログイン/登録・申込・KYC・見積/署名・マイページを確認できるサンプル SPA。
+
 - 管理画面：会員一覧・詳細・ロック解除、KYC 一覧・審査、追加書類要請一覧、手続き依頼一覧・更新。
 
 ### 4.5 テスト
@@ -1043,22 +1043,23 @@ sequenceDiagram
 
 ## 14. 顧客サンプル画面（`/portal`）
 
-### 14.1 現状
+### 14.1 実装状況
 
-- `PortalHome.ftl` は「Under construction」の仮ページ。
-- 認証・API 呼出し・画面遷移は未実装。
+- `PortalHome.ftl` は、eFinance の REST API を呼び出すサンプル SPA。
+- 認証、商品一覧・シミュレーション、申込、本人確認、見積・署名、マイページ、support ケースを画面から確認できる。
+- デモアカウント `demo-ef-customer` / `ofbiz` は `data/EfinanceDemoData.xml` の demo データで、KYC・同意・サンプル申込・有効なローン契約・メッセージ・通知設定を含む。`test-ef-customer` はテスト専用で demo には投入しない。
 
-### 14.2 追加予定
+### 14.2 実装内容
 
 | 画面 | 内容 |
 |------|------|
-| ホーム | 商品紹介、ログイン、新規登録 |
-| 商品一覧・詳細 | 公開商品、シミュレーション |
-| 申込 | 段階入力、下書き保存、書類アップロード |
-| 本人確認 | 画像アップロード、進捗 |
-| 見積・契約 | 見積確認、同意、署名 |
-| マイページ | 申込・契約・返済・手続き・メッセージ |
-| support | ケース一覧・作成・返信・クローズ・評価 |
+| ホーム | 商品紹介、ログイン、新規登録（実装済み） |
+| 商品一覧・詳細 | 公開商品、シミュレーション（実装済み） |
+| 申込 | 段階入力、下書き保存、同意、送信（実装済み） |
+| 本人確認 | 画像アップロード、進捗（実装済み） |
+| 見積・契約 | 見積確認、同意、署名（実装済み） |
+| マイページ | 申込・契約・メッセージ・サポート・通知設定（実装済み） |
+| support | ケース一覧・作成・返信・クローズ・評価（API は efinance のブリッジを利用） |
 
 - サンプル画面は API の動作確認とフロントエンドの参考実装を目的とする。
 - 本番画面は別リポジトリで置き換える。
@@ -1152,15 +1153,34 @@ sequenceDiagram
 | 2026-10-22（追加） | 法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面（KYC 審査・書類要請・手続き依頼・ロック解除）を実装。**57 テスト成功** |
 | 2026-10-22（ログ修正） | `efinance.rest.xml` のスキーマ参照を `rest-api.xsd` に修正し、`EfinancePermissionServices.xml` の minilang 名前空間を修正。`ofbiz-rest.xsd` Warning と `TargetNamespace.2` Error を 0 件にした。**57 テスト成功** |
 | 2026-10-22（P1追加） | 同意文書の版一致・必須同意チェック、再認証（`efReauthenticate` / `EfToken.detail=REAUTH`）、法人管理の監査ログを実装。**62 テスト成功** |
+| 2026-10-22（Portal） | `/portal` をサンプル SPA に置き換え。商品一覧・シミュレーション・ログイン/登録・申込・KYC・見積/署名・マイページ・support を実装。**62 テスト成功** |
+| 2026-10-22（Portal demo） | デモ会員 `demo-ef-customer`、サンプル申込、有効なローン契約、メッセージ、通知設定を `EfinanceDemoData.xml` に追加。公開 REST 操作の 401 を `APIAuthFilter` と `auth="false"` 明示で修正。REST 手動結合確認済み。**62 テスト成功** |
 
 ---
 
 ## 19. rest-api への変更（2026-10-22）
 
-- 変更ファイル：`plugins/rest-api/src/main/java/org/apache/ofbiz/ws/rs/security/auth/EfAuthFilter.java`
-- 変更理由：rest-api の `APIAuthFilter` は JWT の署名だけを検証し、efinance の `EfToken` 失効や `EfMember` ロックを参照しない。失効済みトークンが有効期限まで利用できていた。
-- 影響範囲：`/ef/` の `auth=true` REST リクエスト。`auth=false` のログイン・登録・商品・シミュレーションは対象外。efinance が導入されていない環境では `EfRequestValidator` が見つからず、フィルタは何もしない。
-- 実装：rest-api の `EfAuthFilter` が `EfRequestValidator` をリフレクションで呼ぶ。efinance から rest-api へのコンパイル依存は追加していない。
-- 代替案：各サービス先頭で `EfAccessGuard` を呼ぶ方式は修正漏れが多く、全 REST を一括で守れないため不採用。
+- 変更ファイル：
+  - `plugins/rest-api/src/main/java/org/apache/ofbiz/ws/rs/security/auth/EfAuthFilter.java`
+  - `plugins/rest-api/src/main/java/org/apache/ofbiz/ws/rs/security/auth/APIAuthFilter.java`
+  - `plugins/efinance/api/efinance.rest.xml`（公開操作の `auth="false"` 明示）
+- 変更理由：
+  - rest-api の `APIAuthFilter` は JWT の署名だけを検証し、efinance の `EfToken` 失効や `EfMember` ロックを参照しない。失効済みトークンが有効期限まで利用できていた。
+  - カスタム REST の `auth="false"` 操作は、XSD の既定値（`auth=true`）により `APIAuthFilter` で 401 になっていた。ログイン・商品一覧など公開 API が動作しなかった。
+- 影響範囲：
+  - `/ef/` の `auth=true` REST リクエスト。
+  - `efinance.rest.xml` で `auth="false"` を明示したログイン・登録・パスワードリセット・商品・シミュレーション・申込フォーム。
+  - efinance が導入されていない環境では `EfRequestValidator` が見つからず、`EfAuthFilter` は何もしない。
+- 実装：
+  - `EfAuthFilter` が `EfRequestValidator` をリフレクションで呼ぶ。efinance から rest-api へのコンパイル依存は追加していない。
+  - `APIAuthFilter` は `OFBizApiConfig` の API 定義を参照し、`auth=false` の REST 操作を認証対象外にする。ログインだけでなく、今後の公開 API も同じ仕組みで扱える。
+  - `efinance.rest.xml` の公開操作に `auth="false"` を明示した。
+- 代替案：
+  - 各サービス先頭で `EfAccessGuard` を呼ぶ方式は修正漏れが多く、全 REST を一括で守れないため不採用。
+  - `APIAuthFilter` に `/ef/auth/` をハードコードする方式は、公開 API の追加ごとに rest-api を修正する必要があるため不採用。
 - 配布：efinance プラグイン単体には含まれないため、rest-api の差分も同時にデプロイする。
-- 検証：`EfAuthTests` で `EfRequestValidator` の有効トークン・失効トークン・ロック会員判定と再認証トークンのワンタイム性を確認。`compileJava compileGroovy` 成功、efinance 62 テスト成功。REST 経由の結合テストは未実施。
+- 検証：
+  - `EfAuthTests` で `EfRequestValidator` の有効トークン・失効トークン・ロック会員判定と再認証トークンのワンタイム性を確認。
+  - `compileJava` 成功、efinance 62 テスト成功。
+  - REST 手動結合確認：`demo-ef-customer` でログイン 200、商品 2 件、申込 1 件、契約 1 件、契約詳細の返済表 2 行、メッセージ、通知設定、`/portal/control/main` 200 を確認。
+  - REST の自動結合テストは未整備（既知ギャップ）。

@@ -26,25 +26,25 @@ under the License.
 
     <!-- Authentication -->
     <resource name="register" path="/ef/auth/register" auth="false">
-        <operation verb="post" consumes="application/json" produces="application/json">
+        <operation verb="post" consumes="application/json" produces="application/json" auth="false">
             <service name="efRegisterMember"/>
         </operation>
     </resource>
 
     <resource name="verifyEmail" path="/ef/auth/verify-email" auth="false">
-        <operation verb="post" consumes="application/json" produces="application/json">
+        <operation verb="post" consumes="application/json" produces="application/json" auth="false">
             <service name="efVerifyEmail"/>
         </operation>
     </resource>
 
     <resource name="login" path="/ef/auth/login" auth="false">
-        <operation verb="post" consumes="application/json" produces="application/json">
+        <operation verb="post" consumes="application/json" produces="application/json" auth="false">
             <service name="efLogin"/>
         </operation>
     </resource>
 
     <resource name="verifyMfa" path="/ef/auth/verify-mfa" auth="false">
-        <operation verb="post" consumes="application/json" produces="application/json">
+        <operation verb="post" consumes="application/json" produces="application/json" auth="false">
             <service name="efVerifyMfa"/>
         </operation>
     </resource>
@@ -56,7 +56,7 @@ under the License.
     </resource>
 
     <resource name="refreshToken" path="/ef/auth/refresh" auth="false">
-        <operation verb="post" consumes="application/json" produces="application/json">
+        <operation verb="post" consumes="application/json" produces="application/json" auth="false">
             <service name="efRefreshToken"/>
         </operation>
     </resource>
@@ -74,13 +74,13 @@ under the License.
     </resource>
 
     <resource name="passwordResetRequest" path="/ef/auth/password-reset" auth="false">
-        <operation verb="post" consumes="application/json" produces="application/json">
+        <operation verb="post" consumes="application/json" produces="application/json" auth="false">
             <service name="efRequestPasswordReset"/>
         </operation>
     </resource>
 
     <resource name="passwordReset" path="/ef/auth/password-reset/confirm" auth="false">
-        <operation verb="post" consumes="application/json" produces="application/json">
+        <operation verb="post" consumes="application/json" produces="application/json" auth="false">
             <service name="efResetPassword"/>
         </operation>
     </resource>
@@ -109,28 +109,28 @@ under the License.
 
     <!-- W1: Product catalog (no auth) -->
     <resource name="products" path="/ef/products" auth="false">
-        <operation verb="get" produces="application/json">
+        <operation verb="get" produces="application/json" auth="false">
             <service name="efListProducts"/>
         </operation>
     </resource>
     <resource name="product" path="/ef/products/{productId}" auth="false">
-        <operation verb="get" produces="application/json">
+        <operation verb="get" produces="application/json" auth="false">
             <service name="efGetProduct"/>
         </operation>
     </resource>
     <resource name="simulateLoan" path="/ef/simulate/loan" auth="false">
-        <operation verb="post" consumes="application/json" produces="application/json">
+        <operation verb="post" consumes="application/json" produces="application/json" auth="false">
             <service name="efSimulateLoan"/>
         </operation>
     </resource>
     <resource name="simulateLease" path="/ef/simulate/lease" auth="false">
-        <operation verb="post" consumes="application/json" produces="application/json">
+        <operation verb="post" consumes="application/json" produces="application/json" auth="false">
             <service name="efSimulateLease"/>
         </operation>
     </resource>
     <!-- W2: Application form schema -->
     <resource name="applicationForm" path="/ef/applications/form" auth="false">
-        <operation verb="get" produces="application/json">
+        <operation verb="get" produces="application/json" auth="false">
             <service name="efGetApplicationForm"/>
         </operation>
     </resource>

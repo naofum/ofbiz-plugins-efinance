@@ -749,7 +749,8 @@ public final class EfMemberServices {
                 profile.put("firstName", person.getString("firstName"));
                 profile.put("lastName", person.getString("lastName"));
             }
-            profile.put("email", member.getString("userLoginId"));
+            String email = getPrimaryEmail(delegator, partyId);
+            profile.put("email", UtilValidate.isNotEmpty(email) ? email : member.getString("userLoginId"));
             profile.put("memberType", member.getString("memberTypeEnumId"));
             profile.put("status", member.getString("statusId"));
             profile.put("mfaMethod", member.getString("mfaMethodEnumId"));
@@ -877,6 +878,19 @@ public final class EfMemberServices {
     // =========================================================================
     // Private helpers
     // =========================================================================
+
+    private static String getPrimaryEmail(Delegator delegator, String partyId) throws GenericEntityException {
+        List<GenericValue> contactMechs = EntityQuery.use(delegator).from("PartyContactMech")
+                .where("partyId", partyId)
+                .queryList();
+        for (GenericValue partyContactMech : contactMechs) {
+            GenericValue contactMech = partyContactMech.getRelatedOne("ContactMech", false);
+            if (contactMech != null && "EMAIL_ADDRESS".equals(contactMech.getString("contactMechTypeId"))) {
+                return contactMech.getString("infoString");
+            }
+        }
+        return null;
+    }
 
     private static String getPartyIdFromContext(Map<String, Object> context) {
         GenericValue userLogin = (GenericValue) context.get("userLogin");
