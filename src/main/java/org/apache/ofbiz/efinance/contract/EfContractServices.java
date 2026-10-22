@@ -44,6 +44,11 @@ import org.apache.ofbiz.entity.GenericValue;
 import org.apache.ofbiz.entity.condition.EntityCondition;
 import org.apache.ofbiz.entity.condition.EntityOperator;
 import org.apache.ofbiz.entity.util.EntityQuery;
+import org.apache.ofbiz.efinance.contract.signature.ESignatureAdapter;
+import org.apache.ofbiz.efinance.contract.signature.ESignatureAdapterFactory;
+import org.apache.ofbiz.efinance.contract.signature.ESignatureException;
+import org.apache.ofbiz.efinance.contract.signature.SignatureRequest;
+import org.apache.ofbiz.efinance.contract.signature.SignatureResult;
 import org.apache.ofbiz.efinance.security.EfAccessGuard;
 import org.apache.ofbiz.party.party.PartyHelper;
 import org.apache.ofbiz.service.DispatchContext;
@@ -376,6 +381,22 @@ public final class EfContractServices {
             String quoteTypeId = session.getString("quoteTypeId");
             String draftId = session.getString("draftId");
 
+            ESignatureAdapter signatureAdapter = ESignatureAdapterFactory.getAdapter();
+            SignatureResult signatureResult;
+            try {
+                signatureResult = signatureAdapter.sign(new SignatureRequest(
+                        signingSessionId, partyId, draftId, quoteId, quoteTypeId,
+                        Boolean.TRUE.equals(confirmContent), ipAddress, deviceId, locale));
+            } catch (ESignatureException e) {
+                Debug.logError(e, "Electronic signature failed for session " + signingSessionId, MODULE);
+                return ServiceUtil.returnError(e.getMessage());
+            }
+            if (!signatureResult.isSuccess()) {
+                return ServiceUtil.returnError(signatureResult.getErrorMessage());
+            }
+            Timestamp signedAt = signatureResult.getSignedDate() != null
+                    ? signatureResult.getSignedDate() : now;
+
             GenericValue systemUser = getSystemUser(delegator);
 
             // Call finance service to create agreement
@@ -417,7 +438,7 @@ public final class EfContractServices {
             String contentId = null;
             try {
                 contentId = createContractDocument(delegator, dispatcher, agreement, agreementTypeId,
-                        draftId, signingSessionId, now);
+                        draftId, signingSessionId, signedAt);
             } catch (Exception documentException) {
                 Debug.logWarning("Unable to create contract PDF for " + agreementId
                         + ": " + documentException.getMessage(), MODULE);
@@ -427,7 +448,9 @@ public final class EfContractServices {
             session.set("statusId", STATUS_EFSIG_SIGNED);
             session.set("consentIpAddress", ipAddress);
             session.set("consentDeviceId", deviceId);
-            session.set("consentDate", now);
+            session.set("consentDate", signedAt);
+            session.set("signatureMethodEnumId", signatureResult.getSignatureMethodEnumId());
+            session.set("signatureEvidenceHash", signatureResult.getEvidenceHash());
             session.set("agreementId", agreementId);
             session.set("agreementTypeId", agreementTypeId);
             if (contentId != null) {
@@ -446,6 +469,8 @@ public final class EfContractServices {
             result.put("agreementTypeId", agreementTypeId);
             result.put("deliveredDocId", deliveredDocId);
             result.put("contentId", contentId);
+            result.put("signatureMethodEnumId", signatureResult.getSignatureMethodEnumId());
+            result.put("signatureEvidenceHash", signatureResult.getEvidenceHash());
             return result;
 
         } catch (Exception e) {

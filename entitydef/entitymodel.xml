@@ -479,6 +479,8 @@ under the License.
         <field name="consentIpAddress" type="short-varchar"/>
         <field name="consentDeviceId" type="short-varchar"/>
         <field name="consentDate" type="date-time"/>
+        <field name="signatureMethodEnumId" type="id"><description>EFSIG_METHOD</description></field>
+        <field name="signatureEvidenceHash" type="short-varchar"><description>hash of the signature evidence</description></field>
         <field name="signedContentId" type="id"><description>Content: record of consent (text/hash)</description></field>
         <field name="agreementId" type="id"><description>loanAgreementId or leaseAgreementId after successful signing</description></field>
         <field name="agreementTypeId" type="id"><description>LOAN or LEASE</description></field>

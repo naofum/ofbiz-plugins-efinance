@@ -567,6 +567,8 @@ under the License.
         <attribute name="agreementTypeId" type="String" mode="OUT" optional="true"/>
         <attribute name="deliveredDocId" type="String" mode="OUT" optional="true"/>
         <attribute name="contentId" type="String" mode="OUT" optional="true"/>
+        <attribute name="signatureMethodEnumId" type="String" mode="OUT" optional="true"/>
+        <attribute name="signatureEvidenceHash" type="String" mode="OUT" optional="true"/>
     </service>
 
     <service name="efListDocuments" engine="java" auth="true" export="true"

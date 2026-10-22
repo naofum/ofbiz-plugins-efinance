@@ -2,7 +2,7 @@
 
 `REQUIREMENTS_EFINANCE.md` の要件に対する設計。各 STEP の実装後に「実装」「テスト」「検証」を追記する。
 
-> **状態：W0〜W6 の API・DB は実装済み（2026-10-22 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト、簡易契約 PDF・電子交付を追加した。最新のテストは **67 件成功（errors="0" / failures="0"）**。残る主要ギャップは本番 PDF テンプレート・`ESignatureAdapter`、W7 口座振替。
+> **状態：W0〜W6 の API・DB は実装済み（2026-10-22 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト、簡易契約 PDF・電子交付、`ESignatureAdapter` を追加した。最新のテストは **68 件成功（errors="0" / failures="0"）**。残る主要ギャップは本番 JasperReports テンプレート、外部電子署名サービス連携、W7 口座振替。
 
 ## 進捗
 
@@ -13,7 +13,7 @@
 | W2 | Web での申込（4 章） | 実装済み（2026-10-21）。フォーム定義・スキャンは未完 |
 | W3 | 本人確認と同意（5 章） | API 実装済み（2026-10-22）。同意文書 seed・一覧 API を追加。U6 連携は未完 |
 | W4 | 仮審査と進み具合（6 章） | API 実装済み（2026-10-21）。段階イベント・通知は未完 |
-| W5 | 電子契約と電子交付（7 章） | API 実装済み（2026-10-22）。KYC・同意ゲート、簡易 PDF・電子交付、再認証を追加。本番テンプレート・署名 Adapter は未完 |
+| W5 | 電子契約と電子交付（7 章） | API 実装済み（2026-10-22）。KYC・同意ゲート、簡易 PDF・電子交付、再認証、`ESignatureAdapter` を追加。本番テンプレート・外部署名サービス連携は未完 |
 | W6 | マイページ（8 章） | API 実装済み（2026-10-22）。support ブリッジ、管理画面（KYC 審査・書類要請一覧・手続き依頼・ロック解除）を追加。タスク自動化は未実装 |
 | W7 | 支払（9 章） | 設計（未着手） |
 | W8 | 販売店のポータル（10 章） | 設計（未着手） |
@@ -31,10 +31,10 @@
 | W5 | `EfSigningSession` / `EfDeliveredDocument`、見積受理、署名、契約作成、交付書類、REST 6 本 | `EfContractTests` |
 | W6 | `EfServiceRequest` / `EfNotificationSetting`、申込・契約照会、繰上返済、手続き、メッセージ、通知設定、REST 10 本、support 顧客 API ブリッジ 8 サービス | `EfMyPageTests` / `EfSupportTests` |
 
-- 全体：**76 サービス**（`auth=true` 64、`auth=false` 12）、**23 entity**、**12 テストクラス / 67 テスト**。
-- 実行：`.\gradlew.bat compileJava compileGroovy` 成功。`.\gradlew.bat "ofbiz --test component=efinance"` で **67 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
+- 全体：**76 サービス**（`auth=true` 64、`auth=false` 12）、**23 entity**、**12 テストクラス / 68 テスト**。
+- 実行：`.\gradlew.bat compileJava compileGroovy` 成功。`.\gradlew.bat "ofbiz --test component=efinance"` で **68 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
 - seed/demo：`data/EfinanceTypeData.xml`（状態・列挙・権限・`efinance-system`・同意文書）、`data/EfinanceDemoData.xml`（公開商品・デモ会員・サンプル申込・契約）、`testdef/data/EfinanceTestData.xml`（テスト会員・KYC/同意フィクスチャ）。
-- **残作業**：CORS・エラーチェーンの網羅、本番 PDF テンプレート・`ESignatureAdapter`、W7。finance 全体回帰は 217 テスト成功、support はユーザー実行で OK。
+- **残作業**：CORS・エラーチェーンの網羅、本番 JasperReports テンプレート、外部電子署名サービス連携、W7。finance 全体回帰は 217 テスト成功、support はユーザー実行で OK。
 
 ### 既知のギャップ（重要度順）
 
@@ -46,7 +46,7 @@
 | 4 | P1 | 監査ログの適用が一部サービスに限られる | 操作証跡が不足 | 2026-10-22 主要な業務サービス・法人・管理操作に適用済み。support 連携は support 側の監査に委ねる |
 | 5 | P1 | 管理画面は会員と KYC 一覧のみ | 運用業務ができない | W6 追加 → 2026-10-22 KYC 審査・書類要請・手続き依頼・ロック解除を実装済み |
 | 6 | P1 | `/portal` は仮ページのみ | 顧客サンプル画面の要件を満たさない | W6 追加 → 2026-10-22 サンプル SPA を実装済み |
-| 7 | P1 | 簡易契約 PDF・交付書類の `contentId` は実装済み。本番テンプレート・電子署名 Adapter は未実装 | 法的な本番運用にはテンプレート・署名方式の確定が必要 | W5 追加 → 2026-10-22 PDF と contentId を実装済み |
+| 7 | P1 | 簡易契約 PDF・交付書類の `contentId`、`ESignatureAdapter`（クリック同意）は実装済み。本番テンプレート・外部署名サービスは未実装 | 法的な本番運用にはテンプレート・署名方式の確定が必要 | W5 追加 → 2026-10-22 PDF・contentId・Adapter を実装済み |
 | 8 | P2 | `EfFormField` が未実装でフォーム定義が Java 固定 | 商品別の項目定義ができない | W2 追加 |
 | 9 | P2 | ファイルスキャン Adapter がない | アップロードの安全性が保証できない | W2 追加 |
 | 10 | P2 | 重複下書き・冪等性・レート制限が不十分 | 二重申込・乱用のリスク | W2/W3 |
@@ -145,6 +145,7 @@ flowchart LR
 | `efinance.draft.expire.days` | 30 | 下書きの有効期間 |
 | `efinance.upload.max.bytes` | 10485760 | アップロード上限（10MB） |
 | `efinance.kyc.retention.years` | 7 | 本人確認記録の保存期間 |
+| `esignature.adapter` | `ClickWrapSignatureAdapter` | 電子署名アダプタの実装クラス |
 
 ### 1.5 seed / demo / test データ
 
@@ -221,7 +222,7 @@ rest-api の応答形式（`statusCode`・`statusDescription`・`errorMessage`�
 | `EfPreScreenResult` | application | `preScreenId` | `draftId`、`memberPartyId`、`preScreenDate`、`resultEnumId`、`triggeredRules`、`inputSummary` |
 | `EfStageEvent` | application | `stageEventId` | `draftId`、`memberPartyId`、`fromStageEnumId`、`toStageEnumId`、`eventDate`、`notified` |
 | `EfDocumentRequest` | application | `docRequestId` | `draftId`、`memberPartyId`、`documentTypeEnumId`、`reason`、`dueDate`、`statusId`、`requestedByPartyId`、`requestedDate`、`submittedContentId`、`submittedDate` |
-| `EfSigningSession` | contract | `signingSessionId` | `draftId`、`memberPartyId`、`quoteId`、`quoteTypeId`、`statusId`、`consentIpAddress`、`consentDeviceId`、`consentDate`、`signedContentId`、`agreementId`、`agreementTypeId`、`expiresAt` |
+| `EfSigningSession` | contract | `signingSessionId` | `draftId`、`memberPartyId`、`quoteId`、`quoteTypeId`、`statusId`、`consentIpAddress`、`consentDeviceId`、`consentDate`、`signatureMethodEnumId`、`signatureEvidenceHash`、`signedContentId`、`agreementId`、`agreementTypeId`、`expiresAt` |
 | `EfDeliveredDocument` | contract | `deliveredDocId` | `draftId`、`memberPartyId`、`documentTypeEnumId`、`contentId`、`deliveredDate`、`consentId`、`viewedDate` |
 | `EfServiceRequest` | mypage | `serviceRequestId` | `memberPartyId`、`draftId`、`agreementId`、`agreementTypeId`、`requestTypeEnumId`、`statusId`、`subject`、`content`、`requestData`、`requestedByPartyId`、`assignedToPartyId`、`requestedDate`、`completedDate`、`staffNotes` |
 | `EfNotificationSetting` | mypage | `memberPartyId` + `notificationTypeEnumId` | `emailEnabled`、`smsEnabled`、`pushEnabled`、`lastModifiedDate` |
@@ -797,7 +798,7 @@ sequenceDiagram
 
 | エンティティ | 主な項目 |
 |--------------|----------|
-| `EfSigningSession` | `signingSessionId`、`draftId`、`memberPartyId`、`quoteId`、`quoteTypeId`、`statusId`、`consentIpAddress`、`consentDeviceId`、`consentDate`、`signedContentId`、`agreementId`、`agreementTypeId`、`expiresAt`、`createdDate` |
+| `EfSigningSession` | `signingSessionId`、`draftId`、`memberPartyId`、`quoteId`、`quoteTypeId`、`statusId`、`consentIpAddress`、`consentDeviceId`、`consentDate`、`signatureMethodEnumId`、`signatureEvidenceHash`、`signedContentId`、`agreementId`、`agreementTypeId`、`expiresAt`、`createdDate` |
 | `EfDeliveredDocument` | `deliveredDocId`、`draftId`、`memberPartyId`、`documentTypeEnumId`、`contentId`、`deliveredDate`、`consentId`、`viewedDate` |
 
 ### 9.2 フロー
@@ -836,7 +837,7 @@ sequenceDiagram
 - 署名セッションは 24 時間で失効。
 - `confirmContent=true` でなければ署名できない。
 - finance の契約作成が失敗した場合、セッションは `EFSIG_PENDING` のままにし、顧客に定型の案内を返す（担当者確認に回す）。
-- **現状（2026-10-22）**：`efCompleteSigning` は KYC の VERIFIED、電子契約同意、再認証を確認し、未確認なら契約を作成しない。契約作成後に簡易 PDF（`ContractDocumentPdf`、PDF 1.4・組み込み CJK フォント）を生成し、`Content` に保存して `EfDeliveredDocument.contentId` と `EfSigningSession.signedContentId` を設定する。`efDownloadDocument` は PDF を Base64 で返す。本番の JasperReports テンプレートと `ESignatureAdapter` の抽象化は未実装。
+- **現状（2026-10-22）**：`efCompleteSigning` は KYC の VERIFIED、電子契約同意、再認証を確認し、未確認なら契約を作成しない。契約作成後に簡易 PDF（`ContractDocumentPdf`、PDF 1.4・組み込み CJK フォント）を生成し、`Content` に保存して `EfDeliveredDocument.contentId` と `EfSigningSession.signedContentId` を設定する。`efDownloadDocument` は PDF を Base64 で返す。署名は `ESignatureAdapter` 経由で実行し、既定の `ClickWrapSignatureAdapter` が署名方式と証跡ハッシュを返す。本番の JasperReports テンプレートと外部署名サービス連携は未実装。
 
 ### 9.5 REST
 
@@ -851,13 +852,12 @@ sequenceDiagram
 
 ### 9.6 テスト
 
-- `EfContractTests`：見積なし、書類なし、ダウンロードなし、同意必須、契約フロー（手動で PRESENTED 見積を作成）。
+- `EfContractTests`：見積なし、書類なし、ダウンロードなし、同意必須、PDF 生成・`contentId`・Base64 取得、クリック同意アダプタ、署名完了フロー。
 
 ### 9.7 既知のギャップ
 
-- 契約書 PDF・交付書類の Content 生成。
-- `ESignatureAdapter` / `ClickWrapSignatureAdapter` の抽象化。
-- 再認証（KYC・電子契約同意のゲートは実装済み）。
+- 本番 JasperReports テンプレートの契約書レイアウト。
+- 外部電子署名サービスとの連携（既定はクリック同意）。
 - L21 承認ワークフロー連携。
 - 電子交付の承諾がない場合の郵送タスク。
 
@@ -1094,13 +1094,13 @@ sequenceDiagram
 .\gradlew.bat "ofbiz --test component=efinance"
 ```
 
-- 2026-10-22：**67 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
+- 2026-10-22：**68 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
 - REST 経由の JWT 取得・Authorization・公開 API・無効トークンは `EfRestIntegrationTests` で確認済み。CORS とエラーチェーンの網羅は未実装。
 - finance 全体回帰は **217 テスト成功**、support はユーザー実行で OK。
-- 簡易 PDF の生成・`Content` 保存・`EfDeliveredDocument.contentId`・`efDownloadDocument` の Base64 取得を `EfContractTests` で確認済み。
+- 簡易 PDF の生成・`Content` 保存・`EfDeliveredDocument.contentId`・`efDownloadDocument` の Base64 取得・`ClickWrapSignatureAdapter` を `EfContractTests` で確認済み。
 - 以下のテストは未実装。
   - 本番 JasperReports テンプレートの PDF レイアウト
-  - `ESignatureAdapter`（電子署名サービス連携）
+  - 外部電子署名サービスとの連携
   - W7 口座振替
 
 
@@ -1162,6 +1162,7 @@ sequenceDiagram
 | 2026-10-22（Corporate/Audit） | 法人契約の照会所有確認（`roleView` / `rolePayment`）と、管理画面の監査ログ一覧（`efListAuditLogs` / `FindEfAuditLog`）を実装。**64 テスト成功** |
 | 2026-10-22（REST integration） | `EfRestIntegrationTests` を追加。公開商品、ログイン、Bearer 認証、無効トークン 401 を確認。**65 テスト成功** |
 | 2026-10-22（Contract PDF） | `ContractDocumentPdf` と交付書類の `contentId` 実体化を追加。署名完了時に PDF を `Content` に保存し、署名セッションと交付書類へ関連付け。`efDownloadDocument` は PDF を Base64 で返す。**67 テスト成功** |
+| 2026-10-22（ESignature Adapter） | `ESignatureAdapter` / `ESignatureAdapterFactory` / `ClickWrapSignatureAdapter` を追加。`esignature.adapter` で差し替え可能にし、署名方式と証跡ハッシュを `EfSigningSession` に保存。**68 テスト成功** |
 
 ---
 
@@ -1188,6 +1189,6 @@ sequenceDiagram
 - 配布：efinance プラグイン単体には含まれないため、rest-api の差分も同時にデプロイする。
 - 検証：
   - `EfAuthTests` で `EfRequestValidator` の有効トークン・失効トークン・ロック会員判定と再認証トークンのワンタイム性を確認。
-  - `compileJava compileGroovy` 成功、efinance 67 テスト成功。
+  - `compileJava compileGroovy` 成功、efinance 68 テスト成功。
   - REST 手動結合確認：`demo-ef-customer` でログイン 200、商品 2 件、申込 1 件、契約 1 件、契約詳細の返済表 2 行、メッセージ、通知設定、`/portal/control/main` 200 を確認。
   - `EfRestIntegrationTests` で公開商品、ログイン、Bearer 認証、無効トークン 401 を自動確認する。CORS とエラーチェーンの網羅は未整備。

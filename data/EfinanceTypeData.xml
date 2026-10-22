@@ -239,6 +239,11 @@ under the License.
     <StatusValidChange statusId="EFSIG_PENDING" statusIdTo="EFSIG_SIGNED" transitionName="Sign"/>
     <StatusValidChange statusId="EFSIG_PENDING" statusIdTo="EFSIG_DECLINED" transitionName="Decline"/>
 
+    <!-- W5 electronic signature methods -->
+    <EnumerationType enumTypeId="EFSIG_METHOD" description="eFinance signature method"/>
+    <Enumeration enumId="EFSIG_METHOD_CLICK" enumTypeId="EFSIG_METHOD" enumCode="CLICK_WRAP" sequenceId="01" description="Click-wrap consent"/>
+    <Enumeration enumId="EFSIG_METHOD_EXT" enumTypeId="EFSIG_METHOD" enumCode="EXTERNAL" sequenceId="02" description="External electronic signature"/>
+
     <!-- W5 Delivered document types -->
     <EnumerationType enumTypeId="EFDELDOC_TYPE" description="eFinance delivered document type"/>
     <Enumeration enumId="EFDELDOC_PRE" enumTypeId="EFDELDOC_TYPE" enumCode="PRE_CONTRACT" sequenceId="01" description="Pre-contract disclosure"/>

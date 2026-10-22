@@ -4,7 +4,7 @@
 
 - 要件：`REQUIREMENTS_EFINANCE.md`
 - 仕様：`SPEC_EFINANCE.md`
-- 状態：W0〜W6 の API・DB は実装済み（2026-10-22）。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、ポータル用デモデータを追加。契約 PDF・電子署名、W7 は未実装。
+- 状態：W0〜W6 の API・DB は実装済み（2026-10-22）。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、ポータル用デモデータ、簡易契約 PDF・電子交付、`ESignatureAdapter` を追加。本番 JasperReports テンプレート・外部署名サービス、W7 は未実装。
 - 依存：`efinance → finance`、`efinance → support`、OFBiz core、rest-api。ecommerce には依存しない。
 - 注意：`/ef/` のトークン失効検証に rest-api の `EfAuthFilter` を、公開 REST 操作の認証除外に `APIAuthFilter` を使うため、efinance プラグイン単体ではなく rest-api の差分もデプロイ対象とする。
 - 画面：`/efinanceadmin`（担当者向け管理）、`/portal`（顧客向けサンプル）。本番の顧客画面は別リポジトリで作成する。
@@ -18,7 +18,7 @@
 | W2 | 申込下書き・書類・送信 | 実装済み |
 | W3 | 本人確認・同意・KYC 審査 | 実装済み |
 | W4 | 仮審査・進捗・追加書類・ステージイベント・通知 | 実装済み |
-| W5 | 見積受理・電子契約・交付 | API・簡易 PDF・電子交付は実装済み（本番テンプレート・電子署名 Adapter は未実装） |
+| W5 | 見積受理・電子契約・交付 | API・簡易 PDF・電子交付・`ESignatureAdapter` は実装済み（本番テンプレート・外部署名サービス連携は未実装） |
 | W6 | マイページ・手続き・メッセージ・通知設定・support ブリッジ・管理画面（監査ログを含む） | 実装済み |
 | W7 | 口座振替・振込照会 | 設計 |
 | W8 | 販売店ポータル | 設計 |

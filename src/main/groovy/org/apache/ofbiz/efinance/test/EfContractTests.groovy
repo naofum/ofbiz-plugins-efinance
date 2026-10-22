@@ -25,6 +25,8 @@ import java.sql.Timestamp
 import java.util.Base64
 import org.apache.ofbiz.entity.GenericValue
 import org.apache.ofbiz.efinance.contract.ContractDocumentPdf
+import org.apache.ofbiz.efinance.contract.signature.ClickWrapSignatureAdapter
+import org.apache.ofbiz.efinance.contract.signature.SignatureRequest
 import org.apache.ofbiz.service.ServiceUtil
 import org.apache.ofbiz.service.testtools.OFBizTestCase
 
@@ -254,6 +256,24 @@ class EfContractTests extends OFBizTestCase {
         assert session.statusId == 'EFSIG_PENDING'
     }
 
+    void testClickWrapSignatureAdapter() {
+        ClickWrapSignatureAdapter adapter = new ClickWrapSignatureAdapter()
+        SignatureRequest request = new SignatureRequest(
+                'SIG_TEST', 'TEST_EF_CUST', 'DRAFT_TEST', 'QUOTE_TEST', 'LOAN',
+                true, '127.0.0.1', 'test-device', Locale.JAPAN)
+        def result = adapter.sign(request)
+        assert result.success
+        assert result.signatureMethodEnumId == 'EFSIG_METHOD_CLICK'
+        assert result.evidenceHash
+        assert result.signedDate
+
+        def denied = adapter.sign(new SignatureRequest(
+                'SIG_TEST', 'TEST_EF_CUST', 'DRAFT_TEST', 'QUOTE_TEST', 'LOAN',
+                false, '127.0.0.1', 'test-device', Locale.JAPAN))
+        assert !denied.success
+        assert denied.errorMessage
+    }
+
     void testCompleteSigningCreatesContractContent() {
         Map data = createDraftWithLoanApp()
         String draftId = data.draftId
@@ -331,6 +351,10 @@ class EfContractTests extends OFBizTestCase {
                 .where('signingSessionId', signStart.signingSessionId).queryOne()
         assert session.statusId == 'EFSIG_SIGNED'
         assert session.signedContentId == signComplete.contentId
+        assert session.signatureMethodEnumId == 'EFSIG_METHOD_CLICK'
+        assert session.signatureEvidenceHash
+        assert signComplete.signatureMethodEnumId == 'EFSIG_METHOD_CLICK'
+        assert signComplete.signatureEvidenceHash
 
         GenericValue delivered = from('EfDeliveredDocument')
                 .where('deliveredDocId', signComplete.deliveredDocId).queryOne()
