@@ -675,7 +675,12 @@ public final class EfContractServices {
         }
         List<String> lines = buildContractDocumentLines(delegator, agreement, agreementTypeId,
                 signingSessionId, now);
-        byte[] pdf = ContractDocumentPdf.build(lines);
+        byte[] pdf = JasperContractDocumentRenderer.render(
+                buildContractReportParameters(delegator, agreement, agreementTypeId, signingSessionId, now),
+                buildContractReportRows(delegator, agreement, agreementTypeId));
+        if (pdf == null) {
+            pdf = ContractDocumentPdf.build(lines);
+        }
         String fileName = "contract-" + agreement.getString(
                 QUOTE_TYPE_LEASE.equals(agreementTypeId) ? "leaseAgreementId" : "loanAgreementId") + ".pdf";
 
@@ -699,6 +704,82 @@ public final class EfContractServices {
         Debug.logWarning("createContentFromUploadedFile failed for " + draftId + ": "
                 + ServiceUtil.getErrorMessage(contentResult), MODULE);
         return null;
+    }
+
+    private static Map<String, Object> buildContractReportParameters(Delegator delegator,
+            GenericValue agreement, String agreementTypeId, String signingSessionId, Timestamp now) {
+        boolean lease = QUOTE_TYPE_LEASE.equals(agreementTypeId);
+        String customerPartyId = agreement.getString(lease ? "lesseePartyId" : "borrowerPartyId");
+        Map<String, Object> parameters = new LinkedHashMap<>();
+        parameters.put("documentTitle", "電子契約書（eFinance）");
+        parameters.put("documentNoLabel", "契約番号");
+        parameters.put("documentNo", agreement.getString(lease ? "leaseAgreementId" : "loanAgreementId"));
+        parameters.put("agreementTypeLabel", "契約種別");
+        parameters.put("agreementType", lease ? "リース" : "ローン");
+        parameters.put("agreementDateLabel", "契約日");
+        parameters.put("agreementDate", agreement.getTimestamp("agreementDate"));
+        parameters.put("partyLabel", lease ? "借受者" : "借入人");
+        parameters.put("partyName", partyName(delegator, customerPartyId));
+        parameters.put("partyId", customerPartyId);
+        parameters.put("principalLabel", lease ? "取得価額" : "借入元本");
+        parameters.put("principalAmount", lease
+                ? agreement.getBigDecimal("acquisitionCost") : agreement.getBigDecimal("principalAmount"));
+        parameters.put("rateLabel", lease ? "計算利率" : "年利");
+        parameters.put("rateAmount", lease
+                ? agreement.getBigDecimal("calcInterestRate") : agreement.getBigDecimal("annualInterestRate"));
+        parameters.put("termLabel", lease ? "リース期間（月）" : "返済期間（月）");
+        parameters.put("termMonths", toBigDecimal(agreement.get("termMonths")));
+        parameters.put("firstPaymentLabel", lease ? "リース開始日" : "初回返済日");
+        parameters.put("firstPaymentDate", lease
+                ? agreement.getTimestamp("leaseStartDate") : agreement.getTimestamp("firstPaymentDate"));
+        parameters.put("currencyLabel", "通貨");
+        parameters.put("currencyUomId", agreement.getString("currencyUomId"));
+        parameters.put("scheduleTitle", "返済・リース料予定表");
+        parameters.put("colNo", "回");
+        parameters.put("colDueDate", "期日");
+        parameters.put("colPayment", "返済額/リース料");
+        parameters.put("colPrincipal", "元本");
+        parameters.put("colInterest", "利息");
+        parameters.put("colTax", "消費税");
+        parameters.put("colBalance", "残高");
+        parameters.put("signatureDateLabel", "署名日時");
+        parameters.put("signatureDate", now);
+        parameters.put("signingSessionLabel", "署名セッション");
+        parameters.put("signingSession", signingSessionId);
+        parameters.put("footerText", "本書面は電子契約により交付されました。");
+        return parameters;
+    }
+
+    private static List<Map<String, Object>> buildContractReportRows(Delegator delegator,
+            GenericValue agreement, String agreementTypeId) throws GenericEntityException {
+        boolean lease = QUOTE_TYPE_LEASE.equals(agreementTypeId);
+        String agreementId = agreement.getString(lease ? "leaseAgreementId" : "loanAgreementId");
+        String entityName = lease ? "LeaseAgreementPaymentSchedule" : "LoanAgreementRepaymentSchedule";
+        String keyName = lease ? "leaseAgreementId" : "loanAgreementId";
+        Long revision = latestRevision(delegator, entityName, keyName, agreementId);
+        List<Map<String, Object>> rows = new ArrayList<>();
+        if (revision == null) {
+            return rows;
+        }
+        List<GenericValue> schedule = EntityQuery.use(delegator).from(entityName)
+                .where(keyName, agreementId, "scheduleRevisionNumber", revision)
+                .orderBy("installmentNumber").queryList();
+        for (GenericValue line : schedule) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("installmentNumber", toBigDecimal(line.get("installmentNumber")));
+            row.put("dueDate", line.getTimestamp("dueDate"));
+            row.put("paymentAmount", line.getBigDecimal(lease ? "leaseAmount" : "paymentAmount"));
+            row.put("principalAmount", line.getBigDecimal(lease ? "principalPortion" : "principalAmount"));
+            row.put("interestAmount", line.getBigDecimal(lease ? "interestPortion" : "interestAmount"));
+            row.put("taxAmount", lease ? line.getBigDecimal("taxAmount") : null);
+            row.put("remainingBalance", line.getBigDecimal(lease ? "remainingPrincipal" : "remainingBalance"));
+            rows.add(row);
+        }
+        return rows;
+    }
+
+    private static BigDecimal toBigDecimal(Object value) {
+        return value == null ? null : new BigDecimal(value.toString());
     }
 
     private static List<String> buildContractDocumentLines(Delegator delegator, GenericValue agreement,

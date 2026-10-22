@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+
+    eFinance electronic contract report. Header values are supplied as report
+    parameters; repayment / lease schedule rows are supplied as a
+    JRMapCollectionDataSource. JasperReports 7.x native JRXML.
+-->
+<jasperReport name="EfinanceContractReport"
+              pageWidth="595" pageHeight="842"
+              columnWidth="555" leftMargin="20" rightMargin="20"
+              topMargin="20" bottomMargin="20"
+              whenNoDataType="AllSectionsNoDetail"
+              uuid="d4e5f6a7-2b3c-4d5e-9f60-3c4d5e6f7a80">
+
+    <!-- CJK font (Japanese) via OpenPDF built-in; requires openpdf-fonts-extra. -->
+    <style name="base" default="true" pdfFontName="HeiseiKakuGo-W5"
+           pdfEncoding="UniJIS-UCS2-H" pdfEmbedded="true"/>
+
+    <parameter name="documentTitle" class="java.lang.String"/>
+    <parameter name="documentNoLabel" class="java.lang.String"/>
+    <parameter name="documentNo" class="java.lang.String"/>
+    <parameter name="agreementTypeLabel" class="java.lang.String"/>
+    <parameter name="agreementType" class="java.lang.String"/>
+    <parameter name="agreementDateLabel" class="java.lang.String"/>
+    <parameter name="agreementDate" class="java.sql.Timestamp"/>
+    <parameter name="partyLabel" class="java.lang.String"/>
+    <parameter name="partyName" class="java.lang.String"/>
+    <parameter name="partyId" class="java.lang.String"/>
+    <parameter name="principalLabel" class="java.lang.String"/>
+    <parameter name="principalAmount" class="java.math.BigDecimal"/>
+    <parameter name="rateLabel" class="java.lang.String"/>
+    <parameter name="rateAmount" class="java.math.BigDecimal"/>
+    <parameter name="termLabel" class="java.lang.String"/>
+    <parameter name="termMonths" class="java.math.BigDecimal"/>
+    <parameter name="firstPaymentLabel" class="java.lang.String"/>
+    <parameter name="firstPaymentDate" class="java.sql.Timestamp"/>
+    <parameter name="currencyLabel" class="java.lang.String"/>
+    <parameter name="currencyUomId" class="java.lang.String"/>
+    <parameter name="scheduleTitle" class="java.lang.String"/>
+    <parameter name="colNo" class="java.lang.String"/>
+    <parameter name="colDueDate" class="java.lang.String"/>
+    <parameter name="colPayment" class="java.lang.String"/>
+    <parameter name="colPrincipal" class="java.lang.String"/>
+    <parameter name="colInterest" class="java.lang.String"/>
+    <parameter name="colTax" class="java.lang.String"/>
+    <parameter name="colBalance" class="java.lang.String"/>
+    <parameter name="signatureDateLabel" class="java.lang.String"/>
+    <parameter name="signatureDate" class="java.sql.Timestamp"/>
+    <parameter name="signingSessionLabel" class="java.lang.String"/>
+    <parameter name="signingSession" class="java.lang.String"/>
+    <parameter name="footerText" class="java.lang.String"/>
+
+    <field name="installmentNumber" class="java.math.BigDecimal"/>
+    <field name="dueDate" class="java.sql.Timestamp"/>
+    <field name="paymentAmount" class="java.math.BigDecimal"/>
+    <field name="principalAmount" class="java.math.BigDecimal"/>
+    <field name="interestAmount" class="java.math.BigDecimal"/>
+    <field name="taxAmount" class="java.math.BigDecimal"/>
+    <field name="remainingBalance" class="java.math.BigDecimal"/>
+
+    <title height="218">
+        <element kind="textField" x="0" y="0" width="555" height="38"
+                 fontSize="22.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+            <expression><![CDATA[$P{documentTitle}]]></expression>
+        </element>
+        <element kind="line" x="0" y="44" width="555" height="1"/>
+
+        <element kind="textField" x="0" y="52" width="110" height="16" fontSize="10.0" bold="true">
+            <expression><![CDATA[$P{documentNoLabel}]]></expression>
+        </element>
+        <element kind="textField" x="115" y="52" width="440" height="16" fontSize="10.0">
+            <expression><![CDATA[$P{documentNo}]]></expression>
+        </element>
+
+        <element kind="textField" x="0" y="72" width="110" height="16" fontSize="10.0" bold="true">
+            <expression><![CDATA[$P{agreementTypeLabel}]]></expression>
+        </element>
+        <element kind="textField" x="115" y="72" width="180" height="16" fontSize="10.0">
+            <expression><![CDATA[$P{agreementType}]]></expression>
+        </element>
+        <element kind="textField" x="300" y="72" width="90" height="16" fontSize="10.0" bold="true">
+            <expression><![CDATA[$P{agreementDateLabel}]]></expression>
+        </element>
+        <element kind="textField" x="395" y="72" width="160" height="16" fontSize="10.0" pattern="yyyy-MM-dd">
+            <expression><![CDATA[$P{agreementDate}]]></expression>
+        </element>
+
+        <element kind="textField" x="0" y="92" width="110" height="16" fontSize="10.0" bold="true">
+            <expression><![CDATA[$P{partyLabel}]]></expression>
+        </element>
+        <element kind="textField" x="115" y="92" width="280" height="16" fontSize="10.0">
+            <expression><![CDATA[$P{partyName}]]></expression>
+        </element>
+        <element kind="textField" x="400" y="92" width="155" height="16" fontSize="9.0" hTextAlign="Right">
+            <expression><![CDATA[$P{partyId}]]></expression>
+        </element>
+
+        <element kind="line" x="0" y="114" width="555" height="1"/>
+
+        <element kind="textField" x="0" y="122" width="110" height="16" fontSize="10.0" bold="true">
+            <expression><![CDATA[$P{principalLabel}]]></expression>
+        </element>
+        <element kind="textField" x="115" y="122" width="150" height="16" fontSize="10.0" hTextAlign="Right" pattern="#,##0">
+            <expression><![CDATA[$P{principalAmount}]]></expression>
+        </element>
+        <element kind="textField" x="280" y="122" width="100" height="16" fontSize="10.0" bold="true">
+            <expression><![CDATA[$P{rateLabel}]]></expression>
+        </element>
+        <element kind="textField" x="385" y="122" width="170" height="16" fontSize="10.0" hTextAlign="Right" pattern="#0.000%">
+            <expression><![CDATA[$P{rateAmount}]]></expression>
+        </element>
+
+        <element kind="textField" x="0" y="142" width="110" height="16" fontSize="10.0" bold="true">
+            <expression><![CDATA[$P{termLabel}]]></expression>
+        </element>
+        <element kind="textField" x="115" y="142" width="150" height="16" fontSize="10.0" hTextAlign="Right" pattern="#,##0">
+            <expression><![CDATA[$P{termMonths}]]></expression>
+        </element>
+        <element kind="textField" x="280" y="142" width="100" height="16" fontSize="10.0" bold="true">
+            <expression><![CDATA[$P{currencyLabel}]]></expression>
+        </element>
+        <element kind="textField" x="385" y="142" width="170" height="16" fontSize="10.0" hTextAlign="Right">
+            <expression><![CDATA[$P{currencyUomId}]]></expression>
+        </element>
+
+        <element kind="textField" x="0" y="162" width="110" height="16" fontSize="10.0" bold="true">
+            <expression><![CDATA[$P{firstPaymentLabel}]]></expression>
+        </element>
+        <element kind="textField" x="115" y="162" width="150" height="16" fontSize="10.0" pattern="yyyy-MM-dd">
+            <expression><![CDATA[$P{firstPaymentDate}]]></expression>
+        </element>
+
+        <element kind="line" x="0" y="186" width="555" height="1"/>
+        <element kind="textField" x="0" y="192" width="555" height="20" fontSize="12.0" bold="true">
+            <expression><![CDATA[$P{scheduleTitle}]]></expression>
+        </element>
+    </title>
+
+    <columnHeader height="22">
+        <element kind="textField" x="0" y="2" width="30" height="18" fontSize="8.0" bold="true"
+                 hTextAlign="Center" vTextAlign="Middle" mode="Opaque" backcolor="#E6E6E6">
+            <expression><![CDATA[$P{colNo}]]></expression>
+        </element>
+        <element kind="textField" x="30" y="2" width="80" height="18" fontSize="8.0" bold="true"
+                 hTextAlign="Center" vTextAlign="Middle" mode="Opaque" backcolor="#E6E6E6">
+            <expression><![CDATA[$P{colDueDate}]]></expression>
+        </element>
+        <element kind="textField" x="110" y="2" width="85" height="18" fontSize="8.0" bold="true"
+                 hTextAlign="Center" vTextAlign="Middle" mode="Opaque" backcolor="#E6E6E6">
+            <expression><![CDATA[$P{colPayment}]]></expression>
+        </element>
+        <element kind="textField" x="195" y="2" width="85" height="18" fontSize="8.0" bold="true"
+                 hTextAlign="Center" vTextAlign="Middle" mode="Opaque" backcolor="#E6E6E6">
+            <expression><![CDATA[$P{colPrincipal}]]></expression>
+        </element>
+        <element kind="textField" x="280" y="2" width="85" height="18" fontSize="8.0" bold="true"
+                 hTextAlign="Center" vTextAlign="Middle" mode="Opaque" backcolor="#E6E6E6">
+            <expression><![CDATA[$P{colInterest}]]></expression>
+        </element>
+        <element kind="textField" x="365" y="2" width="85" height="18" fontSize="8.0" bold="true"
+                 hTextAlign="Center" vTextAlign="Middle" mode="Opaque" backcolor="#E6E6E6">
+            <expression><![CDATA[$P{colTax}]]></expression>
+        </element>
+        <element kind="textField" x="450" y="2" width="105" height="18" fontSize="8.0" bold="true"
+                 hTextAlign="Center" vTextAlign="Middle" mode="Opaque" backcolor="#E6E6E6">
+            <expression><![CDATA[$P{colBalance}]]></expression>
+        </element>
+    </columnHeader>
+
+    <detail>
+        <band height="18">
+            <element kind="textField" x="0" y="0" width="30" height="16" fontSize="8.0" hTextAlign="Center" pattern="#,##0">
+                <expression><![CDATA[$F{installmentNumber}]]></expression>
+            </element>
+            <element kind="textField" x="30" y="0" width="80" height="16" fontSize="8.0" hTextAlign="Center" pattern="yyyy-MM-dd">
+                <expression><![CDATA[$F{dueDate}]]></expression>
+            </element>
+            <element kind="textField" x="110" y="0" width="85" height="16" fontSize="8.0" hTextAlign="Right" pattern="#,##0">
+                <expression><![CDATA[$F{paymentAmount}]]></expression>
+            </element>
+            <element kind="textField" x="195" y="0" width="85" height="16" fontSize="8.0" hTextAlign="Right" pattern="#,##0">
+                <expression><![CDATA[$F{principalAmount}]]></expression>
+            </element>
+            <element kind="textField" x="280" y="0" width="85" height="16" fontSize="8.0" hTextAlign="Right" pattern="#,##0">
+                <expression><![CDATA[$F{interestAmount}]]></expression>
+            </element>
+            <element kind="textField" x="365" y="0" width="85" height="16" fontSize="8.0" hTextAlign="Right" pattern="#,##0">
+                <expression><![CDATA[$F{taxAmount}]]></expression>
+            </element>
+            <element kind="textField" x="450" y="0" width="105" height="16" fontSize="8.0" hTextAlign="Right" pattern="#,##0">
+                <expression><![CDATA[$F{remainingBalance}]]></expression>
+            </element>
+            <element kind="line" x="0" y="17" width="555" height="1" forecolor="#CCCCCC"/>
+        </band>
+    </detail>
+
+    <summary height="70">
+        <element kind="textField" x="0" y="8" width="150" height="16" fontSize="9.0" bold="true">
+            <expression><![CDATA[$P{signatureDateLabel}]]></expression>
+        </element>
+        <element kind="textField" x="155" y="8" width="180" height="16" fontSize="9.0" pattern="yyyy-MM-dd HH:mm">
+            <expression><![CDATA[$P{signatureDate}]]></expression>
+        </element>
+        <element kind="textField" x="0" y="28" width="150" height="16" fontSize="9.0" bold="true">
+            <expression><![CDATA[$P{signingSessionLabel}]]></expression>
+        </element>
+        <element kind="textField" x="155" y="28" width="400" height="16" fontSize="9.0">
+            <expression><![CDATA[$P{signingSession}]]></expression>
+        </element>
+        <element kind="textField" x="0" y="48" width="555" height="14" fontSize="8.0">
+            <expression><![CDATA[$P{footerText}]]></expression>
+        </element>
+    </summary>
+
+    <pageFooter height="18">
+        <element kind="textField" x="455" y="0" width="100" height="14" fontSize="8.0" hTextAlign="Right">
+            <expression><![CDATA[$V{PAGE_NUMBER}]]></expression>
+        </element>
+    </pageFooter>
+</jasperReport>

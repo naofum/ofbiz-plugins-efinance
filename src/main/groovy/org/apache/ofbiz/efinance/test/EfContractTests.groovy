@@ -25,6 +25,7 @@ import java.sql.Timestamp
 import java.util.Base64
 import org.apache.ofbiz.entity.GenericValue
 import org.apache.ofbiz.efinance.contract.ContractDocumentPdf
+import org.apache.ofbiz.efinance.contract.JasperContractDocumentRenderer
 import org.apache.ofbiz.efinance.contract.signature.ClickWrapSignatureAdapter
 import org.apache.ofbiz.efinance.contract.signature.SignatureRequest
 import org.apache.ofbiz.service.ServiceUtil
@@ -272,6 +273,37 @@ class EfContractTests extends OFBizTestCase {
                 false, '127.0.0.1', 'test-device', Locale.JAPAN))
         assert !denied.success
         assert denied.errorMessage
+    }
+
+    void testJasperContractTemplateRendersPdf() {
+        Timestamp now = new Timestamp(System.currentTimeMillis())
+        Map parameters = [
+                documentTitle: '電子契約書（テンプレート検証）',
+                documentNoLabel: '契約番号', documentNo: 'TEST_JR_TEMPLATE',
+                agreementTypeLabel: '契約種別', agreementType: 'ローン',
+                agreementDateLabel: '契約日', agreementDate: now,
+                partyLabel: '借入人', partyName: 'Test Customer', partyId: 'TEST_EF_CUST',
+                principalLabel: '借入元本', principalAmount: new BigDecimal('100000'),
+                rateLabel: '年利', rateAmount: new BigDecimal('0.150000'),
+                termLabel: '返済期間（月）', termMonths: new BigDecimal('12'),
+                firstPaymentLabel: '初回返済日', firstPaymentDate: now,
+                currencyLabel: '通貨', currencyUomId: 'JPY',
+                scheduleTitle: '返済予定表',
+                colNo: '回', colDueDate: '期日', colPayment: '返済額',
+                colPrincipal: '元本', colInterest: '利息', colTax: '消費税', colBalance: '残高',
+                signatureDateLabel: '署名日時', signatureDate: now,
+                signingSessionLabel: '署名セッション', signingSession: 'TEST_SESSION',
+                footerText: '本書面は電子契約により交付されました。'
+        ]
+        List<Map> rows = [[
+                installmentNumber: new BigDecimal('1'), dueDate: now,
+                paymentAmount: new BigDecimal('9026'), principalAmount: new BigDecimal('8000'),
+                interestAmount: new BigDecimal('1026'), taxAmount: null,
+                remainingBalance: new BigDecimal('92000')
+        ]]
+        byte[] pdf = JasperContractDocumentRenderer.render(parameters, rows)
+        assert pdf != null
+        assert new String(pdf, 0, 5, StandardCharsets.US_ASCII) == '%PDF-'
     }
 
     void testCompleteSigningCreatesContractContent() {
