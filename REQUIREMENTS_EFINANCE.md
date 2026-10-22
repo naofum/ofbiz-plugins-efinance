@@ -2,7 +2,7 @@
 
 ローン・リースを **Web で申込から契約・契約後の手続きまで完結** できるようにする、顧客向けのプラグイン `efinance` の要件定義。OFBiz の ecommerce（order・product の上に乗る顧客向けの店舗）と同じ考え方で、finance の上に乗る顧客向けの仕組みとする。詳細な設計は `SPEC_EFINANCE.md` を正とする。
 
-> **状態：W0〜W6 の API・DB は実装済み（2026-10-22 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧を追加した。テストは 64 件成功（errors="0" / failures="0"）。残作業は PDF・電子署名、W7 口座振替。
+> **状態：W0〜W6 の API・DB は実装済み（2026-10-22 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テストを追加した。テストは 65 件成功（errors="0" / failures="0"）。残作業は PDF・電子署名、W7 口座振替。
 
 ---
 
@@ -662,8 +662,9 @@ flowchart LR
 
 **現在の結果（2026-10-22）**
 
-- `.\gradlew.bat "ofbiz --test component=efinance"`：64 テスト、`errors="0"` / `failures="0"`
-- 未実施：REST 経由の結合テスト、finance・support の全体回帰、契約 PDF・電子署名、W7。
+- `.\gradlew.bat "ofbiz --test component=efinance"`：65 テスト、`errors="0"` / `failures="0"`
+- REST 経由の JWT 取得・Authorization・公開 API・無効トークンは自動テスト済み。
+- 未実施：finance・support の全体回帰、CORS・エラーチェーンの網羅、契約 PDF・電子署名、W7。
 
 ---
 
@@ -715,3 +716,4 @@ flowchart LR
 | 2026-10-22（Portal） | `/portal` をサンプル SPA に置き換え。商品一覧・シミュレーション・ログイン/登録・申込・KYC・見積/署名・マイページ・support を実装。62 テスト成功 |
 | 2026-10-22（Portal demo） | デモ会員 `demo-ef-customer`、サンプル申込、有効なローン契約、メッセージ、通知設定を追加。公開 REST 操作の 401 を修正。REST 手動結合確認済み。62 テスト成功 |
 | 2026-10-22（Corporate/Audit） | 法人契約の照会所有確認（`roleView` / `rolePayment`）と管理画面の監査ログ一覧を実装。64 テスト成功 |
+| 2026-10-22（REST integration） | 公開商品、ログイン、Bearer 認証、無効トークン 401 の REST 自動結合テストを追加。65 テスト成功 |

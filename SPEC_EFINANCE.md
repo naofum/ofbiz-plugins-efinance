@@ -2,7 +2,7 @@
 
 `REQUIREMENTS_EFINANCE.md` の要件に対する設計。各 STEP の実装後に「実装」「テスト」「検証」を追記する。
 
-> **状態：W0〜W6 の API・DB は実装済み（2026-10-22 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧を追加した。最新のテストは **64 件成功（errors="0" / failures="0"）**。残る主要ギャップは契約 PDF・電子署名、W7 口座振替。
+> **状態：W0〜W6 の API・DB は実装済み（2026-10-22 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テストを追加した。最新のテストは **65 件成功（errors="0" / failures="0"）**。残る主要ギャップは契約 PDF・電子署名、W7 口座振替。
 
 ## 進捗
 
@@ -31,10 +31,10 @@
 | W5 | `EfSigningSession` / `EfDeliveredDocument`、見積受理、署名、契約作成、交付書類、REST 6 本 | `EfContractTests` |
 | W6 | `EfServiceRequest` / `EfNotificationSetting`、申込・契約照会、繰上返済、手続き、メッセージ、通知設定、REST 10 本、support 顧客 API ブリッジ 8 サービス | `EfMyPageTests` / `EfSupportTests` |
 
-- 全体：**76 サービス**（`auth=true` 64、`auth=false` 12）、**23 entity**、**11 テストクラス / 64 テスト**。
-- 実行：`.\gradlew.bat compileJava compileGroovy` 成功。`.\gradlew.bat "ofbiz --test component=efinance"` で **64 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
+- 全体：**76 サービス**（`auth=true` 64、`auth=false` 12）、**23 entity**、**12 テストクラス / 65 テスト**。
+- 実行：`.\gradlew.bat compileJava compileGroovy` 成功。`.\gradlew.bat "ofbiz --test component=efinance"` で **65 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
 - seed/demo：`data/EfinanceTypeData.xml`（状態・列挙・権限・`efinance-system`・同意文書）、`data/EfinanceDemoData.xml`（公開商品・デモ会員・サンプル申込・契約）、`testdef/data/EfinanceTestData.xml`（テスト会員・KYC/同意フィクスチャ）。
-- **残作業**：REST 経由の結合テスト、finance・support の全体回帰、契約 PDF・電子署名、W7。
+- **残作業**：finance・support の全体回帰、CORS・エラーチェーンの網羅、契約 PDF・電子署名、W7。
 
 ### 既知のギャップ（重要度順）
 
@@ -511,6 +511,7 @@ sequenceDiagram
 - `EfMemberTests`：登録→メール確認→ログイン、誤パスワード、画面パース。
 - `EfCorporateTests`：法人アカウント・ロール管理、法人契約の照会所有確認。
 - `EfAdminTests`：会員ロック解除、手続き依頼更新、監査ログ一覧。
+- `EfRestIntegrationTests`：公開商品、ログイン、Bearer 認証、無効トークンの 401。
 
 ### 4.6 既知のギャップ
 
@@ -1093,9 +1094,9 @@ sequenceDiagram
 .\gradlew.bat "ofbiz --test component=efinance"
 ```
 
-- 2026-10-22：**64 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
-- ただし、以下のテストは未実装。
-  - REST 経由の JWT 取得・Authorization・CORS・エラーチェーン
+- 2026-10-22：**65 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
+- REST 経由の JWT 取得・Authorization・公開 API・無効トークンは `EfRestIntegrationTests` で確認済み。CORS とエラーチェーンの網羅は未実装。
+- 以下のテストは未実装。
   - finance・support の全体回帰
   - 契約 PDF・電子署名・電子交付
   - W7 口座振替
@@ -1157,6 +1158,7 @@ sequenceDiagram
 | 2026-10-22（Portal） | `/portal` をサンプル SPA に置き換え。商品一覧・シミュレーション・ログイン/登録・申込・KYC・見積/署名・マイページ・support を実装。**62 テスト成功** |
 | 2026-10-22（Portal demo） | デモ会員 `demo-ef-customer`、サンプル申込、有効なローン契約、メッセージ、通知設定を `EfinanceDemoData.xml` に追加。公開 REST 操作の 401 を `APIAuthFilter` と `auth="false"` 明示で修正。REST 手動結合確認済み。**62 テスト成功** |
 | 2026-10-22（Corporate/Audit） | 法人契約の照会所有確認（`roleView` / `rolePayment`）と、管理画面の監査ログ一覧（`efListAuditLogs` / `FindEfAuditLog`）を実装。**64 テスト成功** |
+| 2026-10-22（REST integration） | `EfRestIntegrationTests` を追加。公開商品、ログイン、Bearer 認証、無効トークン 401 を確認。**65 テスト成功** |
 
 ---
 
@@ -1183,6 +1185,6 @@ sequenceDiagram
 - 配布：efinance プラグイン単体には含まれないため、rest-api の差分も同時にデプロイする。
 - 検証：
   - `EfAuthTests` で `EfRequestValidator` の有効トークン・失効トークン・ロック会員判定と再認証トークンのワンタイム性を確認。
-  - `compileJava compileGroovy` 成功、efinance 64 テスト成功。
+  - `compileJava compileGroovy` 成功、efinance 65 テスト成功。
   - REST 手動結合確認：`demo-ef-customer` でログイン 200、商品 2 件、申込 1 件、契約 1 件、契約詳細の返済表 2 行、メッセージ、通知設定、`/portal/control/main` 200 を確認。
-  - REST の自動結合テストは未整備（既知ギャップ）。
+  - `EfRestIntegrationTests` で公開商品、ログイン、Bearer 認証、無効トークン 401 を自動確認する。CORS とエラーチェーンの網羅は未整備。

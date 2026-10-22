@@ -70,4 +70,8 @@ under the License.
         <junit-test-suite class-name="org.apache.ofbiz.efinance.test.EfAdminTests"/>
     </test-case>
 
+    <test-case case-name="ef-rest-integration-tests">
+        <junit-test-suite class-name="org.apache.ofbiz.efinance.test.EfRestIntegrationTests"/>
+    </test-case>
+
 </test-suite>
