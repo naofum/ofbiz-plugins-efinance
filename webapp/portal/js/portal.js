@@ -30,6 +30,7 @@ const state = {
     draftId: sessionStorage.getItem('ef_draft_id'),
     kycCheckId: sessionStorage.getItem('ef_kyc_check_id'),
     signingSessionId: sessionStorage.getItem('ef_signing_session_id'),
+    chatConversationId: sessionStorage.getItem('ef_chat_conversation_id'),
     offer: null,
     offerDraftId: null,
     offerAccepted: false,
@@ -67,8 +68,8 @@ function showView(name) {
     if (!name) {
         name = 'home';
     }
-    if (name === 'mypage' && !state.token) {
-        showFlash('マイページの利用にはログインが必要です。', 'warn');
+    if ((name === 'mypage' || name === 'chat') && !state.token) {
+        showFlash('この画面の利用にはログインが必要です。', 'warn');
         name = 'auth';
     }
     document.querySelectorAll('.view').forEach(function (view) {
@@ -79,6 +80,9 @@ function showView(name) {
     });
     if (window.location.hash !== '#' + name) {
         window.location.hash = name;
+    }
+    if (name === 'chat' && state.token) {
+        loadChat();
     }
 }
 
@@ -95,8 +99,10 @@ function clearAuth() {
     state.token = null;
     state.refreshToken = null;
     state.member = null;
+    state.chatConversationId = null;
     sessionStorage.removeItem('ef_access_token');
     sessionStorage.removeItem('ef_refresh_token');
+    sessionStorage.removeItem('ef_chat_conversation_id');
     setAuthState();
 }
 
@@ -565,6 +571,189 @@ async function loadMyPage() {
     ]);
 }
 
+function resetChatView(message) {
+    const log = el('chatLog');
+    if (log) {
+        log.innerHTML = '<p class="empty">' + escapeHtml(message || '会話はまだありません。') + '</p>';
+    }
+    if (el('chatForm')) {
+        el('chatForm').hidden = true;
+    }
+    if (el('startChatBtn')) {
+        el('startChatBtn').hidden = false;
+    }
+    if (el('escalateChatBtn')) {
+        el('escalateChatBtn').hidden = true;
+    }
+    if (el('closeChatBtn')) {
+        el('closeChatBtn').hidden = true;
+    }
+    if (el('chatStatus')) {
+        el('chatStatus').textContent = message || 'チャットを開始してください。';
+    }
+}
+
+function chatSenderClass(senderTypeEnumId) {
+    if (senderTypeEnumId === 'EFCHAT_SND_CUSTOMER') {
+        return 'customer';
+    }
+    if (senderTypeEnumId === 'EFCHAT_SND_STAFF') {
+        return 'staff';
+    }
+    if (senderTypeEnumId === 'EFCHAT_SND_SYSTEM') {
+        return 'system';
+    }
+    return 'ai';
+}
+
+function chatSenderLabel(senderTypeEnumId) {
+    if (senderTypeEnumId === 'EFCHAT_SND_CUSTOMER') {
+        return 'あなた';
+    }
+    if (senderTypeEnumId === 'EFCHAT_SND_STAFF') {
+        return '担当者';
+    }
+    if (senderTypeEnumId === 'EFCHAT_SND_SYSTEM') {
+        return 'システム';
+    }
+    return 'AIアシスタント';
+}
+
+function renderChat(data) {
+    const conversation = data && data.conversation ? data.conversation : {};
+    if (conversation.conversationId) {
+        state.chatConversationId = conversation.conversationId;
+        sessionStorage.setItem('ef_chat_conversation_id', conversation.conversationId);
+    }
+    const messages = (data && data.messages ? data.messages : [])
+        .concat(data && data.supportMessages ? data.supportMessages : []);
+    messages.sort(function (left, right) {
+        return String(left.createdDate || '').localeCompare(String(right.createdDate || ''));
+    });
+
+    const log = el('chatLog');
+    if (!messages.length) {
+        log.innerHTML = '<p class="empty">会話はまだありません。</p>';
+    } else {
+        log.innerHTML = messages.map(function (message) {
+            const sender = message.senderTypeEnumId;
+            const date = message.createdDate
+                ? new Date(message.createdDate).toLocaleString('ja-JP') : '';
+            return '<div class="chat-message ' + chatSenderClass(sender) + '">'
+                + '<span class="chat-meta">' + escapeHtml(chatSenderLabel(sender))
+                + (date ? ' ・ ' + escapeHtml(date) : '') + '</span>'
+                + '<span class="chat-body">' + escapeHtml(message.content || '').replace(/\n/g, '<br>') + '</span>'
+                + '</div>';
+        }).join('');
+    }
+    log.scrollTop = log.scrollHeight;
+
+    const status = conversation.statusId;
+    const statusLabel = status === 'EFCHAT_HUMAN'
+        ? '担当者対応中' : (status === 'EFCHAT_CLOSED' ? '終了' : 'AI対応中');
+    el('chatStatus').innerHTML = '<span class="badge">' + escapeHtml(statusLabel) + '</span>'
+        + (conversation.supportCaseId
+            ? ' サポートケース: <code>' + escapeHtml(conversation.supportCaseId) + '</code>' : '');
+    el('startChatBtn').hidden = Boolean(conversation.conversationId) && status !== 'EFCHAT_CLOSED';
+    el('chatForm').hidden = status === 'EFCHAT_CLOSED';
+    el('escalateChatBtn').hidden = status !== 'EFCHAT_AI';
+    el('closeChatBtn').hidden = !conversation.conversationId || status === 'EFCHAT_CLOSED';
+}
+
+async function loadChat() {
+    if (!state.token) {
+        return;
+    }
+    if (!state.chatConversationId) {
+        resetChatView('チャットを開始してください。');
+        return;
+    }
+    try {
+        const data = await get('/ef/chat/conversations/' + encodeURIComponent(state.chatConversationId));
+        renderChat(data);
+    } catch (e) {
+        state.chatConversationId = null;
+        sessionStorage.removeItem('ef_chat_conversation_id');
+        resetChatView('新しいチャットを開始してください。');
+        showFlash('チャットの取得に失敗しました: ' + e.message, 'error');
+    }
+}
+
+async function startChat() {
+    if (!state.token) {
+        showView('auth');
+        showFlash('チャットの利用にはログインが必要です。', 'warn');
+        return;
+    }
+    try {
+        const body = {subject: 'ポータルからのお問い合わせ'};
+        if (state.draftId) {
+            body.draftId = state.draftId;
+        }
+        const data = await post('/ef/chat/conversations', body);
+        state.chatConversationId = data.conversation.conversationId;
+        sessionStorage.setItem('ef_chat_conversation_id', state.chatConversationId);
+        renderChat(data);
+        el('chatMessage').focus();
+    } catch (e) {
+        showFlash('チャットの開始に失敗しました: ' + e.message, 'error');
+    }
+}
+
+async function sendChatMessage(event) {
+    event.preventDefault();
+    if (!state.chatConversationId) {
+        showFlash('先にチャットを開始してください。', 'warn');
+        return;
+    }
+    const content = el('chatMessage').value.trim();
+    if (!content) {
+        showFlash('メッセージを入力してください。', 'warn');
+        return;
+    }
+    try {
+        const data = await post('/ef/chat/conversations/'
+            + encodeURIComponent(state.chatConversationId) + '/messages', {content: content});
+        el('chatMessage').value = '';
+        renderChat(data);
+        if (data.escalated) {
+            showFlash('担当者に引き継ぎました。返信はサポートケースに表示されます。', 'ok');
+        }
+    } catch (e) {
+        showFlash('メッセージの送信に失敗しました: ' + e.message, 'error');
+    }
+}
+
+async function escalateChat() {
+    if (!state.chatConversationId) {
+        return;
+    }
+    try {
+        const data = await post('/ef/chat/conversations/'
+            + encodeURIComponent(state.chatConversationId) + '/escalate', {
+                reason: 'customer requested human support'
+            });
+        renderChat(data);
+        showFlash('担当者に引き継ぎました。', 'ok');
+    } catch (e) {
+        showFlash('担当者への引き継ぎに失敗しました: ' + e.message, 'error');
+    }
+}
+
+async function closeChat() {
+    if (!state.chatConversationId) {
+        return;
+    }
+    try {
+        const data = await post('/ef/chat/conversations/'
+            + encodeURIComponent(state.chatConversationId) + '/close', {});
+        renderChat(data);
+        showFlash('チャットを終了しました。', 'ok');
+    } catch (e) {
+        showFlash('チャットの終了に失敗しました: ' + e.message, 'error');
+    }
+}
+
 async function acceptRequiredConsents() {
     const data = await get('/ef/consent-documents');
     const documents = data.documents || [];
@@ -987,6 +1176,10 @@ function bindEvents() {
         loadProfile();
         loadMyPage();
     });
+    el('startChatBtn').addEventListener('click', startChat);
+    el('chatForm').addEventListener('submit', sendChatMessage);
+    el('escalateChatBtn').addEventListener('click', escalateChat);
+    el('closeChatBtn').addEventListener('click', closeChat);
     el('simProduct').addEventListener('change', updateProductLabels);
     el('applyProduct').addEventListener('change', updateProductLabels);
     document.addEventListener('click', function (event) {

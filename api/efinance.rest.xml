@@ -442,4 +442,34 @@ under the License.
             <service name="efUploadSupportAttachment"/>
         </operation>
     </resource>
+
+    <!-- W9: chat support -->
+    <resource name="chatConversations" path="/ef/chat/conversations" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efListChats"/>
+        </operation>
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efStartChat"/>
+        </operation>
+    </resource>
+    <resource name="chatConversation" path="/ef/chat/conversations/{conversationId}" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efGetChat"/>
+        </operation>
+    </resource>
+    <resource name="chatMessages" path="/ef/chat/conversations/{conversationId}/messages" auth="true">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efSendChatMessage"/>
+        </operation>
+    </resource>
+    <resource name="chatEscalate" path="/ef/chat/conversations/{conversationId}/escalate" auth="true">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efEscalateChat"/>
+        </operation>
+    </resource>
+    <resource name="chatClose" path="/ef/chat/conversations/{conversationId}/close" auth="true">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efCloseChat"/>
+        </operation>
+    </resource>
 </api>

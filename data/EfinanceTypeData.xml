@@ -374,6 +374,28 @@ under the License.
     <EfFormField formFieldId="EFFORM_LS_012" productId="*" applicationTypeId="LEASE" stepNumber="4" stepKey="agreement" fieldName="confirmPrivacy" fieldType="checkbox" requiredFlag="Y" label="Agree to privacy policy" displayOrder="2" active="Y"/>
 
     <!-- ========================================================= -->
+    <!-- W9 Chat support                                           -->
+    <!-- ========================================================= -->
+    <StatusType statusTypeId="EFCHAT_STATUS" description="eFinance chat conversation status" hasTable="N"/>
+    <StatusItem statusId="EFCHAT_AI" statusTypeId="EFCHAT_STATUS" statusCode="AI" sequenceId="01" description="AI support"/>
+    <StatusItem statusId="EFCHAT_HUMAN" statusTypeId="EFCHAT_STATUS" statusCode="HUMAN" sequenceId="02" description="Human support"/>
+    <StatusItem statusId="EFCHAT_CLOSED" statusTypeId="EFCHAT_STATUS" statusCode="CLOSED" sequenceId="99" description="Closed"/>
+    <StatusValidChange statusId="EFCHAT_AI" statusIdTo="EFCHAT_HUMAN" transitionName="Escalate to human"/>
+    <StatusValidChange statusId="EFCHAT_AI" statusIdTo="EFCHAT_CLOSED" transitionName="Close"/>
+    <StatusValidChange statusId="EFCHAT_HUMAN" statusIdTo="EFCHAT_CLOSED" transitionName="Close"/>
+
+    <EnumerationType enumTypeId="EFCHAT_SENDER" description="eFinance chat message sender"/>
+    <Enumeration enumId="EFCHAT_SND_CUSTOMER" enumTypeId="EFCHAT_SENDER" enumCode="CUSTOMER" sequenceId="01" description="Customer"/>
+    <Enumeration enumId="EFCHAT_SND_AI" enumTypeId="EFCHAT_SENDER" enumCode="AI" sequenceId="02" description="AI assistant"/>
+    <Enumeration enumId="EFCHAT_SND_STAFF" enumTypeId="EFCHAT_SENDER" enumCode="STAFF" sequenceId="03" description="Support staff"/>
+    <Enumeration enumId="EFCHAT_SND_SYSTEM" enumTypeId="EFCHAT_SENDER" enumCode="SYSTEM" sequenceId="04" description="System"/>
+
+    <Enumeration enumId="EFAUD_CHAT_START" enumTypeId="EFAUDIT_ACTION" enumCode="CHAT_START" sequenceId="70" description="Chat started"/>
+    <Enumeration enumId="EFAUD_CHAT_MESSAGE" enumTypeId="EFAUDIT_ACTION" enumCode="CHAT_MESSAGE" sequenceId="71" description="Chat message sent"/>
+    <Enumeration enumId="EFAUD_CHAT_ESCALATE" enumTypeId="EFAUDIT_ACTION" enumCode="CHAT_ESCALATE" sequenceId="72" description="Chat escalated to support"/>
+    <Enumeration enumId="EFAUD_CHAT_CLOSE" enumTypeId="EFAUDIT_ACTION" enumCode="CHAT_CLOSE" sequenceId="73" description="Chat closed"/>
+
+    <!-- ========================================================= -->
     <!-- System user for internal dispatcher calls                 -->
     <!-- ========================================================= -->
     <Party partyId="EFINANCE_SYSTEM" partyTypeId="PERSON"/>

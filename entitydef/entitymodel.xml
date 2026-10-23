@@ -626,6 +626,60 @@ under the License.
     </entity>
 
     <!-- ========================================================= -->
+    <!-- W9 Chat support                                          -->
+    <!-- ========================================================= -->
+    <entity entity-name="EfChatConversation" package-name="org.apache.ofbiz.efinance.chat"
+            title="eFinance chat conversation">
+        <field name="conversationId" type="id"><description>sequenced PK</description></field>
+        <field name="memberPartyId" type="id"><description>FK to Party</description></field>
+        <field name="draftId" type="id"><description>optional related application draft</description></field>
+        <field name="agreementId" type="id"><description>optional related loan/lease agreement</description></field>
+        <field name="agreementTypeId" type="id"><description>LOAN or LEASE</description></field>
+        <field name="statusId" type="id"><description>EFCHAT_STATUS</description></field>
+        <field name="subject" type="short-varchar"/>
+        <field name="supportCaseId" type="id"><description>support case created on human escalation</description></field>
+        <field name="startedDate" type="date-time"/>
+        <field name="lastMessageDate" type="date-time"/>
+        <field name="closedDate" type="date-time"/>
+        <prim-key field="conversationId"/>
+        <relation type="one" fk-name="EFCHAT_MBR" rel-entity-name="Party">
+            <key-map field-name="memberPartyId" rel-field-name="partyId"/>
+        </relation>
+        <relation type="one-nofk" fk-name="EFCHAT_DRF" rel-entity-name="EfApplicationDraft">
+            <key-map field-name="draftId"/>
+        </relation>
+        <relation type="one-nofk" fk-name="EFCHAT_SUP" rel-entity-name="SupportCase">
+            <key-map field-name="supportCaseId"/>
+        </relation>
+        <index name="EFCHAT_MBR_IDX"><index-field name="memberPartyId"/></index>
+        <index name="EFCHAT_STS_IDX"><index-field name="statusId"/></index>
+        <index name="EFCHAT_DTE_IDX"><index-field name="lastMessageDate"/></index>
+    </entity>
+
+    <entity entity-name="EfChatMessage" package-name="org.apache.ofbiz.efinance.chat"
+            title="eFinance chat message">
+        <field name="messageId" type="id"><description>sequenced PK</description></field>
+        <field name="conversationId" type="id"/>
+        <field name="senderTypeEnumId" type="id"><description>EFCHAT_SENDER</description></field>
+        <field name="senderPartyId" type="id"><description>customer/staff party, null for AI/system</description></field>
+        <field name="content" type="very-long"/>
+        <field name="intent" type="short-varchar"><description>adapter intent for AI messages</description></field>
+        <field name="createdDate" type="date-time"/>
+        <field name="communicationEventId" type="id"><description>support communication event when forwarded</description></field>
+        <prim-key field="messageId"/>
+        <relation type="one" fk-name="EFCHATM_CNV" rel-entity-name="EfChatConversation">
+            <key-map field-name="conversationId"/>
+        </relation>
+        <relation type="one-nofk" fk-name="EFCHATM_COMM" rel-entity-name="CommunicationEvent">
+            <key-map field-name="communicationEventId"/>
+        </relation>
+        <index name="EFCHATM_CNV_IDX">
+            <index-field name="conversationId"/>
+            <index-field name="createdDate"/>
+        </index>
+    </entity>
+
+    <!-- ========================================================= -->
     <!-- W6 Service request                                       -->
     <!-- ========================================================= -->
     <entity entity-name="EfServiceRequest" package-name="org.apache.ofbiz.efinance.mypage"

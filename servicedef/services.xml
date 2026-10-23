@@ -1006,4 +1006,75 @@ under the License.
         <attribute name="contracts" type="List" mode="OUT" optional="true"/>
     </service>
 
+    <!-- ========================================================= -->
+    <!-- W9: chat support                                          -->
+    <!-- ========================================================= -->
+    <service name="efStartChat" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.chat.EfChatServices" invoke="efStartChat">
+        <description>Start a customer chat conversation.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
+        <attribute name="draftId" type="String" mode="IN" optional="true"/>
+        <attribute name="agreementId" type="String" mode="IN" optional="true"/>
+        <attribute name="agreementTypeId" type="String" mode="IN" optional="true"/>
+        <attribute name="subject" type="String" mode="IN" optional="true"/>
+        <attribute name="conversation" type="Map" mode="OUT" optional="true"/>
+        <attribute name="messages" type="List" mode="OUT" optional="true"/>
+        <attribute name="supportMessages" type="List" mode="OUT" optional="true"/>
+        <attribute name="escalated" type="Boolean" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efListChats" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.chat.EfChatServices" invoke="efListChats">
+        <description>List the customer's chat conversations.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
+        <attribute name="conversations" type="List" mode="OUT" optional="true"/>
+        <attribute name="count" type="Integer" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efGetChat" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.chat.EfChatServices" invoke="efGetChat">
+        <description>Get a chat conversation and its messages.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
+        <attribute name="conversationId" type="String" mode="IN" optional="false"/>
+        <attribute name="conversation" type="Map" mode="OUT" optional="true"/>
+        <attribute name="messages" type="List" mode="OUT" optional="true"/>
+        <attribute name="supportMessages" type="List" mode="OUT" optional="true"/>
+        <attribute name="escalated" type="Boolean" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efSendChatMessage" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.chat.EfChatServices" invoke="efSendChatMessage">
+        <description>Send a chat message; AI answers or the message is forwarded to support.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
+        <attribute name="conversationId" type="String" mode="IN" optional="false"/>
+        <attribute name="content" type="String" mode="IN" optional="false"/>
+        <attribute name="conversation" type="Map" mode="OUT" optional="true"/>
+        <attribute name="messages" type="List" mode="OUT" optional="true"/>
+        <attribute name="supportMessages" type="List" mode="OUT" optional="true"/>
+        <attribute name="escalated" type="Boolean" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efEscalateChat" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.chat.EfChatServices" invoke="efEscalateChat">
+        <description>Escalate a chat to a human support case.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
+        <attribute name="conversationId" type="String" mode="IN" optional="false"/>
+        <attribute name="reason" type="String" mode="IN" optional="true"/>
+        <attribute name="conversation" type="Map" mode="OUT" optional="true"/>
+        <attribute name="messages" type="List" mode="OUT" optional="true"/>
+        <attribute name="supportMessages" type="List" mode="OUT" optional="true"/>
+        <attribute name="escalated" type="Boolean" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efCloseChat" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.chat.EfChatServices" invoke="efCloseChat">
+        <description>Close a chat conversation.</description>
+        <permission-service service-name="efinanceCustomerPermission"/>
+        <attribute name="conversationId" type="String" mode="IN" optional="false"/>
+        <attribute name="conversation" type="Map" mode="OUT" optional="true"/>
+        <attribute name="messages" type="List" mode="OUT" optional="true"/>
+        <attribute name="supportMessages" type="List" mode="OUT" optional="true"/>
+        <attribute name="escalated" type="Boolean" mode="OUT" optional="true"/>
+    </service>
+
 </services>

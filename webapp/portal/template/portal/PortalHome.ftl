@@ -89,6 +89,16 @@ under the License.
         .tabs button.active { background: var(--sky); border-color: #a8c8e5; }
         .muted { color: var(--muted); }
         code { background: #eef3f8; padding: .1rem .3rem; border-radius: 4px; }
+        .chat-log { border: 1px solid var(--line); border-radius: 10px; background: #f8fbfe; padding: .8rem; min-height: 260px; max-height: 480px; overflow-y: auto; margin: .8rem 0; }
+        .chat-message { margin: .45rem 0; padding: .65rem .8rem; border-radius: 10px; max-width: 88%; white-space: pre-wrap; line-height: 1.55; }
+        .chat-message .chat-meta { display: block; font-size: .72rem; color: var(--muted); margin-bottom: .2rem; }
+        .chat-message.customer { margin-left: auto; background: #e3f0fb; border: 1px solid #c3ddf2; }
+        .chat-message.ai { background: #fff; border: 1px solid var(--line); }
+        .chat-message.staff { background: #eef8f0; border: 1px solid #c8e6cf; }
+        .chat-message.system { background: #fff7e6; border: 1px solid #f1d6a5; font-size: .88rem; }
+        .chat-message .chat-body { word-break: break-word; }
+        .chat-status { font-size: .88rem; }
+        .chat-status .badge { display: inline-block; border-radius: 999px; padding: .15rem .55rem; background: var(--sky); color: var(--navy); font-size: .78rem; }
         footer { color: var(--muted); font-size: .8rem; text-align: center; padding: 2rem 1rem 3rem; }
         @media (max-width: 640px) {
             .topbar { padding: .5rem .8rem; }
@@ -110,6 +120,7 @@ under the License.
         <button type="button" data-view="kyc">本人確認</button>
         <button type="button" data-view="contract">契約</button>
         <button type="button" data-view="mypage" data-auth-only hidden>マイページ</button>
+        <button type="button" data-view="chat" data-auth-only hidden>チャット</button>
         <button type="button" data-view="auth" id="navAuth">ログイン</button>
         <button type="button" id="logoutBtn" hidden>ログアウト</button>
     </nav>
@@ -308,6 +319,29 @@ under the License.
                 </div>
             </div>
             <div id="contractResult" class="result" hidden></div>
+        </div>
+    </section>
+
+    <section id="view-chat" class="view" hidden>
+        <div class="panel">
+            <div class="section-title">
+                <h2>チャットサポート</h2>
+                <span id="chatStatus" class="chat-status muted">チャットを開始してください。</span>
+            </div>
+            <p class="muted">商品・お申込み・本人確認・ご契約・ご返済についてご案内します。個別の審査結果や返済条件の確定はできません。担当者へのご相談が必要な場合は、会話をサポートケースに引き継ぎます。</p>
+            <div class="actions">
+                <button type="button" id="startChatBtn" class="btn">チャットを開始</button>
+                <button type="button" id="escalateChatBtn" class="btn secondary" hidden>担当者と話す</button>
+                <button type="button" id="closeChatBtn" class="btn secondary" hidden>チャットを終了</button>
+            </div>
+            <div id="chatLog" class="chat-log"><p class="empty">会話はまだありません。</p></div>
+            <form id="chatForm" class="form-grid" hidden>
+                <div class="field wide">
+                    <label for="chatMessage">メッセージ</label>
+                    <textarea id="chatMessage" rows="3" maxlength="4000" required placeholder="例: 本人確認の書類について教えてください"></textarea>
+                </div>
+                <div class="field wide actions"><button type="submit" class="btn">送信</button></div>
+            </form>
         </div>
     </section>
 
