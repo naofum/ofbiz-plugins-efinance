@@ -41,6 +41,8 @@ import org.apache.ofbiz.entity.GenericValue;
 import org.apache.ofbiz.entity.condition.EntityCondition;
 import org.apache.ofbiz.entity.condition.EntityOperator;
 import org.apache.ofbiz.entity.util.EntityQuery;
+import org.apache.ofbiz.efinance.filescan.FileScanAdapterFactory;
+import org.apache.ofbiz.efinance.filescan.FileScanResult;
 import org.apache.ofbiz.efinance.notification.NotificationAdapter;
 import org.apache.ofbiz.efinance.notification.NotificationAdapterFactory;
 import org.apache.ofbiz.efinance.security.EfAccessGuard;
@@ -681,6 +683,11 @@ public final class EfPreScreenServices {
             if (!"EFDOCREQ_PENDING".equals(req.getString("statusId"))) {
                 return ServiceUtil.returnError(UtilProperties.getMessage(RESOURCE, "EfinanceDocRequestNotPending", locale));
             }
+            FileScanResult scanResult = FileScanAdapterFactory.scan(fileName, contentType, uploadedFile);
+            if (scanResult.isInfected()) {
+                return ServiceUtil.returnError(UtilProperties.getMessage(
+                        RESOURCE, "EfinanceFileInfected", locale));
+            }
 
             // Upload file using createContentFromUploadedFile
             String contentId = null;
@@ -711,11 +718,14 @@ public final class EfPreScreenServices {
             req.set("statusId", "EFDOCREQ_SUBMITTED");
             req.set("submittedContentId", contentId);
             req.set("submittedDate", now);
+            req.set("scanStatus", scanResult.getStatus());
             delegator.store(req);
 
             writeAuditLog(delegator, partyId, ACTION_DOC_REQ_SUBMIT, "EfDocumentRequest", docRequestId);
 
-            return ServiceUtil.returnSuccess();
+            Map<String, Object> result = ServiceUtil.returnSuccess();
+            result.put("scanStatus", scanResult.getStatus());
+            return result;
 
         } catch (Exception e) {
             Debug.logError(e, MODULE);

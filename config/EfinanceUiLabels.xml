@@ -426,6 +426,10 @@ under the License.
         <value xml:lang="en">An existing draft was reused to prevent a duplicate.</value>
         <value xml:lang="ja">重複を防ぐため、既存の下書きを再利用しました。</value>
     </property>
+    <property key="EfinanceFileInfected">
+        <value xml:lang="en">The uploaded file failed the security scan.</value>
+        <value xml:lang="ja">アップロードされたファイルは安全確認に失敗しました。</value>
+    </property>
 
     <!-- W6: MyPage labels -->
     <property key="EfinanceContractNotFound">

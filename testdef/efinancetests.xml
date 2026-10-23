@@ -74,6 +74,10 @@ under the License.
         <junit-test-suite class-name="org.apache.ofbiz.efinance.test.EfRequestGuardTests"/>
     </test-case>
 
+    <test-case case-name="ef-file-scan-tests">
+        <junit-test-suite class-name="org.apache.ofbiz.efinance.test.EfFileScanTests"/>
+    </test-case>
+
     <test-case case-name="ef-payment-tests">
         <junit-test-suite class-name="org.apache.ofbiz.efinance.test.EfPaymentTests"/>
     </test-case>

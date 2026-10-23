@@ -43,6 +43,8 @@ import org.apache.ofbiz.entity.GenericValue;
 import org.apache.ofbiz.entity.condition.EntityCondition;
 import org.apache.ofbiz.entity.condition.EntityOperator;
 import org.apache.ofbiz.entity.util.EntityQuery;
+import org.apache.ofbiz.efinance.filescan.FileScanAdapterFactory;
+import org.apache.ofbiz.efinance.filescan.FileScanResult;
 import org.apache.ofbiz.efinance.security.EfAccessGuard;
 import org.apache.ofbiz.efinance.security.EfRequestGuard;
 import org.apache.ofbiz.service.DispatchContext;
@@ -525,6 +527,11 @@ public final class EfApplicationServices {
             if (uploadedFile != null && uploadedFile.limit() > maxBytes) {
                 return ServiceUtil.returnError(UtilProperties.getMessage(RESOURCE, "EfinanceFileTooLarge", locale));
             }
+            FileScanResult scanResult = FileScanAdapterFactory.scan(fileName, contentType, uploadedFile);
+            if (scanResult.isInfected()) {
+                return ServiceUtil.returnError(UtilProperties.getMessage(
+                        RESOURCE, "EfinanceFileInfected", locale));
+            }
 
             // Create content via createContentFromUploadedFile service using system user
             GenericValue systemUser = getSystemUser(delegator);
@@ -557,7 +564,7 @@ public final class EfApplicationServices {
             doc.set("fileName", fileName);
             doc.set("mimeTypeId", contentType);
             doc.set("fileSizeBytes", uploadedFile != null ? (long) uploadedFile.limit() : 0L);
-            doc.set("scanStatus", "EFSCAN_PENDING");
+            doc.set("scanStatus", scanResult.getStatus());
             doc.set("uploadedDate", now);
             delegator.create(doc);
 
@@ -565,6 +572,7 @@ public final class EfApplicationServices {
 
             Map<String, Object> result = ServiceUtil.returnSuccess();
             result.put("draftDocumentId", draftDocumentId);
+            result.put("scanStatus", scanResult.getStatus());
             return result;
         } catch (Exception e) {
             Debug.logError(e, MODULE);

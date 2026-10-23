@@ -2,7 +2,7 @@
 
 `REQUIREMENTS_EFINANCE.md` の要件に対する設計。各 STEP の実装後に「実装」「テスト」「検証」を追記する。
 
-> **状態：W0〜W7 の API・DB は実装済み（2026-10-23 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト（CORS・エラーチェーンを含む）、JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）、口座振替・振込案内、冪等性・重複下書き防止・レート制限を追加した。最新のテストは **75 件成功（errors="0" / failures="0"）**。残る主要ギャップは W8 販売店ポータル、W9 提携先組込み・チャット。
+> **状態：W0〜W7 の API・DB は実装済み（2026-10-23 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト（CORS・エラーチェーンを含む）、JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）、口座振替・振込案内、冪等性・重複下書き防止・レート制限、ファイルスキャン Adapter を追加した。最新のテストは **77 件成功（errors="0" / failures="0"）**。残る主要ギャップは W8 販売店ポータル、W9 提携先組込み・チャット。
 
 ## 進捗
 
@@ -10,7 +10,7 @@
 |------|------|------|
 | W0 | 基盤（2 章） | API/DB 実装済み（2026-10-22）。法人ロール管理・申込下書きの所有確認、`EfAuthFilter`、管理画面を追加 |
 | W1 | 商品の紹介とシミュレーション（3 章） | 実装済み（2026-10-21） |
-| W2 | Web での申込（4 章） | 実装済み（2026-10-21）。フォーム定義・スキャンは未完 |
+| W2 | Web での申込（4 章） | 実装済み（2026-10-23）。フォーム定義・外部ウイルススキャン接続は未完 |
 | W3 | 本人確認と同意（5 章） | API 実装済み（2026-10-22）。同意文書 seed・一覧 API を追加。U6 連携は未完 |
 | W4 | 仮審査と進み具合（6 章） | API 実装済み（2026-10-21）。段階イベント・通知は未完 |
 | W5 | 電子契約と電子交付（7 章） | API 実装済み（2026-10-22）。KYC・同意ゲート、JasperReports PDF・電子交付、再認証、`ESignatureAdapter`（クリック同意・外部 HTTP）を追加 |
@@ -32,8 +32,8 @@
 | W6 | `EfServiceRequest` / `EfNotificationSetting`、申込・契約照会、繰上返済、手続き、メッセージ、通知設定、REST 10 本、support 顧客 API ブリッジ 8 サービス | `EfMyPageTests` / `EfSupportTests` |
 | W7 | `EfDirectDebitMandate`、口座振替依頼・照会、振込案内、担当者登録、REST 2 本、管理画面 | `EfPaymentTests` |
 
-- 全体：**80 サービス**（`auth=true` 68、`auth=false` 12）、**26 entity**、**14 テストクラス / 75 テスト**。
-- 実行：`.\gradlew.bat compileJava compileGroovy` 成功。`.\gradlew.bat "ofbiz --test component=efinance"` で **75 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
+- 全体：**80 サービス**（`auth=true` 68、`auth=false` 12）、**26 entity**、**15 テストクラス / 77 テスト**。
+- 実行：`.\gradlew.bat compileJava compileGroovy` 成功。`.\gradlew.bat "ofbiz --test component=efinance"` で **77 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
 - seed/demo：`data/EfinanceTypeData.xml`（状態・列挙・権限・`efinance-system`・同意文書）、`data/EfinanceDemoData.xml`（公開商品・デモ会員・サンプル申込・契約）、`testdef/data/EfinanceTestData.xml`（テスト会員・KYC/同意フィクスチャ）。
 - **残作業**：W8 販売店ポータル、W9 提携先組込み・チャット。finance 全体回帰は 217 テスト成功、support はユーザー実行で OK。CORS・エラーチェーン・外部署名 HTTP アダプタ・W7 は自動テスト済み。
 
@@ -49,7 +49,7 @@
 | 6 | P1 | `/portal` は仮ページのみ | 顧客サンプル画面の要件を満たさない | W6 追加 → 2026-10-22 サンプル SPA を実装済み |
 | 7 | P1 | JasperReports 契約 PDF・交付書類の `contentId`、`ESignatureAdapter`（クリック同意）は実装済み。外部署名サービス連携は未実装 | 法的な本番運用には署名方式の確定が必要 | W5 追加 → 2026-10-22 PDF・contentId・Adapter を実装済み |
 | 8 | P2 | `EfFormField` が未実装でフォーム定義が Java 固定 | 商品別の項目定義ができない | W2 追加 |
-| 9 | P2 | ファイルスキャン Adapter がない | アップロードの安全性が保証できない | W2 追加 |
+| 9 | P2 | ファイルスキャン Adapter がない | アップロードの安全性が保証できない | 2026-10-23 `FileScanAdapter` と既定 `EFSCAN_PENDING` を実装済み。外部スキャンサービス接続は未実装 |
 | 10 | P2 | 重複下書き・冪等性・レート制限が不十分 | 二重申込・乱用のリスク | 2026-10-23 `EfRequestGuard` と `idempotencyKey` で下書き・送信・認証操作に対応済み |
 | 11 | P2 | ローン残高が返済表の最終行の簡易計算 | finance の入金消込と一致しない場合がある | 2026-10-23 `getLoanAgreementBalance` 連携で解消済み |
 | 12 | P2 | REST 結合テストは基本フロー・CORS・エラーチェーンを実装済み。外部署名・負荷試験は未実施 | API 契約の回帰は自動化済み | W6 テスト → 2026-10-22 実装済み |
@@ -150,6 +150,7 @@ flowchart LR
 | `efinance.system.userlogin` | efinance-system | 内部呼出しのシステムユーザー |
 | `efinance.draft.expire.days` | 30 | 下書きの有効期間 |
 | `efinance.upload.max.bytes` | 10485760 | アップロード上限（10MB） |
+| `efinance.filescan.adapter` | `NoopFileScanAdapter` | ファイルスキャン Adapter。既定は `EFSCAN_PENDING` |
 | `efinance.kyc.retention.years` | 7 | 本人確認記録の保存期間 |
 | `esignature.adapter` | `ClickWrapSignatureAdapter` | 電子署名アダプタの実装クラス |
 | `esignature.external.endpoint` | 空 | `ExternalSignatureAdapter` の署名 API URL |
@@ -229,10 +230,10 @@ rest-api の応答形式（`statusCode`・`statusDescription`・`errorMessage`�
 | `EfApplicationLink` | application | `linkId` | `draftId`、`memberPartyId`、`corporatePartyId`、`financeApplicationId`、`financeApplicationTypeId`、`linkedDate` |
 | `EfFraudCheck` | application | `fraudCheckId` | `draftId`、`memberPartyId`、`checkDate`、`resultEnumId`、`triggeredRules`、`ipAddress`、`deviceId` |
 | `EfKycCheck` | kyc | `kycCheckId` | `memberPartyId`、`kycSubjectPartyId`、`draftId`、`kycMethodEnumId`、`statusId`、`confirmerPartyId`、`confirmedDate`、`confirmerNote`、`adapterResultCode`、`adapterExternalId`、`expiresDate` |
-| `EfKycImage` | kyc | `kycImageId` | `kycCheckId`、`contentId`、`imageTypeEnumId`、`uploadedDate` |
+| `EfKycImage` | kyc | `kycImageId` | `kycCheckId`、`contentId`、`imageTypeEnumId`、`scanStatus`、`uploadedDate` |
 | `EfPreScreenResult` | application | `preScreenId` | `draftId`、`memberPartyId`、`preScreenDate`、`resultEnumId`、`triggeredRules`、`inputSummary` |
 | `EfStageEvent` | application | `stageEventId` | `draftId`、`memberPartyId`、`fromStageEnumId`、`toStageEnumId`、`eventDate`、`notified` |
-| `EfDocumentRequest` | application | `docRequestId` | `draftId`、`memberPartyId`、`documentTypeEnumId`、`reason`、`dueDate`、`statusId`、`requestedByPartyId`、`requestedDate`、`submittedContentId`、`submittedDate` |
+| `EfDocumentRequest` | application | `docRequestId` | `draftId`、`memberPartyId`、`documentTypeEnumId`、`reason`、`dueDate`、`statusId`、`requestedByPartyId`、`requestedDate`、`submittedContentId`、`submittedDate`、`scanStatus` |
 | `EfSigningSession` | contract | `signingSessionId` | `draftId`、`memberPartyId`、`quoteId`、`quoteTypeId`、`statusId`、`consentIpAddress`、`consentDeviceId`、`consentDate`、`signatureMethodEnumId`、`signatureEvidenceHash`、`signedContentId`、`agreementId`、`agreementTypeId`、`expiresAt` |
 | `EfDeliveredDocument` | contract | `deliveredDocId` | `draftId`、`memberPartyId`、`documentTypeEnumId`、`contentId`、`deliveredDate`、`consentId`、`viewedDate` |
 | `EfDirectDebitMandate` | payment | `mandateId` | `memberPartyId`、`agreementId`、`agreementTypeId`、`financeContractId`、`bankName`、`branchName`、`accountTypeEnumId`、`accountNumber`（暗号化）、`accountNumberLast4`、`accountHolderName`、`statusId`、`adapterResult`、`startDate` |
@@ -617,14 +618,14 @@ sequenceDiagram
 | サービス | auth | 主な IN / OUT | 内容 |
 |----------|:---:|---------------|------|
 | `efGetApplicationForm` | false | IN: productId, applicationTypeId / OUT: steps, totalSteps | ステップ定義 |
-| `efCreateDraft` | true | IN: productId, applicationTypeId, sourceEnumId / OUT: draftId, expiresAt | 下書き作成 |
+| `efCreateDraft` | true | IN: productId, applicationTypeId, sourceEnumId, idempotencyKey / OUT: draftId, expiresAt, existingDraft, replayed | 下書き作成（空の下書きを再利用） |
 | `efSaveDraft` | true | IN: draftId, step, stepData / OUT: stepValid, validationErrors | ステップ保存・検証 |
 | `efGetDraft` | true | IN: draftId / OUT: draft | 下書き＋書類 |
 | `efListDrafts` | true | OUT: drafts | 自分の編集中下書き |
 | `efWithdrawDraft` | true | IN: draftId | 撤回 |
-| `efUploadDraftDocument` | true | IN: draftId, documentTypeEnumId, fileName, contentType, uploadedFile / OUT: draftDocumentId | `createContentFromUploadedFile` |
+| `efUploadDraftDocument` | true | IN: draftId, documentTypeEnumId, fileName, contentType, uploadedFile / OUT: draftDocumentId, scanStatus | `FileScanAdapter` で検査し、`createContentFromUploadedFile` で保存 |
 | `efDeleteDraftDocument` | true | IN: draftDocumentId | 書類削除 |
-| `efSubmitApplication` | true | IN: draftId, ipAddress, deviceId / OUT: financeApplicationId, financeApplicationTypeId, fraudResult | 全検証→不正検知→finance 申込作成→リンク |
+| `efSubmitApplication` | true | IN: draftId, ipAddress, deviceId, idempotencyKey / OUT: financeApplicationId, financeApplicationTypeId, fraudResult, replayed | 全検証→不正検知→finance 申込作成→リンク |
 
 ### 6.4 送信フロー
 
@@ -647,6 +648,7 @@ sequenceDiagram
 - 下書き作成は、同じ会員・商品・申込種別の未入力（`draftJson={}`）の編集中下書きを再利用し、連打による重複作成を防ぐ。
 - `efCreateDraft` / `efSubmitApplication` は任意の `idempotencyKey` を受け付ける。完了済みの同じキーと同じ内容の再実行は、作成済みの `draftId` / `financeApplicationId` を返す。
 - 異なる内容で同じキーを再利用した場合は `EfIdempotencyRecord` により競合として拒否する。処理中・失敗の状態も記録する。
+- 下書き書類・KYC 画像・追加書類のアップロードは `FileScanAdapter` を通す。既定の `NoopFileScanAdapter` は `EFSCAN_PENDING` を返し、`BasicFileScanAdapter` は EICAR テスト文字列を `EFSCAN_INFECTED` として拒否する。
 
 ### 6.5 不正検知
 
@@ -674,7 +676,7 @@ sequenceDiagram
 ### 6.8 既知のギャップ
 
 - `EfFormField` 未実装。
-- ファイルスキャン Adapter 未実装（`scanStatus` は常に PENDING）。
+- ファイルスキャン Adapter は実装済み。既定の `NoopFileScanAdapter` は安全側で `EFSCAN_PENDING` を返し、外部ウイルススキャンサービスとの接続は未実装。
 - 住所・法人番号の照会 Adapter 未実装。
 - AI 書類読取（U8）未実装。
 - 公開シミュレーションの IP レート制限は未実装。
@@ -689,7 +691,7 @@ sequenceDiagram
 | エンティティ | 主な項目 |
 |--------------|----------|
 | `EfKycCheck` | `kycCheckId`、`memberPartyId`、`kycSubjectPartyId`、`draftId`、`kycMethodEnumId`、`statusId`、`confirmerPartyId`、`confirmedDate`、`confirmerNote`、`adapterResultCode`、`adapterExternalId`、`expiresDate`、`createdDate`、`lastModifiedDate` |
-| `EfKycImage` | `kycImageId`、`kycCheckId`、`contentId`、`imageTypeEnumId`、`uploadedDate` |
+| `EfKycImage` | `kycImageId`、`kycCheckId`、`contentId`、`imageTypeEnumId`、`scanStatus`、`uploadedDate` |
 | `EfConsentDocument` | `documentId`、`documentTypeEnumId`、`version`、`language`、`contentId`、`effectiveDate`、`expiresDate` |
 | `EfConsent` | `consentId`、`partyId`、`documentId`、`consentDate`、`ipAddress`、`deviceId`、`revokedDate` |
 
@@ -698,7 +700,7 @@ sequenceDiagram
 | サービス | auth | 主な IN / OUT | 内容 |
 |----------|:---:|---------------|------|
 | `efStartKyc` | true | IN: draftId, kycMethodEnumId / OUT: kycCheckId | PENDING 作成、保存期限設定 |
-| `efUploadKycImage` | true | IN: kycCheckId, imageTypeEnumId, fileName, contentType, uploadedFile / OUT: kycImageId | 画像アップロード |
+| `efUploadKycImage` | true | IN: kycCheckId, imageTypeEnumId, fileName, contentType, uploadedFile / OUT: kycImageId, scanStatus | 画像アップロード。`FileScanAdapter` で検査 |
 | `efSubmitKyc` | true | IN: kycCheckId | PENDING→SUBMITTED |
 | `efGetKycStatus` | true | IN: kycCheckId / draftId / OUT: kycCheck, images | 状態・画像一覧 |
 | `reviewEfKycCheck` | true | IN: kycCheckId, statusId, confirmerNote | 管理者審査（VERIFIED/RESUBMIT/REJECTED） |
@@ -748,7 +750,7 @@ sequenceDiagram
 |--------------|----------|
 | `EfPreScreenResult` | `preScreenId`、`draftId`、`memberPartyId`、`preScreenDate`、`resultEnumId`、`triggeredRules`、`inputSummary` |
 | `EfStageEvent` | `stageEventId`、`draftId`、`memberPartyId`、`fromStageEnumId`、`toStageEnumId`、`eventDate`、`notified` |
-| `EfDocumentRequest` | `docRequestId`、`draftId`、`memberPartyId`、`documentTypeEnumId`、`reason`、`dueDate`、`statusId`、`requestedByPartyId`、`requestedDate`、`submittedContentId`、`submittedDate` |
+| `EfDocumentRequest` | `docRequestId`、`draftId`、`memberPartyId`、`documentTypeEnumId`、`reason`、`dueDate`、`statusId`、`requestedByPartyId`、`requestedDate`、`submittedContentId`、`submittedDate`、`scanStatus` |
 
 ### 8.2 仮審査ルール（現行）
 
@@ -787,7 +789,7 @@ sequenceDiagram
 | `efListStageEvents` | true | IN: draftId / OUT: stageEvents | 進捗タイムライン |
 | `efCreateDocumentRequest` | true | IN: draftId, documentTypeEnumId, reason, dueDate / OUT: docRequestId | 管理者が書類要請 |
 | `efListDocumentRequests` | true | IN: draftId / OUT: docRequests | 書類要請一覧 |
-| `efSubmitRequestedDocument` | true | IN: docRequestId, fileName, contentType, uploadedFile | 顧客が提出 |
+| `efSubmitRequestedDocument` | true | IN: docRequestId, fileName, contentType, uploadedFile / OUT: scanStatus | 顧客が提出。`FileScanAdapter` で検査 |
 
 ### 8.5 REST
 
@@ -1105,6 +1107,7 @@ sequenceDiagram
 | `EfApplicationTests` | フォーム・下書き・重複下書き再利用・冪等性・撤回・送信・一覧 |
 | `EfRequestGuardTests` | レート制限バケット・冪等性の再実行・競合検知 |
 | `EfKycTests` | KYC 開始・提出・審査・再提出・確認判定 |
+| `EfFileScanTests` | ファイルスキャン既定 PENDING・EICAR 検知 |
 | `EfPreScreenTests` | 仮審査・進捗・書類要請 |
 | `EfContractTests` | 見積・受理・署名・交付書類 |
 | `EfMyPageTests` | 申込・契約・繰上返済・手続き・メッセージ・通知設定 |
@@ -1120,12 +1123,13 @@ sequenceDiagram
 .\gradlew.bat "ofbiz --test component=efinance"
 ```
 
-- 2026-10-23：**75 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
+- 2026-10-23：**77 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
 - REST 経由の JWT 取得・Authorization・公開 API・無効トークン・認証なし 401・不正 JSON・必須項目不足・404・CORS 応答ヘッダーを `EfRestIntegrationTests` で確認済み。
 - finance 全体回帰は **217 テスト成功**、support はユーザー実行で OK。
 - JasperReports テンプレート、PDF の `Content` 保存、`EfDeliveredDocument.contentId`、Base64 ダウンロード、クリック同意・外部署名 HTTP アダプタを `EfContractTests` で確認済み。
 - 口座振替依頼、暗号化保存、下4桁表示、振込案内、担当者登録を `EfPaymentTests` で確認済み。
 - レート制限、下書きの冪等作成、重複下書き再利用、申込送信の再実行を `EfRequestGuardTests` / `EfApplicationTests` で確認済み。
+- ファイルスキャンの既定 PENDING と EICAR 検知を `EfFileScanTests` で確認済み。KYC 画像・追加書類の `scanStatus` は `EfKycTests` / `EfPreScreenTests` で確認済み。
 - 未実装のテストは W8/W9 の設計機能のみ。
 
 
@@ -1194,6 +1198,7 @@ sequenceDiagram
 | 2026-10-23（W7） | `EfDirectDebitMandate`、口座振替依頼・照会、振込案内、担当者登録、管理画面、REST を追加。口座番号は暗号化し、表示は下4桁のみ。**72 テスト成功** |
 | 2026-10-23（P2 ローン残高） | `getLoanAgreementBalance` を finance に追加し、efinance の契約照会・繰上返済シミュレーションを入金消込・繰上返済ベースの残高に切り替えた。**72 テスト成功** |
 | 2026-10-23（P2 冪等性） | `EfIdempotencyRecord` / `EfRateLimitBucket` と `EfRequestGuard` を追加。下書き作成・申込送信の `idempotencyKey`、重複下書き再利用、認証操作のレート制限を実装。**75 テスト成功** |
+| 2026-10-23（P2 ファイルスキャン） | `FileScanAdapter` / `NoopFileScanAdapter` / `BasicFileScanAdapter` を追加。KYC 画像・追加書類・下書き書類に `scanStatus` を保存し、感染ファイルを拒否。**77 テスト成功** |
 
 ---
 
@@ -1220,6 +1225,6 @@ sequenceDiagram
 - 配布：efinance プラグイン単体には含まれないため、rest-api の差分も同時にデプロイする。
 - 検証：
   - `EfAuthTests` で `EfRequestValidator` の有効トークン・失効トークン・ロック会員判定と再認証トークンのワンタイム性を確認。
-  - `compileJava compileGroovy` 成功、efinance 75 テスト成功。
+  - `compileJava compileGroovy` 成功、efinance 77 テスト成功。
   - REST 手動結合確認：`demo-ef-customer` でログイン 200、商品 2 件、申込 1 件、契約 1 件、契約詳細の返済表 2 行、メッセージ、通知設定、`/portal/control/main` 200 を確認。
   - `EfRestIntegrationTests` で公開商品、ログイン、Bearer 認証、無効トークン 401 を自動確認する。CORS とエラーチェーンの網羅は未整備。

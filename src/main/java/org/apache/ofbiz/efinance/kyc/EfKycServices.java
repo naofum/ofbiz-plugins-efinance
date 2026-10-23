@@ -40,6 +40,8 @@ import org.apache.ofbiz.entity.GenericValue;
 import org.apache.ofbiz.entity.condition.EntityCondition;
 import org.apache.ofbiz.entity.condition.EntityOperator;
 import org.apache.ofbiz.entity.util.EntityQuery;
+import org.apache.ofbiz.efinance.filescan.FileScanAdapterFactory;
+import org.apache.ofbiz.efinance.filescan.FileScanResult;
 import org.apache.ofbiz.service.DispatchContext;
 import org.apache.ofbiz.service.LocalDispatcher;
 import org.apache.ofbiz.service.ServiceUtil;
@@ -155,6 +157,11 @@ public final class EfKycServices {
                 return ServiceUtil.returnError(
                         UtilProperties.getMessage(RESOURCE, "EfinanceKycNotSubmittable", locale));
             }
+            FileScanResult scanResult = FileScanAdapterFactory.scan(fileName, contentType, uploadedFile);
+            if (scanResult.isInfected()) {
+                return ServiceUtil.returnError(UtilProperties.getMessage(
+                        RESOURCE, "EfinanceFileInfected", locale));
+            }
 
             // Upload content via core service using system user
             GenericValue systemUser = getSystemUser(delegator);
@@ -185,11 +192,13 @@ public final class EfKycServices {
             kycImage.set("kycCheckId", kycCheckId);
             kycImage.set("contentId", contentId);
             kycImage.set("imageTypeEnumId", imageTypeEnumId);
+            kycImage.set("scanStatus", scanResult.getStatus());
             kycImage.set("uploadedDate", now);
             delegator.create(kycImage);
 
             Map<String, Object> result = ServiceUtil.returnSuccess();
             result.put("kycImageId", kycImageId);
+            result.put("scanStatus", scanResult.getStatus());
             return result;
         } catch (Exception e) {
             Debug.logError(e, MODULE);

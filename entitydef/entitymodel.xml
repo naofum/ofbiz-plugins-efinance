@@ -382,6 +382,7 @@ under the License.
         <field name="kycCheckId" type="id"/>
         <field name="contentId" type="id"/>
         <field name="imageTypeEnumId" type="id"><description>EFKYC_IMG_TYPE: ID_DOC_FRONT, ID_DOC_BACK, FACIAL, IC_CHIP_DATA</description></field>
+        <field name="scanStatus" type="id"><description>EFSCAN_PENDING, EFSCAN_OK, EFSCAN_INFECTED</description></field>
         <field name="uploadedDate" type="date-time"/>
         <prim-key field="kycImageId"/>
         <relation type="one" fk-name="EFKYCIMG_KYC" rel-entity-name="EfKycCheck">
@@ -454,6 +455,7 @@ under the License.
         <field name="requestedDate" type="date-time"/>
         <field name="submittedContentId" type="id"><description>Content when document is submitted</description></field>
         <field name="submittedDate" type="date-time"/>
+        <field name="scanStatus" type="id"><description>EFSCAN_PENDING, EFSCAN_OK, EFSCAN_INFECTED</description></field>
         <prim-key field="docRequestId"/>
         <relation type="one" fk-name="EFDOCREQ_DRF" rel-entity-name="EfApplicationDraft">
             <key-map field-name="draftId"/>

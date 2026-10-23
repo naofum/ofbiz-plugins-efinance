@@ -2,7 +2,7 @@
 
 ローン・リースを **Web で申込から契約・契約後の手続きまで完結** できるようにする、顧客向けのプラグイン `efinance` の要件定義。OFBiz の ecommerce（order・product の上に乗る顧客向けの店舗）と同じ考え方で、finance の上に乗る顧客向けの仕組みとする。詳細な設計は `SPEC_EFINANCE.md` を正とする。
 
-> **状態：W0〜W7 の API・DB は実装済み（2026-10-23 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト（CORS・エラーチェーンを含む）、JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）、口座振替・振込案内、冪等性・重複下書き防止・レート制限を追加した。テストは 75 件成功（errors="0" / failures="0"）。残作業は W8 販売店ポータル、W9 提携先組込み・チャット。
+> **状態：W0〜W7 の API・DB は実装済み（2026-10-23 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト（CORS・エラーチェーンを含む）、JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）、口座振替・振込案内、冪等性・重複下書き防止・レート制限、ファイルスキャン Adapter を追加した。テストは 77 件成功（errors="0" / failures="0"）。残作業は W8 販売店ポータル、W9 提携先組込み・チャット。
 
 ---
 
@@ -158,7 +158,7 @@ flowchart LR
 |------|:---:|:---:|-----------|
 | W0 | 実装済み | 管理画面・法人・認証 | リクエスト単位の `EfAuthFilter`、法人ロール管理、申込下書き・法人契約の所有確認、再認証、管理画面（KYC 審査・書類要請・手続き依頼・ロック解除・監査ログ）を 2026-10-22 に実装 |
 | W1 | 実装済み | – | 公開シミュレーションの IP レート制限、公開商品の管理画面 |
-| W2 | 実装済み | – | `EfFormField`、書類スキャン Adapter、住所・法人番号の照会 Adapter、AI 読取。重複下書き・冪等性は 2026-10-23 に実装済み |
+| W2 | 実装済み | – | `EfFormField`、外部ウイルススキャンサービス接続、住所・法人番号の照会 Adapter、AI 読取。重複下書き・冪等性・スキャン Adapter は 2026-10-23 に実装済み |
 | W3 | 実装済み | KYC 審査 | `FinUwExternalInfo` 連携、KYC 画像の暗号化は未実装 |
 | W4 | 実装済み | 管理画面の書類要請一覧 | `EfStageEvent` と `NotificationAdapter` を実装済み。ECA・バッチ通知は未実装 |
 | W5 | 実装済み | – | JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）は実装済み。プロバイダ固有の認証・L21 承認連携は未実装 |
@@ -209,7 +209,7 @@ flowchart LR
 | `NotificationAdapter` | メール（OFBiz の通信）、SMS はログ出力 | SMS・プッシュ通知 |
 | `DirectDebitAdapter` | 口座情報の受付＋担当者による登録 | 金融機関の口座振替 API |
 | `AddressLookupAdapter` / `CorporateLookupAdapter` | 郵便番号表・法人番号の手入力 | 郵便番号 API・法人番号 API |
-| `FileScanAdapter` | 検査なし（テスト用） | ウイルス検査サービス |
+| `FileScanAdapter` | `NoopFileScanAdapter`（安全側で PENDING） / `BasicFileScanAdapter`（EICAR 検知） | ウイルス検査サービス |
 
 ### 3.5 法令・記録
 
@@ -219,7 +219,7 @@ flowchart LR
 
 ### 3.6 セキュリティ
 
-- HTTPS、CORS（フロントエンドの出所だけ）、入力検証、アップロード制限（種類・大きさ・ウイルス検査の口）、レート制限、CSRF 対策、秘密情報の非保存。
+- HTTPS、CORS（フロントエンドの出所だけ）、入力検証、アップロード制限（種類・大きさ・`FileScanAdapter` によるウイルス検査）、レート制限、CSRF 対策、秘密情報の非保存。
 - ログイン・登録・パスワード再設定・MFA は `EfRateLimitBucket` による固定ウィンドウ制限を行う。下書き作成・申込送信も利用者単位で制限する。
 - パスワード・OTP・リセットトークン・更新トークンはハッシュで保存し、平文を API 応答・ログに出さない。**テスト用の平文返却は本番設定で無効化する**。
 - 不正の検知：同一端末・IP・電話・住所・口座からの複数申込、短時間の連続申込、仮審査の繰返し、海外 IP（設定）。疑わしい申込は担当者の確認に回す。
@@ -580,7 +580,7 @@ flowchart LR
 |------|------|------|
 | W0 | 基盤、会員登録、ログイン、MFA、トークン、監査 | API/DB 実装済み（2026-10-22）。法人ロール管理・申込下書きの所有確認、リクエスト単位の認証フィルタを追加 |
 | W1 | 商品紹介、ローン・リースシミュレーション | 実装済み（2026-10-21）。公開シミュレーションの IP 制限・公開管理は未完 |
-| W2 | 申込下書き、書類、送信、不正検知 | 実装済み（2026-10-23）。フォーム定義・スキャンは未完。重複下書き・冪等性・レート制限は実装済み |
+| W2 | 申込下書き、書類、送信、不正検知 | 実装済み（2026-10-23）。フォーム定義・外部スキャンサービス接続は未完。重複下書き・冪等性・レート制限・スキャン Adapter は実装済み |
 | W3 | 本人確認、同意 | API 実装済み（2026-10-22）。同意文書 seed・一覧 API を追加。U6 連携・審査画面は未完 |
 | W4 | 仮審査、進捗、追加書類 | API 実装済み（2026-10-21）。段階イベント・通知は未完 |
 | W5 | 見積受理、署名、契約作成、交付 | API 実装済み（2026-10-22）。KYC・同意ゲート、JasperReports PDF・電子交付、再認証、`ESignatureAdapter`（クリック同意・外部 HTTP）を追加。プロバイダ固有の認証・L21 連携は未完 |
@@ -669,11 +669,12 @@ flowchart LR
 
 **現在の結果（2026-10-23）**
 
-- `.\gradlew.bat "ofbiz --test component=efinance"`：75 テスト、`errors="0"` / `failures="0"`
+- `.\gradlew.bat "ofbiz --test component=efinance"`：77 テスト、`errors="0"` / `failures="0"`
 - REST 経由の JWT 取得・Authorization・公開 API・無効トークン・認証なし 401・不正 JSON・必須項目不足・404・CORS 応答ヘッダーは自動テスト済み。
 - finance 全体回帰は 217 テスト成功、support はユーザー実行で OK。
 - W7 口座振替・振込案内は自動テスト済み。
 - 下書き作成・申込送信の冪等性、重複下書き再利用、認証操作のレート制限は自動テスト済み。
+- ファイルスキャン Adapter（既定 PENDING・EICAR 検知）と KYC 画像・追加書類のスキャン結果保存は自動テスト済み。
 - 未実施：W8 販売店ポータル、W9 提携先組込み・チャット。
 
 ---
@@ -735,3 +736,4 @@ flowchart LR
 | 2026-10-23（W7） | 口座振替（`EfDirectDebitMandate`・依頼・照会・担当者登録）と振込案内、管理画面、REST を実装。口座番号は暗号化し、表示は下 4 桁のみ。72 テスト成功 |
 | 2026-10-23（P2 ローン残高） | finance の `getLoanAgreementBalance` を追加し、マイページの契約照会・繰上返済シミュレーションを、有効な入金消込と繰上返済を正本とする残高に変更。72 テスト成功 |
 | 2026-10-23（P2 冪等性） | `EfIdempotencyRecord`、`EfRateLimitBucket`、`EfRequestGuard` を追加。下書き作成・申込送信の `idempotencyKey`、空の下書き再利用、認証操作のレート制限を実装。75 テスト成功 |
+| 2026-10-23（P2 ファイルスキャン） | `FileScanAdapter` と既定 `NoopFileScanAdapter`、EICAR 検知の `BasicFileScanAdapter` を追加。KYC 画像・追加書類・下書き書類に `scanStatus` を保存。77 テスト成功 |

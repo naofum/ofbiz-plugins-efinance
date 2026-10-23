@@ -64,6 +64,9 @@ class EfKycTests extends OFBizTestCase {
         ])
         ok(upload)
         assert upload.kycImageId
+        assert upload.scanStatus == 'EFSCAN_PENDING'
+        GenericValue kycImage = from('EfKycImage').where('kycImageId', upload.kycImageId).queryOne()
+        assert kycImage.scanStatus == 'EFSCAN_PENDING'
 
         // Submit
         Map submit = dispatcher.runSync('efSubmitKyc', [

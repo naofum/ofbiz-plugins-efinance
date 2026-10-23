@@ -380,6 +380,7 @@ under the License.
         <attribute name="contentType" type="String" mode="IN" optional="false"/>
         <attribute name="uploadedFile" type="java.nio.ByteBuffer" mode="IN" optional="false"/>
         <attribute name="draftDocumentId" type="String" mode="OUT" optional="true"/>
+        <attribute name="scanStatus" type="String" mode="OUT" optional="true"/>
     </service>
 
     <service name="efDeleteDraftDocument" engine="java" auth="true" export="true"
@@ -426,6 +427,7 @@ under the License.
         <attribute name="contentType" type="String" mode="IN" optional="false"/>
         <attribute name="uploadedFile" type="java.nio.ByteBuffer" mode="IN" optional="false"/>
         <attribute name="kycImageId" type="String" mode="OUT" optional="true"/>
+        <attribute name="scanStatus" type="String" mode="OUT" optional="true"/>
     </service>
 
     <service name="efSubmitKyc" engine="java" auth="true" export="true"
@@ -523,6 +525,7 @@ under the License.
         <attribute name="fileName" type="String" mode="IN" optional="false"/>
         <attribute name="contentType" type="String" mode="IN" optional="false"/>
         <attribute name="uploadedFile" type="java.nio.ByteBuffer" mode="IN" optional="false"/>
+        <attribute name="scanStatus" type="String" mode="OUT" optional="true"/>
     </service>
 
     <!-- ========================================================= -->

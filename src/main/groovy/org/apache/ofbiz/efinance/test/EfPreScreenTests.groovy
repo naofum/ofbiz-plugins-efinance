@@ -181,9 +181,11 @@ class EfPreScreenTests extends OFBizTestCase {
             uploadedFile: ByteBuffer.wrap('income-proof-data'.getBytes('UTF-8'))
         ])
         ok(submit)
+        assert submit.scanStatus == 'EFSCAN_PENDING'
 
         GenericValue req = from('EfDocumentRequest').where('docRequestId', docRequestId).queryOne()
         assert req.statusId == 'EFDOCREQ_SUBMITTED'
         assert req.submittedContentId != null
+        assert req.scanStatus == 'EFSCAN_PENDING'
     }
 }
