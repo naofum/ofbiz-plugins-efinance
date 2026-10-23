@@ -261,9 +261,59 @@ async function loadProducts() {
     renderProducts();
 }
 
+function updateAmountConstraints(input, product) {
+    if (!input) {
+        return;
+    }
+    const rawMin = product && product.minPrincipalAmount !== null
+        && product.minPrincipalAmount !== undefined ? Number(product.minPrincipalAmount) : 1000;
+    const rawMax = product && product.maxPrincipalAmount !== null
+        && product.maxPrincipalAmount !== undefined ? Number(product.maxPrincipalAmount) : null;
+    const min = Math.max(1000, Math.ceil(rawMin / 1000) * 1000);
+    const max = rawMax !== null ? Math.floor(rawMax / 1000) * 1000 : null;
+    input.min = String(min);
+    input.step = '1000';
+    if (max !== null) {
+        input.max = String(max);
+    } else {
+        input.removeAttribute('max');
+    }
+    let value = Number(input.value);
+    if (!value || value < min) {
+        value = min;
+    } else if (max !== null && value > max) {
+        value = max;
+    } else {
+        value = Math.round((value - min) / 1000) * 1000 + min;
+    }
+    if (String(value) !== input.value) {
+        input.value = String(value);
+    }
+}
+
+function updateTermConstraints(input, product) {
+    if (!input) {
+        return;
+    }
+    const min = product && product.minTermMonths ? Number(product.minTermMonths) : 1;
+    const max = product && product.maxTermMonths ? Number(product.maxTermMonths) : 120;
+    input.min = String(min);
+    input.max = String(max);
+    const value = Number(input.value);
+    if (!value || value < min) {
+        input.value = String(min);
+    } else if (value > max) {
+        input.value = String(max);
+    }
+}
+
 function updateProductLabels() {
     const simProduct = productById(el('simProduct').value);
     const applyProduct = productById(el('applyProduct').value);
+    updateAmountConstraints(el('simAmount'), simProduct);
+    updateAmountConstraints(el('applyAmount'), applyProduct);
+    updateTermConstraints(el('simTerm'), simProduct);
+    updateTermConstraints(el('applyTerm'), applyProduct);
     el('simAmountLabel').textContent = simProduct && simProduct.isLease ? '取得見積額（円）' : '借入希望額（円）';
     el('applyAmountLabel').textContent = applyProduct && applyProduct.isLease ? '取得見積額（円）' : '借入希望額（円）';
     const lease = applyProduct && applyProduct.isLease;

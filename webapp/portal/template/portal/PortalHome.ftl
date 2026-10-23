@@ -149,7 +149,7 @@ under the License.
                 </div>
                 <div class="field">
                     <label for="simAmount" id="simAmountLabel">借入希望額（円）</label>
-                    <input id="simAmount" type="number" min="1" step="1000" required value="300000"/>
+                    <input id="simAmount" type="number" min="1000" step="1000" required value="300000"/>
                 </div>
                 <div class="field">
                     <label for="simTerm">期間（月）</label>
@@ -178,7 +178,7 @@ under the License.
                 </div>
                 <div class="field">
                     <label for="applyAmount" id="applyAmountLabel">借入希望額（円）</label>
-                    <input id="applyAmount" type="number" min="1" step="1000" required value="300000"/>
+                    <input id="applyAmount" type="number" min="1000" step="1000" required value="300000"/>
                 </div>
                 <div class="field">
                     <label for="applyTerm">期間（月）</label>
@@ -217,7 +217,7 @@ under the License.
                         <legend>リース物件・法人情報</legend>
                         <div class="form-grid">
                             <div class="field wide"><label for="applyAssetName">物件名</label><input id="applyAssetName" value="業務用機器"/></div>
-                            <div class="field"><label for="applyAcquisitionCost">取得見積額（円）</label><input id="applyAcquisitionCost" type="number" value="300000"/></div>
+                            <div class="field"><label for="applyAcquisitionCost">取得見積額（円）</label><input id="applyAcquisitionCost" type="number" min="1000" step="1000" value="300000"/></div>
                             <div class="field"><label for="applyCompanyName">法人名</label><input id="applyCompanyName" value="サンプル株式会社"/></div>
                             <div class="field"><label for="applyRepresentative">代表者名</label><input id="applyRepresentative" value="山田 太郎"/></div>
                         </div>
