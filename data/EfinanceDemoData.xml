@@ -246,4 +246,14 @@ under the License.
                       consentDate="2026-10-01 00:00:00.0" fromDate="2026-10-01 00:00:00.0"
                       createdByPartyId="DEMO_EF_DEALER_USER"
                       createdDate="2026-10-01 00:00:00.0"/>
+
+    <!-- eFinance admin demo. Login: demo-ef-admin / ofbiz -->
+    <Party partyId="DEMO_EF_ADMIN" partyTypeId="PERSON"/>
+    <Person partyId="DEMO_EF_ADMIN" firstName="Admin" lastName="Demo"
+            birthDate="1980-01-01" gender="M"/>
+    <UserLogin userLoginId="demo-ef-admin" partyId="DEMO_EF_ADMIN"
+               currentPassword="{SHA}47b56994cbc2b6d10aa1be30f70165adb305a41a"
+               enabled="Y" hasLoggedOut="N"/>
+    <UserLoginSecurityGroup userLoginId="demo-ef-admin" groupId="EF_ADMIN_GROUP"
+                            fromDate="2026-10-01 00:00:00.0"/>
 </entity-engine-xml>

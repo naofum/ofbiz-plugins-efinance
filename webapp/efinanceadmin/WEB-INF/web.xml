@@ -34,7 +34,12 @@ under the License.
     <context-param>
         <description>The location of the main-decorator screen to use for this webapp.</description>
         <param-name>mainDecoratorLocation</param-name>
-        <param-value>component://efinance/widget/EfinanceAdminScreens.xml</param-value>
+        <param-value>component://efinance/widget/CommonScreens.xml</param-value>
+    </context-param>
+    <context-param>
+        <description>The location of the menus file to be used in this webapp.</description>
+        <param-name>mainMenuLocation</param-name>
+        <param-value>component://efinance/widget/EfinanceAdminMenus.xml</param-value>
     </context-param>
     <context-param>
         <param-name>compressHTML</param-name>

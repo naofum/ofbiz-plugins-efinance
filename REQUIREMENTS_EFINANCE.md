@@ -442,6 +442,8 @@ flowchart LR
 | 不正検知 | 要確認の申込・規則・対応 | 未実装 |
 | 口座振替 | 登録結果の記録 | W7 で実装 |
 
+- efinanceadmin は `OFBTOOLS_VIEW` と `EFINANCE_ADMIN_VIEW` を持つスタッフだけがログインできる。`EF_ADMIN_GROUP` には両方を付与する。デモ環境では `demo-ef-admin` / `ofbiz` を利用する。
+
 ### 5.2 顧客サンプル画面（`/portal`）
 
 | 画面 | 内容 | 現状 |
@@ -765,3 +767,4 @@ flowchart LR
 | 2026-10-23（公開 IP 制限） | REST のリモート IP を公開シミュレーションへ渡し、`EfRateLimitBucket` で IP 単位の制限を追加。79 テスト成功 |
 | 2026-10-23（W8） | `EfDealer` / `EfDealerUser` / `EfDealerCustomer`、顧客同意、代理下書き、申込・契約照会、`/dealer` サンプル画面を追加。81 テスト成功 |
 | 2026-10-23（W5 見積未提示） | 見積未提示時は `offerAvailable=false` と申込ステータスを表示し、受理・署名を無効化。受理済み見積の再取得と、`DEMO_EF_DRAFT2` の契約フロー用デモを追加。81 テスト成功 |
+| 2026-10-23（efinanceadmin 修正） | 管理画面の `main-decorator` とアプリバーを追加して 500 エラーを修正。ログイン権限 `OFBTOOLS_VIEW` / `EFINANCE_ADMIN_VIEW` とデモ管理者 `demo-ef-admin` を追加。フォームの `text-line` を `text` に修正。 |

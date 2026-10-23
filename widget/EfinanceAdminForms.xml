@@ -131,7 +131,7 @@ under the License.
             </drop-down>
         </field>
         <field name="confirmerNote" title="Reviewer Note">
-            <text-line size="80"/>
+            <text size="80"/>
         </field>
         <field name="submitButton" title="Save Review" widget-style="smallSubmit">
             <submit button-type="button"/>
@@ -195,8 +195,8 @@ under the License.
                 </entity-options>
             </drop-down>
         </field>
-        <field name="assignedToPartyId" title="Assignee"><text-line size="40"/></field>
-        <field name="staffNotes" title="Staff Notes"><text-line size="80"/></field>
+        <field name="assignedToPartyId" title="Assignee"><text size="40"/></field>
+        <field name="staffNotes" title="Staff Notes"><text size="80"/></field>
         <field name="submitButton" title="Update Request" widget-style="smallSubmit">
             <submit button-type="button"/>
         </field>
@@ -204,7 +204,7 @@ under the License.
 
     <!-- Audit log filter and list (read-only) -->
     <form name="FindEfAuditLog" type="single" target="FindEfAuditLog">
-        <field name="partyId" title="Party ID"><text-line size="40"/></field>
+        <field name="partyId" title="Party ID"><text size="40"/></field>
         <field name="actionEnumId" title="Action">
             <drop-down allow-empty="true">
                 <entity-options entity-name="Enumeration" key-field-name="enumId"
@@ -259,7 +259,7 @@ under the License.
                 </entity-options>
             </drop-down>
         </field>
-        <field name="staffNote" title="Staff Note"><text-line size="80"/></field>
+        <field name="staffNote" title="Staff Note"><text size="80"/></field>
         <field name="submitButton" title="Update Mandate" widget-style="smallSubmit">
             <submit button-type="button"/>
         </field>

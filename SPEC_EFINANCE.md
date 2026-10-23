@@ -105,8 +105,10 @@ plugins/efinance/
     efinanceadmin/   # 担当者向け管理画面
     portal/          # 顧客向けサンプル画面
   widget/
+    CommonScreens.xml
     EfinanceAdminScreens.xml
     EfinanceAdminForms.xml
+    EfinanceAdminMenus.xml
 ```
 
 ### 1.2 `ofbiz-component.xml`
@@ -167,7 +169,7 @@ flowchart LR
 | ファイル | 用途 | 内容 |
 |----------|------|------|
 | `data/EfinanceTypeData.xml` | seed | 会員・法人・KYC・下書き・書類・署名・手続きの状態、列挙、権限、`efinance-system` |
-| `data/EfinanceDemoData.xml` | demo | `EFPUB1`（`DEMO_LOANPROD1`）、`EFPUB2`（`DEMO_LEASEPROD1`）の公開設定。デモ会員 `DEMO_EF_CUST` / `demo-ef-customer`（パスワード `ofbiz`、KYC・同意済み）、サンプル申込、有効なローン契約、契約フロー用の提示済み見積（`DEMO_EF_DRAFT2`）、メッセージ、通知設定 |
+| `data/EfinanceDemoData.xml` | demo | `EFPUB1`（`DEMO_LOANPROD1`）、`EFPUB2`（`DEMO_LEASEPROD1`）の公開設定。デモ会員 `DEMO_EF_CUST` / `demo-ef-customer`（パスワード `ofbiz`、KYC・同意済み）、サンプル申込、有効なローン契約、契約フロー用の提示済み見積（`DEMO_EF_DRAFT2`）、管理画面用 `demo-ef-admin` / `ofbiz`、メッセージ、通知設定 |
 | `testdef/data/EfinanceTestData.xml` | test | テスト会員 `TEST_EF_CUST` / `test-ef-customer`（パスワード `ofbiz`）。demo とは分離する |
 
 - `efinance-system` は `SUPER` グループに所属し、finance・support の内部サービスを呼ぶ。
@@ -1077,8 +1079,8 @@ sequenceDiagram
 | `FindEfKycCheck` / `ViewEfKycCheck` | `FindEfKycCheck` / `ViewEfKycCheck` | KYC 一覧・審査 |
 | `FindEfDocumentRequest` | `FindEfDocumentRequest` | 追加書類要請の一覧 |
 | `FindEfServiceRequest` / `ViewEfServiceRequest` | `FindEfServiceRequest` / `ViewEfServiceRequest` | 手続き依頼の一覧・更新 |
-- 画面定義は `widget/EfinanceAdminScreens.xml` / `EfinanceAdminForms.xml`。
-- 権限は `OFBTOOLS,EFINANCE_ADMIN`。
+- 画面定義は `widget/EfinanceAdminScreens.xml` / `EfinanceAdminForms.xml`。デコレーターは `widget/CommonScreens.xml`、アプリバーは `widget/EfinanceAdminMenus.xml`。
+- 権限は `OFBTOOLS,EFINANCE_ADMIN`。Web アプリのログイン判定は `OFBTOOLS_VIEW` と `EFINANCE_ADMIN_VIEW` を要求するため、seed では `OFBTOOLS_VIEW` を `FULLADMIN` / `EF_ADMIN_GROUP` に、`EFINANCE_ADMIN` / `EFINANCE_ADMIN_VIEW` を `EF_ADMIN_GROUP` / `SUPER` に付与する。デモ管理者は `demo-ef-admin` / `ofbiz`。
 - 会員ロック解除、KYC 審査、追加書類要請、手続き依頼、申込・契約照会のうち、申込・契約照会と書類要請の新規作成画面は未実装。
 
 ### 16.2 追加予定
@@ -1235,6 +1237,7 @@ sequenceDiagram
 | 2026-10-23（公開 IP 制限） | REST のリモート IP を公開シミュレーションに渡し、`EfRateLimitBucket` で IP 単位の制限を追加。**79 テスト成功** |
 | 2026-10-23（W8） | `EfDealer` / `EfDealerUser` / `EfDealerCustomer`、販売店プロフィール、顧客同意、代理下書き、申込・契約照会、`/dealer` サンプル画面を追加。**81 テスト成功** |
 | 2026-10-23（W5 見積未提示） | `efGetOffer` に `offerAvailable` / `quoteStatusId` を追加し、受理済み見積の再取得に対応。`/portal` は見積未提示時に申込ステータスを表示して受理・署名を無効化し、`DEMO_EF_DRAFT2` の提示済み見積デモを追加。**81 テスト成功** |
+| 2026-10-23（efinanceadmin 修正） | 管理画面の `main-decorator` とアプリバーを追加し、`/efinanceadmin/control/main` の 500 エラーを修正。ログインに必要な `OFBTOOLS_VIEW` / `EFINANCE_ADMIN_VIEW` とデモ管理者 `demo-ef-admin` を追加。未対応のフォーム要素 `text-line` を `text` に修正。 |
 
 ---
 

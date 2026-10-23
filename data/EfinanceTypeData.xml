@@ -102,6 +102,7 @@ under the License.
     <!-- Permissions and groups                                    -->
     <!-- ========================================================= -->
     <SecurityPermission permissionId="EFINANCE_ADMIN" description="Administer the eFinance portal"/>
+    <SecurityPermission permissionId="EFINANCE_ADMIN_VIEW" description="Access the eFinance admin application"/>
     <SecurityPermission permissionId="EFINANCE_CUSTOMER" description="Customer operations in the eFinance portal"/>
     <SecurityPermission permissionId="EFINANCE_DEALER" description="Dealer operations in the eFinance portal"/>
 
@@ -109,10 +110,13 @@ under the License.
     <SecurityGroup groupId="EF_CUSTOMER_GROUP" groupName="eFinance Customer" description="eFinance customer group"/>
     <SecurityGroup groupId="EF_DEALER_GROUP" groupName="eFinance Dealer" description="eFinance dealer group"/>
 
+    <SecurityGroupPermission groupId="EF_ADMIN_GROUP" permissionId="OFBTOOLS_VIEW" fromDate="2026-10-21 00:00:00.0"/>
     <SecurityGroupPermission groupId="EF_ADMIN_GROUP" permissionId="EFINANCE_ADMIN" fromDate="2026-10-21 00:00:00.0"/>
+    <SecurityGroupPermission groupId="EF_ADMIN_GROUP" permissionId="EFINANCE_ADMIN_VIEW" fromDate="2026-10-21 00:00:00.0"/>
     <SecurityGroupPermission groupId="EF_CUSTOMER_GROUP" permissionId="EFINANCE_CUSTOMER" fromDate="2026-10-21 00:00:00.0"/>
     <SecurityGroupPermission groupId="EF_DEALER_GROUP" permissionId="EFINANCE_DEALER" fromDate="2026-10-21 00:00:00.0"/>
     <SecurityGroupPermission groupId="SUPER" permissionId="EFINANCE_ADMIN" fromDate="2026-10-21 00:00:00.0"/>
+    <SecurityGroupPermission groupId="SUPER" permissionId="EFINANCE_ADMIN_VIEW" fromDate="2026-10-21 00:00:00.0"/>
 
     <!-- ========================================================= -->
     <!-- Product target audience (W1)                             -->
