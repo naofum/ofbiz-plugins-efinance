@@ -25,60 +25,56 @@ under the License.
     <!-- Member list -->
     <form name="ListEfMembers" type="list" list-name="efMembers"
           target="ViewEfMember" paginate-target="FindEfMember">
-        <field name="partyId" title="Party ID">
-            <hyperlink description="${efMember.partyId}" target="ViewEfMember">
+        <field name="partyId" title="${uiLabelMap.EfinanceAdminFieldPartyId}">
+            <hyperlink description="${partyId}" target="ViewEfMember">
                 <parameter param-name="partyId" from-field="partyId"/>
             </hyperlink>
         </field>
-        <field name="userLoginId" title="Login / Email">
+        <field name="userLoginId" title="${uiLabelMap.EfinanceAdminFieldLoginEmail}">
             <display/>
         </field>
-        <field name="memberTypeEnumId" title="Type">
-            <display/>
+        <field name="memberTypeEnumId" title="${uiLabelMap.EfinanceAdminFieldType}"><display description="${uiLabelMap[memberTypeEnumId]}"/>
         </field>
-        <field name="statusId" title="Status">
-            <display/>
+        <field name="statusId" title="${uiLabelMap.EfinanceAdminFieldStatus}"><display description="${uiLabelMap[statusId]}"/>
         </field>
-        <field name="createdDate" title="Registered">
+        <field name="createdDate" title="${uiLabelMap.EfinanceAdminFieldRegistered}">
             <display type="date-time"/>
         </field>
-        <field name="emailVerifiedDate" title="Email Verified">
+        <field name="emailVerifiedDate" title="${uiLabelMap.EfinanceAdminFieldEmailVerified}">
             <display type="date-time"/>
         </field>
     </form>
 
     <!-- Member detail (read-only) -->
     <form name="ViewEfMember" type="single" default-map-name="efMember">
-        <field name="partyId" title="Party ID">
+        <field name="partyId" title="${uiLabelMap.EfinanceAdminFieldPartyId}">
             <display/>
         </field>
-        <field name="userLoginId" title="Login / Email">
+        <field name="userLoginId" title="${uiLabelMap.EfinanceAdminFieldLoginEmail}">
             <display/>
         </field>
-        <field name="memberTypeEnumId" title="Member Type">
+        <field name="memberTypeEnumId" title="${uiLabelMap.EfinanceAdminFieldMemberType}"><display description="${uiLabelMap[memberTypeEnumId]}"/>
+        </field>
+        <field name="statusId" title="${uiLabelMap.EfinanceAdminFieldStatus}"><display description="${uiLabelMap[statusId]}"/>
+        </field>
+        <field name="mfaMethodEnumId" title="${uiLabelMap.EfinanceAdminFieldMfaMethod}">
             <display/>
         </field>
-        <field name="statusId" title="Status">
-            <display/>
-        </field>
-        <field name="mfaMethodEnumId" title="MFA Method">
-            <display/>
-        </field>
-        <field name="emailVerifiedDate" title="Email Verified">
+        <field name="emailVerifiedDate" title="${uiLabelMap.EfinanceAdminFieldEmailVerified}">
             <display type="date-time"/>
         </field>
-        <field name="lastLoginDate" title="Last Login">
+        <field name="lastLoginDate" title="${uiLabelMap.EfinanceAdminFieldLastLogin}">
             <display type="date-time"/>
         </field>
-        <field name="createdDate" title="Registered">
+        <field name="createdDate" title="${uiLabelMap.EfinanceAdminFieldRegistered}">
             <display type="date-time"/>
         </field>
     </form>
 
     <!-- Unlock member (shown on member detail) -->
     <form name="UnlockEfMember" type="single" default-map-name="efMember" target="unlockEfMember">
-        <field name="partyId" title="Party ID"><hidden/></field>
-        <field name="submitButton" title="Unlock Account" widget-style="smallSubmit">
+        <field name="partyId" title="${uiLabelMap.EfinanceAdminFieldPartyId}"><hidden/></field>
+        <field name="submitButton" title="${uiLabelMap.EfinanceAdminFieldUnlockAccount}" widget-style="smallSubmit">
             <submit button-type="button"/>
         </field>
     </form>
@@ -86,27 +82,25 @@ under the License.
     <!-- W3: KYC check list (read-only) -->
     <form name="ListEfKycChecks" type="list" list-name="efKycChecks"
           paginate-target="FindEfKycCheck">
-        <field name="kycCheckId" title="KYC Check ID">
+        <field name="kycCheckId" title="${uiLabelMap.EfinanceAdminFieldKycCheckId}">
             <hyperlink description="${kycCheckId}" target="ViewEfKycCheck">
                 <parameter param-name="kycCheckId" from-field="kycCheckId"/>
             </hyperlink>
         </field>
-        <field name="memberPartyId" title="Member">
+        <field name="memberPartyId" title="${uiLabelMap.EfinanceAdminFieldMember}">
             <display/>
         </field>
-        <field name="kycMethodEnumId" title="Method">
+        <field name="kycMethodEnumId" title="${uiLabelMap.EfinanceAdminFieldMethod}"><display description="${uiLabelMap[kycMethodEnumId]}"/>
+        </field>
+        <field name="statusId" title="${uiLabelMap.EfinanceAdminFieldStatus}"><display description="${uiLabelMap[statusId]}"/>
+        </field>
+        <field name="confirmerPartyId" title="${uiLabelMap.EfinanceAdminFieldReviewer}">
             <display/>
         </field>
-        <field name="statusId" title="Status">
-            <display/>
-        </field>
-        <field name="confirmerPartyId" title="Reviewer">
-            <display/>
-        </field>
-        <field name="confirmedDate" title="Reviewed">
+        <field name="confirmedDate" title="${uiLabelMap.EfinanceAdminFieldReviewed}">
             <display type="date-time"/>
         </field>
-        <field name="createdDate" title="Created">
+        <field name="createdDate" title="${uiLabelMap.EfinanceAdminFieldCreated}">
             <display type="date-time"/>
         </field>
     </form>
@@ -114,98 +108,98 @@ under the License.
     <!-- W3: KYC detail and staff review -->
     <form name="ViewEfKycCheck" type="single" default-map-name="efKycCheck"
           target="reviewEfKycCheck">
-        <field name="kycCheckId" title="KYC Check ID"><hidden/></field>
-        <field name="memberPartyId" title="Member"><display/></field>
-        <field name="kycSubjectPartyId" title="Subject Party"><display/></field>
-        <field name="kycMethodEnumId" title="Method"><display/></field>
-        <field name="confirmerPartyId" title="Reviewer"><display/></field>
-        <field name="confirmedDate" title="Reviewed"><display type="date-time"/></field>
-        <field name="createdDate" title="Created"><display type="date-time"/></field>
-        <field name="statusId" title="Review Result">
+        <field name="kycCheckId" title="${uiLabelMap.EfinanceAdminFieldKycCheckId}"><hidden/></field>
+        <field name="memberPartyId" title="${uiLabelMap.EfinanceAdminFieldMember}"><display/></field>
+        <field name="kycSubjectPartyId" title="${uiLabelMap.EfinanceAdminFieldSubjectParty}"><display/></field>
+        <field name="kycMethodEnumId" title="${uiLabelMap.EfinanceAdminFieldMethod}"><display description="${uiLabelMap[kycMethodEnumId]}"/></field>
+        <field name="confirmerPartyId" title="${uiLabelMap.EfinanceAdminFieldReviewer}"><display/></field>
+        <field name="confirmedDate" title="${uiLabelMap.EfinanceAdminFieldReviewed}"><display type="date-time"/></field>
+        <field name="createdDate" title="${uiLabelMap.EfinanceAdminFieldCreated}"><display type="date-time"/></field>
+        <field name="statusId" title="${uiLabelMap.EfinanceAdminFieldReviewResult}">
             <drop-down allow-empty="false">
                 <entity-options entity-name="StatusItem" key-field-name="statusId"
-                                description="${description}">
+                                description="${uiLabelMap[statusId]}">
                     <entity-constraint name="statusTypeId" operator="equals" value="EFKYC_STATUS"/>
                     <entity-order-by field-name="sequenceId"/>
                 </entity-options>
             </drop-down>
         </field>
-        <field name="confirmerNote" title="Reviewer Note">
+        <field name="confirmerNote" title="${uiLabelMap.EfinanceAdminFieldReviewerNote}">
             <text size="80"/>
         </field>
-        <field name="submitButton" title="Save Review" widget-style="smallSubmit">
+        <field name="submitButton" title="${uiLabelMap.EfinanceAdminFieldSaveReview}" widget-style="smallSubmit">
             <submit button-type="button"/>
         </field>
     </form>
 
     <form name="ListEfKycImages" type="list" list-name="efKycImages">
-        <field name="kycImageId" title="Image ID"><display/></field>
-        <field name="imageTypeEnumId" title="Type"><display/></field>
-        <field name="contentId" title="Content"><display/></field>
-        <field name="uploadedDate" title="Uploaded"><display type="date-time"/></field>
+        <field name="kycImageId" title="${uiLabelMap.EfinanceAdminFieldImageId}"><display/></field>
+        <field name="imageTypeEnumId" title="${uiLabelMap.EfinanceAdminFieldType}"><display description="${uiLabelMap[imageTypeEnumId]}"/></field>
+        <field name="contentId" title="${uiLabelMap.EfinanceAdminFieldContent}"><display/></field>
+        <field name="uploadedDate" title="${uiLabelMap.EfinanceAdminFieldUploaded}"><display type="date-time"/></field>
     </form>
 
     <!-- W4: additional document requests -->
     <form name="ListEfDocumentRequests" type="list" list-name="efDocumentRequests">
-        <field name="docRequestId" title="Request ID"><display/></field>
-        <field name="draftId" title="Application"><display/></field>
-        <field name="memberPartyId" title="Member"><display/></field>
-        <field name="documentTypeEnumId" title="Document Type"><display/></field>
-        <field name="statusId" title="Status"><display/></field>
-        <field name="dueDate" title="Due"><display type="date-time"/></field>
-        <field name="requestedDate" title="Requested"><display type="date-time"/></field>
-        <field name="submittedDate" title="Submitted"><display type="date-time"/></field>
+        <field name="docRequestId" title="${uiLabelMap.EfinanceAdminFieldRequestId}"><display/></field>
+        <field name="draftId" title="${uiLabelMap.EfinanceAdminFieldApplication}"><display/></field>
+        <field name="memberPartyId" title="${uiLabelMap.EfinanceAdminFieldMember}"><display/></field>
+        <field name="documentTypeEnumId" title="${uiLabelMap.EfinanceAdminFieldDocumentType}"><display description="${uiLabelMap[documentTypeEnumId]}"/></field>
+        <field name="statusId" title="${uiLabelMap.EfinanceAdminFieldStatus}"><display description="${uiLabelMap[statusId]}"/></field>
+        <field name="dueDate" title="${uiLabelMap.EfinanceAdminFieldDue}"><display type="date-time"/></field>
+        <field name="requestedDate" title="${uiLabelMap.EfinanceAdminFieldRequested}"><display type="date-time"/></field>
+        <field name="submittedDate" title="${uiLabelMap.EfinanceAdminFieldSubmitted}"><display type="date-time"/></field>
     </form>
 
     <!-- W6: service requests -->
     <form name="ListEfServiceRequests" type="list" list-name="efServiceRequests"
           paginate-target="FindEfServiceRequest">
-        <field name="serviceRequestId" title="Request ID">
+        <field name="serviceRequestId" title="${uiLabelMap.EfinanceAdminFieldRequestId}">
             <hyperlink description="${serviceRequestId}" target="ViewEfServiceRequest">
                 <parameter param-name="serviceRequestId" from-field="serviceRequestId"/>
             </hyperlink>
         </field>
-        <field name="memberPartyId" title="Member"><display/></field>
-        <field name="requestTypeEnumId" title="Type"><display/></field>
-        <field name="statusId" title="Status"><display/></field>
-        <field name="subject" title="Subject"><display/></field>
-        <field name="assignedToPartyId" title="Assignee"><display/></field>
-        <field name="requestedDate" title="Requested"><display type="date-time"/></field>
-        <field name="completedDate" title="Completed"><display type="date-time"/></field>
+        <field name="memberPartyId" title="${uiLabelMap.EfinanceAdminFieldMember}"><display/></field>
+        <field name="requestTypeEnumId" title="${uiLabelMap.EfinanceAdminFieldType}"><display description="${uiLabelMap[requestTypeEnumId]}"/></field>
+        <field name="statusId" title="${uiLabelMap.EfinanceAdminFieldStatus}"><display description="${uiLabelMap[statusId]}"/></field>
+        <field name="subject" title="${uiLabelMap.EfinanceAdminFieldSubject}"><display/></field>
+        <field name="assignedToPartyId" title="${uiLabelMap.EfinanceAdminFieldAssignee}"><display/></field>
+        <field name="requestedDate" title="${uiLabelMap.EfinanceAdminFieldRequested}"><display type="date-time"/></field>
+        <field name="completedDate" title="${uiLabelMap.EfinanceAdminFieldCompleted}"><display type="date-time"/></field>
     </form>
 
     <form name="ViewEfServiceRequest" type="single" default-map-name="efServiceRequest"
           target="updateEfServiceRequest">
-        <field name="serviceRequestId" title="Request ID"><hidden/></field>
-        <field name="memberPartyId" title="Member"><display/></field>
-        <field name="requestTypeEnumId" title="Type"><display/></field>
-        <field name="agreementId" title="Contract"><display/></field>
-        <field name="agreementTypeId" title="Contract Type"><display/></field>
-        <field name="subject" title="Subject"><display/></field>
-        <field name="content" title="Content"><display/></field>
-        <field name="requestData" title="Request Data"><display/></field>
-        <field name="requestedDate" title="Requested"><display type="date-time"/></field>
-        <field name="completedDate" title="Completed"><display type="date-time"/></field>
-        <field name="statusId" title="New Status">
+        <field name="serviceRequestId" title="${uiLabelMap.EfinanceAdminFieldRequestId}"><hidden/></field>
+        <field name="memberPartyId" title="${uiLabelMap.EfinanceAdminFieldMember}"><display/></field>
+        <field name="requestTypeEnumId" title="${uiLabelMap.EfinanceAdminFieldType}"><display description="${uiLabelMap[requestTypeEnumId]}"/></field>
+        <field name="agreementId" title="${uiLabelMap.EfinanceAdminFieldContract}"><display/></field>
+        <field name="agreementTypeId" title="${uiLabelMap.EfinanceAdminFieldContractType}"><display/></field>
+        <field name="subject" title="${uiLabelMap.EfinanceAdminFieldSubject}"><display/></field>
+        <field name="content" title="${uiLabelMap.EfinanceAdminFieldContent}"><display/></field>
+        <field name="requestData" title="${uiLabelMap.EfinanceAdminFieldRequestData}"><display/></field>
+        <field name="requestedDate" title="${uiLabelMap.EfinanceAdminFieldRequested}"><display type="date-time"/></field>
+        <field name="completedDate" title="${uiLabelMap.EfinanceAdminFieldCompleted}"><display type="date-time"/></field>
+        <field name="statusId" title="${uiLabelMap.EfinanceAdminFieldNewStatus}">
             <drop-down allow-empty="true">
                 <entity-options entity-name="StatusItem" key-field-name="statusId"
-                                description="${description}">
+                                description="${uiLabelMap[statusId]}">
                     <entity-constraint name="statusTypeId" operator="equals" value="EFSVCREQ_STATUS"/>
                     <entity-order-by field-name="sequenceId"/>
                 </entity-options>
             </drop-down>
         </field>
-        <field name="assignedToPartyId" title="Assignee"><text size="40"/></field>
-        <field name="staffNotes" title="Staff Notes"><text size="80"/></field>
-        <field name="submitButton" title="Update Request" widget-style="smallSubmit">
+        <field name="assignedToPartyId" title="${uiLabelMap.EfinanceAdminFieldAssignee}"><text size="40"/></field>
+        <field name="staffNotes" title="${uiLabelMap.EfinanceAdminFieldStaffNotes}"><text size="80"/></field>
+        <field name="submitButton" title="${uiLabelMap.EfinanceAdminFieldUpdateRequest}" widget-style="smallSubmit">
             <submit button-type="button"/>
         </field>
     </form>
 
     <!-- Audit log filter and list (read-only) -->
     <form name="FindEfAuditLog" type="single" target="FindEfAuditLog">
-        <field name="partyId" title="Party ID"><text size="40"/></field>
-        <field name="actionEnumId" title="Action">
+        <field name="partyId" title="${uiLabelMap.EfinanceAdminFieldPartyId}"><text size="40"/></field>
+        <field name="actionEnumId" title="${uiLabelMap.EfinanceAdminFieldAction}">
             <drop-down allow-empty="true">
                 <entity-options entity-name="Enumeration" key-field-name="enumId"
                                 description="${description}">
@@ -214,68 +208,97 @@ under the License.
                 </entity-options>
             </drop-down>
         </field>
-        <field name="submitButton" title="Search" widget-style="smallSubmit">
+        <field name="submitButton" title="${uiLabelMap.EfinanceAdminFieldSearch}" widget-style="smallSubmit">
             <submit button-type="button"/>
+        </field>
+    </form>
+
+    <!-- Admin dashboard summary -->
+    <form name="EfAdminDashboardSummary" type="single" default-map-name="dashboard">
+        <field name="memberCount" title="${uiLabelMap.EfinanceAdminDashboardMembersTotal}">
+            <display/>
+        </field>
+        <field name="activeMemberCount" title="${uiLabelMap.EfinanceAdminDashboardMembersActive}">
+            <display/>
+        </field>
+        <field name="lockedMemberCount" title="${uiLabelMap.EfinanceAdminDashboardMembersLocked}">
+            <display/>
+        </field>
+        <field name="kycPendingCount" title="${uiLabelMap.EfinanceAdminDashboardKycPending}">
+            <display/>
+        </field>
+        <field name="documentRequestPendingCount" title="${uiLabelMap.EfinanceAdminDashboardDocRequestPending}">
+            <display/>
+        </field>
+        <field name="openServiceRequestCount" title="${uiLabelMap.EfinanceAdminDashboardServiceRequestOpen}">
+            <display/>
+        </field>
+        <field name="directDebitPendingCount" title="${uiLabelMap.EfinanceAdminDashboardDirectDebitPending}">
+            <display/>
         </field>
     </form>
 
     <!-- W7 direct debit mandates -->
     <form name="ListEfDirectDebits" type="list" list-name="efDirectDebits"
           target="ViewEfDirectDebit">
-        <field name="mandateId" title="Mandate ID">
+        <field name="mandateId" title="${uiLabelMap.EfinanceAdminFieldMandateId}">
             <hyperlink description="${mandateId}" target="ViewEfDirectDebit">
                 <parameter param-name="mandateId" from-field="mandateId"/>
             </hyperlink>
         </field>
-        <field name="memberPartyId" title="Member"><display/></field>
-        <field name="agreementId" title="Contract"><display/></field>
-        <field name="bankName" title="Bank"><display/></field>
-        <field name="branchName" title="Branch"><display/></field>
-        <field name="accountNumberLast4" title="Account"><display/></field>
-        <field name="statusId" title="Status"><display/></field>
-        <field name="requestedDate" title="Requested"><display type="date-time"/></field>
+        <field name="memberPartyId" title="${uiLabelMap.EfinanceAdminFieldMember}"><display/></field>
+        <field name="agreementId" title="${uiLabelMap.EfinanceAdminFieldContract}"><display/></field>
+        <field name="bankName" title="${uiLabelMap.EfinanceAdminFieldBank}"><display/></field>
+        <field name="branchName" title="${uiLabelMap.EfinanceAdminFieldBranch}"><display/></field>
+        <field name="accountNumberLast4" title="${uiLabelMap.EfinanceAdminFieldAccount}"><display/></field>
+        <field name="statusId" title="${uiLabelMap.EfinanceAdminFieldStatus}"><display description="${uiLabelMap[statusId]}"/></field>
+        <field name="requestedDate" title="${uiLabelMap.EfinanceAdminFieldRequested}"><display type="date-time"/></field>
     </form>
 
     <form name="UpdateEfDirectDebit" type="single" default-map-name="efDirectDebit"
           target="updateEfDirectDebit">
-        <field name="mandateId" title="Mandate ID"><hidden/></field>
-        <field name="memberPartyId" title="Member"><display/></field>
-        <field name="agreementId" title="Contract"><display/></field>
-        <field name="agreementTypeId" title="Contract Type"><display/></field>
-        <field name="bankName" title="Bank"><display/></field>
-        <field name="branchName" title="Branch"><display/></field>
-        <field name="accountTypeEnumId" title="Account Type"><display/></field>
-        <field name="accountNumberLast4" title="Account Last 4"><display/></field>
-        <field name="accountHolderName" title="Account Holder"><display/></field>
-        <field name="currentStatus" title="Current Status">
-            <display description="${efDirectDebit.statusId}"/>
+        <field name="mandateId" title="${uiLabelMap.EfinanceAdminFieldMandateId}"><hidden/></field>
+        <field name="memberPartyId" title="${uiLabelMap.EfinanceAdminFieldMember}"><display/></field>
+        <field name="agreementId" title="${uiLabelMap.EfinanceAdminFieldContract}"><display/></field>
+        <field name="agreementTypeId" title="${uiLabelMap.EfinanceAdminFieldContractType}"><display/></field>
+        <field name="bankName" title="${uiLabelMap.EfinanceAdminFieldBank}"><display/></field>
+        <field name="branchName" title="${uiLabelMap.EfinanceAdminFieldBranch}"><display/></field>
+        <field name="accountTypeEnumId" title="${uiLabelMap.EfinanceAdminFieldAccountType}"><display description="${uiLabelMap[accountTypeEnumId]}"/></field>
+        <field name="accountNumberLast4" title="${uiLabelMap.EfinanceAdminFieldAccountLast4}"><display/></field>
+        <field name="accountHolderName" title="${uiLabelMap.EfinanceAdminFieldAccountHolder}"><display/></field>
+        <field name="currentStatus" title="${uiLabelMap.EfinanceAdminFieldCurrentStatus}">
+            <display description="${uiLabelMap[efDirectDebit.statusId]}"/>
         </field>
-        <field name="statusId" title="New Status">
+        <field name="statusId" title="${uiLabelMap.EfinanceAdminFieldNewStatus}">
             <drop-down allow-empty="true">
                 <entity-options entity-name="StatusItem" key-field-name="statusId"
-                                description="${description}">
+                                description="${uiLabelMap[statusId]}">
                     <entity-constraint name="statusTypeId" operator="equals" value="EFDD_STATUS"/>
                     <entity-order-by field-name="sequenceId"/>
                 </entity-options>
             </drop-down>
         </field>
-        <field name="staffNote" title="Staff Note"><text size="80"/></field>
-        <field name="submitButton" title="Update Mandate" widget-style="smallSubmit">
+        <field name="staffNote" title="${uiLabelMap.EfinanceAdminFieldStaffNote}"><text size="80"/></field>
+        <field name="submitButton" title="${uiLabelMap.EfinanceAdminFieldUpdateMandate}" widget-style="smallSubmit">
             <submit button-type="button"/>
         </field>
     </form>
 
     <form name="ListEfAuditLogs" type="list" list-name="auditLogs"
           paginate-target="FindEfAuditLog">
-        <field name="auditLogId" title="Audit ID"><display/></field>
-        <field name="actionDate" title="Date"><display type="date-time"/></field>
-        <field name="partyId" title="Party"><display/></field>
-        <field name="actionEnumId" title="Action"><display/></field>
-        <field name="targetEntityName" title="Target"><display/></field>
-        <field name="targetEntityId" title="Target ID"><display/></field>
-        <field name="resultEnumId" title="Result"><display/></field>
-        <field name="ipAddress" title="IP"><display/></field>
-        <field name="detail" title="Detail"><display/></field>
+        <field name="auditLogId" title="${uiLabelMap.EfinanceAdminFieldAuditId}"><display/></field>
+        <field name="actionDate" title="${uiLabelMap.EfinanceAdminFieldDate}"><display type="date-time"/></field>
+        <field name="partyId" title="${uiLabelMap.EfinanceAdminFieldParty}"><display/></field>
+        <field name="actionEnumId" title="${uiLabelMap.EfinanceAdminFieldAction}">
+            <display-entity entity-name="Enumeration" key-field-name="enumId"/>
+        </field>
+        <field name="targetEntityName" title="${uiLabelMap.EfinanceAdminFieldTarget}"><display/></field>
+        <field name="targetEntityId" title="${uiLabelMap.EfinanceAdminFieldTargetId}"><display/></field>
+        <field name="resultEnumId" title="${uiLabelMap.EfinanceAdminFieldResult}">
+            <display-entity entity-name="Enumeration" key-field-name="enumId"/>
+        </field>
+        <field name="ipAddress" title="${uiLabelMap.EfinanceAdminFieldIp}"><display/></field>
+        <field name="detail" title="${uiLabelMap.EfinanceAdminFieldDetail}"><display/></field>
     </form>
 
 </forms>

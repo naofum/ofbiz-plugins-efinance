@@ -2,7 +2,7 @@
 
 ローン・リースを **Web で申込から契約・契約後の手続きまで完結** できるようにする、顧客向けのプラグイン `efinance` の要件定義。OFBiz の ecommerce（order・product の上に乗る顧客向けの店舗）と同じ考え方で、finance の上に乗る顧客向けの仕組みとする。詳細な設計は `SPEC_EFINANCE.md` を正とする。
 
-> **状態：W0〜W8 の API・DB は実装済み（2026-10-23 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、`/dealer` 販売店サンプル、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト（CORS・エラーチェーンを含む）、JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）、口座振替・振込案内、冪等性・重複下書き防止・レート制限、ファイルスキャン Adapter、`EfFormField` による商品別フォーム定義、公開シミュレーションの IP レート制限を追加した。テストは 81 件成功（errors="0" / failures="0"）。残作業は W9 提携先組込み・チャット。
+> **状態：W0〜W8 の API・DB は実装済み（2026-10-23 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、`/dealer` 販売店サンプル、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト（CORS・エラーチェーンを含む）、JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）、口座振替・振込案内、冪等性・重複下書き防止・レート制限、ファイルスキャン Adapter、`EfFormField` による商品別フォーム定義、公開シミュレーションの IP レート制限を追加した。テストは 82 件成功（errors="0" / failures="0"）。残作業は W9 提携先組込み・チャット。
 
 ---
 
@@ -434,6 +434,7 @@ flowchart LR
 
 | 画面 | 内容 | 現状 |
 |------|------|------|
+| ダッシュボード（Main） | 会員・本人確認・書類・手続き・口座振替の件数、クイックリンク、最近の監査ログ | 実装済み |
 | 会員一覧・詳細 | 会員の検索、状態、最終ログイン、ロック解除 | 一覧・詳細・ロック解除を実装済み |
 | 本人確認一覧・審査 | 提出画像、審査結果、確認者、コメント | 一覧・審査フォームを実装済み |
 | 書類要請 | 対象・書類種別・理由・期限・状態 | 一覧を実装済み。新規作成画面は未実装 |
@@ -442,7 +443,8 @@ flowchart LR
 | 不正検知 | 要確認の申込・規則・対応 | 未実装 |
 | 口座振替 | 登録結果の記録 | W7 で実装 |
 
-- efinanceadmin は `OFBTOOLS_VIEW` と `EFINANCE_ADMIN_VIEW` を持つスタッフだけがログインできる。`EF_ADMIN_GROUP` には両方を付与する。デモ環境では `demo-ef-admin` / `ofbiz` を利用する。
+- efinanceadmin は `OFBTOOLS_VIEW` と `EFINANCE_ADMIN_VIEW` を持つスタッフだけがログインできる。`EF_ADMIN_GROUP` には両方を付与する。デモ環境では `demo-ef-admin` / `ofbiz`（ロケール `ja`）を利用する。
+- 管理画面の表示文言は `EfinanceUiLabels` で日本語・英語を切り替える。会員一覧の PARTY ID は会員詳細へのリンクとして表示する。
 
 ### 5.2 顧客サンプル画面（`/portal`）
 
@@ -692,7 +694,7 @@ flowchart LR
 
 **現在の結果（2026-10-23）**
 
-- `.\gradlew.bat "ofbiz --test component=efinance"`：81 テスト、`errors="0"` / `failures="0"`
+- `.\gradlew.bat "ofbiz --test component=efinance"`：82 テスト、`errors="0"` / `failures="0"`
 - REST 経由の JWT 取得・Authorization・公開 API・無効トークン・認証なし 401・不正 JSON・必須項目不足・404・CORS 応答ヘッダーは自動テスト済み。
 - finance 全体回帰は 217 テスト成功、support はユーザー実行で OK。
 - W7 口座振替・振込案内は自動テスト済み。
@@ -768,3 +770,4 @@ flowchart LR
 | 2026-10-23（W8） | `EfDealer` / `EfDealerUser` / `EfDealerCustomer`、顧客同意、代理下書き、申込・契約照会、`/dealer` サンプル画面を追加。81 テスト成功 |
 | 2026-10-23（W5 見積未提示） | 見積未提示時は `offerAvailable=false` と申込ステータスを表示し、受理・署名を無効化。受理済み見積の再取得と、`DEMO_EF_DRAFT2` の契約フロー用デモを追加。81 テスト成功 |
 | 2026-10-23（efinanceadmin 修正） | 管理画面の `main-decorator` とアプリバーを追加して 500 エラーを修正。ログイン権限 `OFBTOOLS_VIEW` / `EFINANCE_ADMIN_VIEW` とデモ管理者 `demo-ef-admin` を追加。フォームの `text-line` を `text` に修正。 |
+| 2026-10-23（管理画面改善） | Main タブを管理ダッシュボードに変更し、件数・クイックリンク・最近の監査ログを表示。画面・メニュー・フォームを日本語化し、会員一覧の PARTY ID 表示を修正。`demo-ef-admin` のロケールを `ja` に設定。82 テスト成功 |

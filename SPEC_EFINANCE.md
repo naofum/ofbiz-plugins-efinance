@@ -2,7 +2,7 @@
 
 `REQUIREMENTS_EFINANCE.md` の要件に対する設計。各 STEP の実装後に「実装」「テスト」「検証」を追記する。
 
-> **状態：W0〜W8 の API・DB は実装済み（2026-10-23 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト（CORS・エラーチェーンを含む）、JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）、口座振替・振込案内、冪等性・重複下書き防止・レート制限、ファイルスキャン Adapter、`EfFormField` による商品別フォーム定義、公開シミュレーションの IP レート制限、`/dealer` 販売店ポータルを追加した。最新のテストは **81 件成功（errors="0" / failures="0"）**。残る主要ギャップは W9 提携先組込み・チャット。
+> **状態：W0〜W8 の API・DB は実装済み（2026-10-23 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト（CORS・エラーチェーンを含む）、JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）、口座振替・振込案内、冪等性・重複下書き防止・レート制限、ファイルスキャン Adapter、`EfFormField` による商品別フォーム定義、公開シミュレーションの IP レート制限、`/dealer` 販売店ポータルを追加した。最新のテストは **82 件成功（errors="0" / failures="0"）**。残る主要ギャップは W9 提携先組込み・チャット。
 
 ## 進捗
 
@@ -33,8 +33,8 @@
 | W7 | `EfDirectDebitMandate`、口座振替依頼・照会、振込案内、担当者登録、REST 2 本、管理画面 | `EfPaymentTests` |
 | W8 | `EfDealer` / `EfDealerUser` / `EfDealerCustomer`、販売店プロフィール、顧客同意、代理下書き、申込・契約照会、`/dealer` サンプル画面 | `EfDealerTests` |
 
-- 全体：**92 サービス**（`auth=true` 80、`auth=false` 12）、**30 entity**、**16 テストクラス / 81 テスト**。
-- 実行：`.\gradlew.bat compileJava compileGroovy` 成功。`.\gradlew.bat "ofbiz --test component=efinance"` で **81 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
+- 全体：**92 サービス**（`auth=true` 80、`auth=false` 12）、**30 entity**、**16 テストクラス / 82 テスト**。
+- 実行：`.\gradlew.bat compileJava compileGroovy` 成功。`.\gradlew.bat "ofbiz --test component=efinance"` で **82 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
 - seed/demo：`data/EfinanceTypeData.xml`（状態・列挙・権限・`efinance-system`・同意文書）、`data/EfinanceDemoData.xml`（公開商品・デモ会員・サンプル申込・契約）、`testdef/data/EfinanceTestData.xml`（テスト会員・KYC/同意フィクスチャ）。
 - **残作業**：W9 提携先組込み・チャット。finance 全体回帰は 217 テスト成功、support はユーザー実行で OK。CORS・エラーチェーン・外部署名 HTTP アダプタ・W7・W8 は自動テスト済み。
 
@@ -1074,13 +1074,16 @@ sequenceDiagram
 
 | request-map | view | 内容 |
 |-------------|------|------|
-| `main` | `FindEfMember` | 会員一覧 |
+| `main` | `EfAdminDashboard` | 管理ダッシュボード（集計・クイックリンク・最近の監査ログ） |
+| `FindEfMember` | `FindEfMember` | 会員一覧 |
 | `ViewEfMember` | `ViewEfMember` | 会員詳細・ロック解除 |
 | `FindEfKycCheck` / `ViewEfKycCheck` | `FindEfKycCheck` / `ViewEfKycCheck` | KYC 一覧・審査 |
 | `FindEfDocumentRequest` | `FindEfDocumentRequest` | 追加書類要請の一覧 |
 | `FindEfServiceRequest` / `ViewEfServiceRequest` | `FindEfServiceRequest` / `ViewEfServiceRequest` | 手続き依頼の一覧・更新 |
 - 画面定義は `widget/EfinanceAdminScreens.xml` / `EfinanceAdminForms.xml`。デコレーターは `widget/CommonScreens.xml`、アプリバーは `widget/EfinanceAdminMenus.xml`。
-- 権限は `OFBTOOLS,EFINANCE_ADMIN`。Web アプリのログイン判定は `OFBTOOLS_VIEW` と `EFINANCE_ADMIN_VIEW` を要求するため、seed では `OFBTOOLS_VIEW` を `FULLADMIN` / `EF_ADMIN_GROUP` に、`EFINANCE_ADMIN` / `EFINANCE_ADMIN_VIEW` を `EF_ADMIN_GROUP` / `SUPER` に付与する。デモ管理者は `demo-ef-admin` / `ofbiz`。
+- 権限は `OFBTOOLS,EFINANCE_ADMIN`。Web アプリのログイン判定は `OFBTOOLS_VIEW` と `EFINANCE_ADMIN_VIEW` を要求するため、seed では `OFBTOOLS_VIEW` を `FULLADMIN` / `EF_ADMIN_GROUP` に、`EFINANCE_ADMIN` / `EFINANCE_ADMIN_VIEW` を `EF_ADMIN_GROUP` / `SUPER` に付与する。デモ管理者は `demo-ef-admin` / `ofbiz`（`lastLocale=ja`）。
+- Main タブはダッシュボード。会員数・有効会員・ロック中会員、本人確認待ち、書類提出待ち、対応中の手続き、口座振替待ちの件数、クイックリンク、直近5件の監査ログを表示する。
+- 管理画面の画面タイトル・メニュー・フォーム項目は `EfinanceUiLabels` を参照する。会員一覧の PARTY ID リンクは一覧行の `partyId` を表示し、会員詳細へ遷移する。
 - 会員ロック解除、KYC 審査、追加書類要請、手続き依頼、申込・契約照会のうち、申込・契約照会と書類要請の新規作成画面は未実装。
 
 ### 16.2 追加予定
@@ -1144,7 +1147,7 @@ sequenceDiagram
 | `EfSupportTests` | support ケースの作成・一覧・詳細・返信・クローズ・選択肢 |
 | `EfCorporateTests` | 法人作成・担当者権限・一覧 |
 | `EfAuthTests` | 有効トークン・失効トークン・ロック会員・再認証トークン |
-| `EfAdminTests` | 会員ロック解除・手続き依頼の状態更新 |
+| `EfAdminTests` | 会員ロック解除・手続き依頼の状態更新・管理ダッシュボード集計 |
 | `EfDealerTests` | 販売店作成・担当者権限・顧客同意・代理下書き・申込/契約照会 |
 
 ### 16.2 実行結果
@@ -1154,7 +1157,7 @@ sequenceDiagram
 .\gradlew.bat "ofbiz --test component=efinance"
 ```
 
-- 2026-10-23：**81 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
+- 2026-10-23：**82 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
 - REST 経由の JWT 取得・Authorization・公開 API・無効トークン・認証なし 401・不正 JSON・必須項目不足・404・CORS 応答ヘッダーを `EfRestIntegrationTests` で確認済み。
 - finance 全体回帰は **217 テスト成功**、support はユーザー実行で OK。
 - JasperReports テンプレート、PDF の `Content` 保存、`EfDeliveredDocument.contentId`、Base64 ダウンロード、クリック同意・外部署名 HTTP アダプタを `EfContractTests` で確認済み。
@@ -1238,6 +1241,7 @@ sequenceDiagram
 | 2026-10-23（W8） | `EfDealer` / `EfDealerUser` / `EfDealerCustomer`、販売店プロフィール、顧客同意、代理下書き、申込・契約照会、`/dealer` サンプル画面を追加。**81 テスト成功** |
 | 2026-10-23（W5 見積未提示） | `efGetOffer` に `offerAvailable` / `quoteStatusId` を追加し、受理済み見積の再取得に対応。`/portal` は見積未提示時に申込ステータスを表示して受理・署名を無効化し、`DEMO_EF_DRAFT2` の提示済み見積デモを追加。**81 テスト成功** |
 | 2026-10-23（efinanceadmin 修正） | 管理画面の `main-decorator` とアプリバーを追加し、`/efinanceadmin/control/main` の 500 エラーを修正。ログインに必要な `OFBTOOLS_VIEW` / `EFINANCE_ADMIN_VIEW` とデモ管理者 `demo-ef-admin` を追加。未対応のフォーム要素 `text-line` を `text` に修正。 |
+| 2026-10-23（管理画面改善） | Main タブを管理ダッシュボードに変更し、件数・クイックリンク・最近の監査ログを表示。管理画面の画面・メニュー・フォームを日本語ラベル化し、会員一覧の PARTY ID 表示を修正。`demo-ef-admin` のロケールを `ja` に設定。**82 テスト成功** |
 
 ---
 
@@ -1266,6 +1270,6 @@ sequenceDiagram
 - 配布：efinance プラグイン単体には含まれないため、rest-api の差分も同時にデプロイする。
 - 検証：
   - `EfAuthTests` で `EfRequestValidator` の有効トークン・失効トークン・ロック会員判定と再認証トークンのワンタイム性を確認。
-  - `compileJava compileGroovy` 成功、efinance 81 テスト成功。
+  - `compileJava compileGroovy` 成功、efinance 82 テスト成功。
   - REST 手動結合確認：`demo-ef-customer` でログイン 200、商品 2 件、申込 1 件、契約 1 件、契約詳細の返済表 2 行、メッセージ、通知設定、`/portal/control/main` 200 を確認。
   - `EfRestIntegrationTests` で公開商品、ログイン、Bearer 認証、無効トークン 401 を自動確認する。CORS とエラーチェーンの網羅は未整備。

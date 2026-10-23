@@ -102,6 +102,18 @@ class EfAdminTests extends OFBizTestCase {
         assert !ServiceUtil.isSuccess(invalid)
     }
 
+    void testAdminDashboardCounts() {
+        Map result = dispatcher.runSync('efGetAdminDashboard', [userLogin: admin()])
+        ok(result)
+        assert result.memberCount >= 0
+        assert result.activeMemberCount >= 0
+        assert result.lockedMemberCount >= 0
+        assert result.kycPendingCount >= 0
+        assert result.documentRequestPendingCount >= 0
+        assert result.openServiceRequestCount >= 0
+        assert result.directDebitPendingCount >= 0
+    }
+
     void testListAuditLogs() {
         Map result = dispatcher.runSync('efListAuditLogs', [
                 userLogin: admin(),

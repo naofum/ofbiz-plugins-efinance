@@ -457,4 +457,372 @@ under the License.
         <value xml:lang="ja">通知設定を更新しました。</value>
     </property>
 
+    <!-- eFinance admin screens -->
+    <property key="EfinanceAdminDashboard">
+        <value xml:lang="en">eFinance Administration</value>
+        <value xml:lang="ja">eFinance 管理</value>
+    </property>
+    <property key="EfinanceAdminDashboardSummary">
+        <value xml:lang="en">Summary</value>
+        <value xml:lang="ja">概要</value>
+    </property>
+    <property key="EfinanceAdminDashboardQuickLinks">
+        <value xml:lang="en">Quick Links</value>
+        <value xml:lang="ja">クイックリンク</value>
+    </property>
+    <property key="EfinanceAdminDashboardRecentAudit">
+        <value xml:lang="en">Recent Audit Logs</value>
+        <value xml:lang="ja">最近の監査ログ</value>
+    </property>
+    <property key="EfinanceAdminDashboardError">
+        <value xml:lang="en">Unable to load the dashboard summary.</value>
+        <value xml:lang="ja">ダッシュボードの集計を取得できませんでした。</value>
+    </property>
+    <property key="EfinanceAdminDashboardMembersTotal">
+        <value xml:lang="en">Members</value>
+        <value xml:lang="ja">会員数</value>
+    </property>
+    <property key="EfinanceAdminDashboardMembersActive">
+        <value xml:lang="en">Active Members</value>
+        <value xml:lang="ja">有効会員</value>
+    </property>
+    <property key="EfinanceAdminDashboardMembersLocked">
+        <value xml:lang="en">Locked Members</value>
+        <value xml:lang="ja">ロック中の会員</value>
+    </property>
+    <property key="EfinanceAdminDashboardKycPending">
+        <value xml:lang="en">KYC Awaiting Review</value>
+        <value xml:lang="ja">本人確認待ち</value>
+    </property>
+    <property key="EfinanceAdminDashboardDocRequestPending">
+        <value xml:lang="en">Documents Pending</value>
+        <value xml:lang="ja">書類提出待ち</value>
+    </property>
+    <property key="EfinanceAdminDashboardServiceRequestOpen">
+        <value xml:lang="en">Open Service Requests</value>
+        <value xml:lang="ja">対応中の手続き</value>
+    </property>
+    <property key="EfinanceAdminDashboardDirectDebitPending">
+        <value xml:lang="en">Direct Debit Pending</value>
+        <value xml:lang="ja">口座振替待ち</value>
+    </property>
+    <property key="EfinanceAdminMenuMembers">
+        <value xml:lang="en">Members</value>
+        <value xml:lang="ja">会員</value>
+    </property>
+    <property key="EfinanceAdminMenuKycChecks">
+        <value xml:lang="en">KYC Checks</value>
+        <value xml:lang="ja">本人確認</value>
+    </property>
+    <property key="EfinanceAdminMenuDocumentRequests">
+        <value xml:lang="en">Document Requests</value>
+        <value xml:lang="ja">追加書類</value>
+    </property>
+    <property key="EfinanceAdminMenuServiceRequests">
+        <value xml:lang="en">Service Requests</value>
+        <value xml:lang="ja">手続き依頼</value>
+    </property>
+    <property key="EfinanceAdminMenuDirectDebits">
+        <value xml:lang="en">Direct Debits</value>
+        <value xml:lang="ja">口座振替</value>
+    </property>
+    <property key="EfinanceAdminMenuAuditLog">
+        <value xml:lang="en">Audit Log</value>
+        <value xml:lang="ja">監査ログ</value>
+    </property>
+    <property key="EfinanceAdminAccountActions">
+        <value xml:lang="en">Account Actions</value>
+        <value xml:lang="ja">アカウント操作</value>
+    </property>
+    <property key="EfinanceAdminUploadedImages">
+        <value xml:lang="en">Uploaded Images</value>
+        <value xml:lang="ja">アップロード画像</value>
+    </property>
+    <property key="EfinanceAdminFieldPartyId">
+        <value xml:lang="en">Party ID</value>
+        <value xml:lang="ja">会員ID</value>
+    </property>
+    <property key="EfinanceAdminFieldLoginEmail">
+        <value xml:lang="en">Login / Email</value>
+        <value xml:lang="ja">ログインID / メール</value>
+    </property>
+    <property key="EfinanceAdminFieldType">
+        <value xml:lang="en">Type</value>
+        <value xml:lang="ja">種別</value>
+    </property>
+    <property key="EfinanceAdminFieldMemberType">
+        <value xml:lang="en">Member Type</value>
+        <value xml:lang="ja">会員種別</value>
+    </property>
+    <property key="EfinanceAdminFieldStatus">
+        <value xml:lang="en">Status</value>
+        <value xml:lang="ja">ステータス</value>
+    </property>
+    <property key="EfinanceAdminFieldRegistered">
+        <value xml:lang="en">Registered</value>
+        <value xml:lang="ja">登録日</value>
+    </property>
+    <property key="EfinanceAdminFieldEmailVerified">
+        <value xml:lang="en">Email Verified</value>
+        <value xml:lang="ja">メール確認日</value>
+    </property>
+    <property key="EfinanceAdminFieldMfaMethod">
+        <value xml:lang="en">MFA Method</value>
+        <value xml:lang="ja">多要素認証</value>
+    </property>
+    <property key="EfinanceAdminFieldLastLogin">
+        <value xml:lang="en">Last Login</value>
+        <value xml:lang="ja">最終ログイン</value>
+    </property>
+    <property key="EfinanceAdminFieldUnlockAccount">
+        <value xml:lang="en">Unlock Account</value>
+        <value xml:lang="ja">ロック解除</value>
+    </property>
+    <property key="EfinanceAdminFieldKycCheckId">
+        <value xml:lang="en">KYC Check ID</value>
+        <value xml:lang="ja">本人確認ID</value>
+    </property>
+    <property key="EfinanceAdminFieldMember">
+        <value xml:lang="en">Member</value>
+        <value xml:lang="ja">会員</value>
+    </property>
+    <property key="EfinanceAdminFieldMethod">
+        <value xml:lang="en">Method</value>
+        <value xml:lang="ja">確認方法</value>
+    </property>
+    <property key="EfinanceAdminFieldReviewer">
+        <value xml:lang="en">Reviewer</value>
+        <value xml:lang="ja">確認者</value>
+    </property>
+    <property key="EfinanceAdminFieldReviewed">
+        <value xml:lang="en">Reviewed</value>
+        <value xml:lang="ja">確認日</value>
+    </property>
+    <property key="EfinanceAdminFieldCreated">
+        <value xml:lang="en">Created</value>
+        <value xml:lang="ja">作成日</value>
+    </property>
+    <property key="EfinanceAdminFieldSubjectParty">
+        <value xml:lang="en">Subject Party</value>
+        <value xml:lang="ja">対象者</value>
+    </property>
+    <property key="EfinanceAdminFieldReviewResult">
+        <value xml:lang="en">Review Result</value>
+        <value xml:lang="ja">審査結果</value>
+    </property>
+    <property key="EfinanceAdminFieldReviewerNote">
+        <value xml:lang="en">Reviewer Note</value>
+        <value xml:lang="ja">確認メモ</value>
+    </property>
+    <property key="EfinanceAdminFieldSaveReview">
+        <value xml:lang="en">Save Review</value>
+        <value xml:lang="ja">審査結果を保存</value>
+    </property>
+    <property key="EfinanceAdminFieldImageId">
+        <value xml:lang="en">Image ID</value>
+        <value xml:lang="ja">画像ID</value>
+    </property>
+    <property key="EfinanceAdminFieldContent">
+        <value xml:lang="en">Content</value>
+        <value xml:lang="ja">内容</value>
+    </property>
+    <property key="EfinanceAdminFieldUploaded">
+        <value xml:lang="en">Uploaded</value>
+        <value xml:lang="ja">アップロード日</value>
+    </property>
+    <property key="EfinanceAdminFieldRequestId">
+        <value xml:lang="en">Request ID</value>
+        <value xml:lang="ja">要請ID</value>
+    </property>
+    <property key="EfinanceAdminFieldApplication">
+        <value xml:lang="en">Application</value>
+        <value xml:lang="ja">申込</value>
+    </property>
+    <property key="EfinanceAdminFieldDocumentType">
+        <value xml:lang="en">Document Type</value>
+        <value xml:lang="ja">書類種別</value>
+    </property>
+    <property key="EfinanceAdminFieldDue">
+        <value xml:lang="en">Due</value>
+        <value xml:lang="ja">期限</value>
+    </property>
+    <property key="EfinanceAdminFieldRequested">
+        <value xml:lang="en">Requested</value>
+        <value xml:lang="ja">要請日</value>
+    </property>
+    <property key="EfinanceAdminFieldSubmitted">
+        <value xml:lang="en">Submitted</value>
+        <value xml:lang="ja">提出日</value>
+    </property>
+    <property key="EfinanceAdminFieldServiceType">
+        <value xml:lang="en">Type</value>
+        <value xml:lang="ja">種別</value>
+    </property>
+    <property key="EfinanceAdminFieldSubject">
+        <value xml:lang="en">Subject</value>
+        <value xml:lang="ja">件名</value>
+    </property>
+    <property key="EfinanceAdminFieldAssignee">
+        <value xml:lang="en">Assignee</value>
+        <value xml:lang="ja">担当者</value>
+    </property>
+    <property key="EfinanceAdminFieldCompleted">
+        <value xml:lang="en">Completed</value>
+        <value xml:lang="ja">完了日</value>
+    </property>
+    <property key="EfinanceAdminFieldContract">
+        <value xml:lang="en">Contract</value>
+        <value xml:lang="ja">契約</value>
+    </property>
+    <property key="EfinanceAdminFieldContractType">
+        <value xml:lang="en">Contract Type</value>
+        <value xml:lang="ja">契約種別</value>
+    </property>
+    <property key="EfinanceAdminFieldRequestData">
+        <value xml:lang="en">Request Data</value>
+        <value xml:lang="ja">リクエストデータ</value>
+    </property>
+    <property key="EfinanceAdminFieldNewStatus">
+        <value xml:lang="en">New Status</value>
+        <value xml:lang="ja">新しいステータス</value>
+    </property>
+    <property key="EfinanceAdminFieldStaffNotes">
+        <value xml:lang="en">Staff Notes</value>
+        <value xml:lang="ja">担当者メモ</value>
+    </property>
+    <property key="EfinanceAdminFieldUpdateRequest">
+        <value xml:lang="en">Update Request</value>
+        <value xml:lang="ja">依頼を更新</value>
+    </property>
+    <property key="EfinanceAdminFieldAuditId">
+        <value xml:lang="en">Audit ID</value>
+        <value xml:lang="ja">監査ID</value>
+    </property>
+    <property key="EfinanceAdminFieldDate">
+        <value xml:lang="en">Date</value>
+        <value xml:lang="ja">日時</value>
+    </property>
+    <property key="EfinanceAdminFieldParty">
+        <value xml:lang="en">Party</value>
+        <value xml:lang="ja">会員</value>
+    </property>
+    <property key="EfinanceAdminFieldAction">
+        <value xml:lang="en">Action</value>
+        <value xml:lang="ja">操作</value>
+    </property>
+    <property key="EfinanceAdminFieldTarget">
+        <value xml:lang="en">Target</value>
+        <value xml:lang="ja">対象</value>
+    </property>
+    <property key="EfinanceAdminFieldTargetId">
+        <value xml:lang="en">Target ID</value>
+        <value xml:lang="ja">対象ID</value>
+    </property>
+    <property key="EfinanceAdminFieldResult">
+        <value xml:lang="en">Result</value>
+        <value xml:lang="ja">結果</value>
+    </property>
+    <property key="EfinanceAdminFieldIp">
+        <value xml:lang="en">IP</value>
+        <value xml:lang="ja">IPアドレス</value>
+    </property>
+    <property key="EfinanceAdminFieldDetail">
+        <value xml:lang="en">Detail</value>
+        <value xml:lang="ja">詳細</value>
+    </property>
+    <property key="EfinanceAdminFieldSearch">
+        <value xml:lang="en">Search</value>
+        <value xml:lang="ja">検索</value>
+    </property>
+    <property key="EfinanceAdminFieldMandateId">
+        <value xml:lang="en">Mandate ID</value>
+        <value xml:lang="ja">口座振替ID</value>
+    </property>
+    <property key="EfinanceAdminFieldBank">
+        <value xml:lang="en">Bank</value>
+        <value xml:lang="ja">銀行</value>
+    </property>
+    <property key="EfinanceAdminFieldBranch">
+        <value xml:lang="en">Branch</value>
+        <value xml:lang="ja">支店</value>
+    </property>
+    <property key="EfinanceAdminFieldAccount">
+        <value xml:lang="en">Account</value>
+        <value xml:lang="ja">口座</value>
+    </property>
+    <property key="EfinanceAdminFieldAccountType">
+        <value xml:lang="en">Account Type</value>
+        <value xml:lang="ja">口座種別</value>
+    </property>
+    <property key="EfinanceAdminFieldAccountLast4">
+        <value xml:lang="en">Account Last 4</value>
+        <value xml:lang="ja">口座番号下4桁</value>
+    </property>
+    <property key="EfinanceAdminFieldAccountHolder">
+        <value xml:lang="en">Account Holder</value>
+        <value xml:lang="ja">口座名義</value>
+    </property>
+    <property key="EfinanceAdminFieldCurrentStatus">
+        <value xml:lang="en">Current Status</value>
+        <value xml:lang="ja">現在のステータス</value>
+    </property>
+    <property key="EfinanceAdminFieldStaffNote">
+        <value xml:lang="en">Staff Note</value>
+        <value xml:lang="ja">担当者メモ</value>
+    </property>
+    <property key="EfinanceAdminFieldUpdateMandate">
+        <value xml:lang="en">Update Mandate</value>
+        <value xml:lang="ja">口座振替を更新</value>
+    </property>
+
+    <!-- Localized status and enum values used by the admin screens -->
+    <property key="EFMBR_PERSONAL"><value xml:lang="en">Personal</value><value xml:lang="ja">個人</value></property>
+    <property key="EFMBR_CORP_USER"><value xml:lang="en">Corporate user</value><value xml:lang="ja">法人担当者</value></property>
+    <property key="EFMBR_DEALER"><value xml:lang="en">Dealer staff</value><value xml:lang="ja">販売店担当者</value></property>
+    <property key="EFMBR_PENDING"><value xml:lang="en">Pending email verification</value><value xml:lang="ja">メール確認待ち</value></property>
+    <property key="EFMBR_ACTIVE"><value xml:lang="en">Active</value><value xml:lang="ja">有効</value></property>
+    <property key="EFMBR_LOCKED"><value xml:lang="en">Locked</value><value xml:lang="ja">ロック中</value></property>
+    <property key="EFMBR_CLOSED"><value xml:lang="en">Closed</value><value xml:lang="ja">閉鎖</value></property>
+
+    <property key="EFKYC_PENDING"><value xml:lang="en">Pending</value><value xml:lang="ja">未提出</value></property>
+    <property key="EFKYC_SUBMITTED"><value xml:lang="en">Submitted for review</value><value xml:lang="ja">審査待ち</value></property>
+    <property key="EFKYC_VERIFIED"><value xml:lang="en">Verified</value><value xml:lang="ja">確認済み</value></property>
+    <property key="EFKYC_RESUBMIT"><value xml:lang="en">Resubmission required</value><value xml:lang="ja">再提出が必要</value></property>
+    <property key="EFKYC_REJECTED"><value xml:lang="en">Rejected</value><value xml:lang="ja">否認</value></property>
+    <property key="EFKYC_M_IMAGE_FACE"><value xml:lang="en">ID document image + facial photo</value><value xml:lang="ja">本人確認書類・顔写真</value></property>
+    <property key="EFKYC_M_IC_CHIP"><value xml:lang="en">IC chip read</value><value xml:lang="ja">ICチップ読取</value></property>
+    <property key="EFKYC_M_POSTAL"><value xml:lang="en">Postal document</value><value xml:lang="ja">郵送書類</value></property>
+    <property key="EFKYC_IMG_ID_FRONT"><value xml:lang="en">ID document (front)</value><value xml:lang="ja">本人確認書類（表面）</value></property>
+    <property key="EFKYC_IMG_ID_BACK"><value xml:lang="en">ID document (back)</value><value xml:lang="ja">本人確認書類（裏面）</value></property>
+    <property key="EFKYC_IMG_FACIAL"><value xml:lang="en">Facial photo</value><value xml:lang="ja">顔写真</value></property>
+    <property key="EFKYC_IMG_IC_CHIP"><value xml:lang="en">IC chip data</value><value xml:lang="ja">ICチップデータ</value></property>
+
+    <property key="EFDOCREQ_PENDING"><value xml:lang="en">Pending</value><value xml:lang="ja">未提出</value></property>
+    <property key="EFDOCREQ_SUBMITTED"><value xml:lang="en">Submitted</value><value xml:lang="ja">提出済み</value></property>
+    <property key="EFDOCREQ_ACCEPTED"><value xml:lang="en">Accepted</value><value xml:lang="ja">受理済み</value></property>
+    <property key="EFDOCREQ_REJECTED"><value xml:lang="en">Rejected (resubmit required)</value><value xml:lang="ja">否認（再提出が必要）</value></property>
+
+    <property key="EFSVCREQ_RECEIVED"><value xml:lang="en">Received</value><value xml:lang="ja">受付済み</value></property>
+    <property key="EFSVCREQ_IN_PROG"><value xml:lang="en">In progress</value><value xml:lang="ja">対応中</value></property>
+    <property key="EFSVCREQ_COMPLETE"><value xml:lang="en">Completed</value><value xml:lang="ja">完了</value></property>
+    <property key="EFSVCREQ_REJECTED"><value xml:lang="en">Rejected</value><value xml:lang="ja">否認</value></property>
+    <property key="EFSVCREQ_PREPAY"><value xml:lang="en">Prepayment request</value><value xml:lang="ja">繰上返済</value></property>
+    <property key="EFSVCREQ_MODIFY"><value xml:lang="en">Condition change</value><value xml:lang="ja">条件変更</value></property>
+    <property key="EFSVCREQ_EXPIRY"><value xml:lang="en">Expiry option</value><value xml:lang="ja">満了時の選択</value></property>
+    <property key="EFSVCREQ_PROFILE"><value xml:lang="en">Profile/contact change</value><value xml:lang="ja">登録情報変更</value></property>
+    <property key="EFSVCREQ_CERT"><value xml:lang="en">Balance certificate</value><value xml:lang="ja">残高証明書</value></property>
+    <property key="EFSVCREQ_OTHER"><value xml:lang="en">Other inquiry</value><value xml:lang="ja">その他のお問い合わせ</value></property>
+
+    <property key="EFDD_REQUESTED"><value xml:lang="en">Requested</value><value xml:lang="ja">依頼済み</value></property>
+    <property key="EFDD_REGISTERED"><value xml:lang="en">Registered</value><value xml:lang="ja">登録済み</value></property>
+    <property key="EFDD_REJECTED"><value xml:lang="en">Rejected</value><value xml:lang="ja">否認</value></property>
+    <property key="EFDD_ACC_ORDINARY"><value xml:lang="en">Ordinary account</value><value xml:lang="ja">普通預金</value></property>
+    <property key="EFDD_ACC_CHECKING"><value xml:lang="en">Checking account</value><value xml:lang="ja">当座預金</value></property>
+    <property key="EFDOC_ID_FRONT"><value xml:lang="en">ID document (front)</value><value xml:lang="ja">本人確認書類（表面）</value></property>
+    <property key="EFDOC_ID_BACK"><value xml:lang="en">ID document (back)</value><value xml:lang="ja">本人確認書類（裏面）</value></property>
+    <property key="EFDOC_INCOME"><value xml:lang="en">Income proof</value><value xml:lang="ja">収入証明書</value></property>
+    <property key="EFDOC_CORP_REG"><value xml:lang="en">Corporate registry</value><value xml:lang="ja">法人登記簿</value></property>
+    <property key="EFDOC_QUOTE"><value xml:lang="en">Supplier quote</value><value xml:lang="ja">仕入見積書</value></property>
+    <property key="EFDOC_OTHER"><value xml:lang="en">Other</value><value xml:lang="ja">その他</value></property>
+
 </resource>

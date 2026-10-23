@@ -22,24 +22,24 @@ under the License.
         xmlns="http://ofbiz.apache.org/Widget-Menu"
         xsi:schemaLocation="http://ofbiz.apache.org/Widget-Menu http://ofbiz.apache.org/dtds/widget-menu.xsd">
 
-    <menu name="EfinanceAdminAppBar" title="eFinance Administration"
+    <menu name="EfinanceAdminAppBar" title="${uiLabelMap.EfinanceAdminDashboard}"
           extends="CommonAppBarMenu" extends-resource="component://common/widget/CommonMenus.xml">
-        <menu-item name="Members" title="Members">
+        <menu-item name="Members" title="${uiLabelMap.EfinanceAdminMenuMembers}">
             <link target="FindEfMember"/>
         </menu-item>
-        <menu-item name="KycChecks" title="KYC Checks">
+        <menu-item name="KycChecks" title="${uiLabelMap.EfinanceAdminMenuKycChecks}">
             <link target="FindEfKycCheck"/>
         </menu-item>
-        <menu-item name="DocumentRequests" title="Document Requests">
+        <menu-item name="DocumentRequests" title="${uiLabelMap.EfinanceAdminMenuDocumentRequests}">
             <link target="FindEfDocumentRequest"/>
         </menu-item>
-        <menu-item name="ServiceRequests" title="Service Requests">
+        <menu-item name="ServiceRequests" title="${uiLabelMap.EfinanceAdminMenuServiceRequests}">
             <link target="FindEfServiceRequest"/>
         </menu-item>
-        <menu-item name="DirectDebits" title="Direct Debits">
+        <menu-item name="DirectDebits" title="${uiLabelMap.EfinanceAdminMenuDirectDebits}">
             <link target="FindEfDirectDebit"/>
         </menu-item>
-        <menu-item name="AuditLog" title="Audit Log">
+        <menu-item name="AuditLog" title="${uiLabelMap.EfinanceAdminMenuAuditLog}">
             <link target="FindEfAuditLog"/>
         </menu-item>
     </menu>

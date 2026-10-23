@@ -33,7 +33,7 @@ under the License.
                 <set field="activeApp" value="efinanceadmin" global="true"/>
                 <set field="applicationMenuName" value="EfinanceAdminAppBar" global="true"/>
                 <set field="applicationMenuLocation" value="component://efinance/widget/EfinanceAdminMenus.xml" global="true"/>
-                <set field="applicationTitle" value="eFinance Administration" global="true"/>
+                <set field="applicationTitle" from-field="uiLabelMap.EfinanceAdminDashboard" global="true"/>
             </actions>
             <widgets>
                 <include-screen name="ApplicationDecorator" location="component://commonext/widget/CommonScreens.xml"/>

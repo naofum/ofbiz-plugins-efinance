@@ -27,7 +27,7 @@ under the License.
 
     <request-map uri="main">
         <security https="true" auth="true"/>
-        <response name="success" type="view" value="FindEfMember"/>
+        <response name="success" type="view" value="EfAdminDashboard"/>
     </request-map>
 
     <request-map uri="FindEfMember">
@@ -108,7 +108,8 @@ under the License.
         <response name="success" type="view" value="FindEfAuditLog"/>
     </request-map>
 
-    <view-map name="main" type="screen" page="component://efinance/widget/EfinanceAdminScreens.xml#FindEfMember"/>
+    <view-map name="main" type="screen" page="component://efinance/widget/EfinanceAdminScreens.xml#EfAdminDashboard"/>
+    <view-map name="EfAdminDashboard" type="screen" page="component://efinance/widget/EfinanceAdminScreens.xml#EfAdminDashboard"/>
     <view-map name="FindEfMember" type="screen" page="component://efinance/widget/EfinanceAdminScreens.xml#FindEfMember"/>
     <view-map name="ViewEfMember" type="screen" page="component://efinance/widget/EfinanceAdminScreens.xml#ViewEfMember"/>
     <view-map name="FindEfKycCheck" type="screen" page="component://efinance/widget/EfinanceAdminScreens.xml#FindEfKycCheck"/>

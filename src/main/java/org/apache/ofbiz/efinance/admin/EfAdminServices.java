@@ -131,6 +131,41 @@ public final class EfAdminServices {
         }
     }
 
+    public static Map<String, Object> efGetAdminDashboard(DispatchContext dctx, Map<String, Object> context) {
+        Delegator delegator = dctx.getDelegator();
+        Locale locale = (Locale) context.get("locale");
+
+        try {
+            Map<String, Object> result = ServiceUtil.returnSuccess();
+            result.put("memberCount", count(delegator, "EfMember", null, null));
+            result.put("activeMemberCount", count(delegator, "EfMember", "statusId", MEMBER_ACTIVE));
+            result.put("lockedMemberCount", count(delegator, "EfMember", "statusId", MEMBER_LOCKED));
+            result.put("kycPendingCount", count(delegator, "EfKycCheck", "statusId", "EFKYC_SUBMITTED"));
+            result.put("documentRequestPendingCount",
+                    count(delegator, "EfDocumentRequest", "statusId", "EFDOCREQ_PENDING")
+                            + count(delegator, "EfDocumentRequest", "statusId", "EFDOCREQ_SUBMITTED"));
+            result.put("openServiceRequestCount",
+                    count(delegator, "EfServiceRequest", "statusId", "EFSVCREQ_RECEIVED")
+                            + count(delegator, "EfServiceRequest", "statusId", "EFSVCREQ_IN_PROG"));
+            result.put("directDebitPendingCount",
+                    count(delegator, "EfDirectDebitMandate", "statusId", "EFDD_REQUESTED"));
+            return result;
+        } catch (GenericEntityException e) {
+            Debug.logError(e, "efGetAdminDashboard failed", MODULE);
+            return ServiceUtil.returnError(UtilProperties.getMessage(
+                    RESOURCE, "EfinanceAdminDashboardError", locale));
+        }
+    }
+
+    private static long count(Delegator delegator, String entityName, String fieldName, String value)
+            throws GenericEntityException {
+        EntityQuery query = EntityQuery.use(delegator).from(entityName);
+        if (UtilValidate.isNotEmpty(fieldName)) {
+            query.where(fieldName, value);
+        }
+        return query.queryCount();
+    }
+
     public static Map<String, Object> efListAuditLogs(DispatchContext dctx, Map<String, Object> context) {
         Delegator delegator = dctx.getDelegator();
         Locale locale = (Locale) context.get("locale");

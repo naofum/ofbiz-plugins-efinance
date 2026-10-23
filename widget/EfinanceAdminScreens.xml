@@ -22,11 +22,51 @@ under the License.
         xmlns="http://ofbiz.apache.org/Widget-Screen"
         xsi:schemaLocation="http://ofbiz.apache.org/Widget-Screen http://ofbiz.apache.org/dtds/widget-screen.xsd">
 
+    <!-- ===== Admin: dashboard (Main tab) ===== -->
+    <screen name="EfAdminDashboard">
+        <section>
+            <actions>
+                <set field="titleProperty" value="EfinanceAdminDashboard"/>
+                <set field="headerItem" value="main"/>
+                <service service-name="efGetAdminDashboard" result-map="dashboard"/>
+                <service service-name="efListAuditLogs" result-map="auditLogResult" auto-field-map="true">
+                    <field-map field-name="viewSize" value="5"/>
+                </service>
+                <set field="auditLogs" type="List" from-field="auditLogResult.auditLogs"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                        <screenlet title="${uiLabelMap.EfinanceAdminDashboardSummary}">
+                            <include-form name="EfAdminDashboardSummary"
+                                          location="component://efinance/widget/EfinanceAdminForms.xml"/>
+                        </screenlet>
+                        <screenlet title="${uiLabelMap.EfinanceAdminDashboardQuickLinks}">
+                            <container style="button-bar">
+                                <link target="FindEfMember" text="${uiLabelMap.EfinanceAdminMenuMembers}" style="buttontext"/>
+                                <link target="FindEfKycCheck" text="${uiLabelMap.EfinanceAdminMenuKycChecks}" style="buttontext"/>
+                                <link target="FindEfDocumentRequest" text="${uiLabelMap.EfinanceAdminMenuDocumentRequests}" style="buttontext"/>
+                                <link target="FindEfServiceRequest" text="${uiLabelMap.EfinanceAdminMenuServiceRequests}" style="buttontext"/>
+                                <link target="FindEfDirectDebit" text="${uiLabelMap.EfinanceAdminMenuDirectDebits}" style="buttontext"/>
+                                <link target="FindEfAuditLog" text="${uiLabelMap.EfinanceAdminMenuAuditLog}" style="buttontext"/>
+                            </container>
+                        </screenlet>
+                        <screenlet title="${uiLabelMap.EfinanceAdminDashboardRecentAudit}">
+                            <include-form name="ListEfAuditLogs"
+                                          location="component://efinance/widget/EfinanceAdminForms.xml"/>
+                        </screenlet>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
     <!-- ===== Admin: member list ===== -->
     <screen name="FindEfMember">
         <section>
             <actions>
                 <set field="titleProperty" value="EfinanceFindMember"/>
+                <set field="headerItem" value="Members"/>
                 <entity-condition entity-name="EfMember" list="efMembers">
                     <order-by field-name="-createdDate"/>
                 </entity-condition>
@@ -34,12 +74,12 @@ under the License.
             <widgets>
                 <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="body">
-                        <screenlet title="eFinance Members">
+                        <screenlet title="${uiLabelMap.EfinanceFindMember}">
                             <include-form name="ListEfMembers"
                                           location="component://efinance/widget/EfinanceAdminForms.xml"/>
                             <container style="button-bar">
-                                <link target="FindEfDirectDebit" text="Direct Debits" style="buttontext"/>
-                                <link target="FindEfAuditLog" text="Audit Log" style="buttontext"/>
+                                <link target="FindEfDirectDebit" text="${uiLabelMap.EfinanceAdminMenuDirectDebits}" style="buttontext"/>
+                                <link target="FindEfAuditLog" text="${uiLabelMap.EfinanceAdminMenuAuditLog}" style="buttontext"/>
                             </container>
                         </screenlet>
                     </decorator-section>
@@ -53,6 +93,7 @@ under the License.
         <section>
             <actions>
                 <set field="titleProperty" value="EfinanceViewMember"/>
+                <set field="headerItem" value="Members"/>
                 <entity-one entity-name="EfMember" value-field="efMember">
                     <field-map field-name="partyId" from-field="parameters.partyId"/>
                 </entity-one>
@@ -60,11 +101,11 @@ under the License.
             <widgets>
                 <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="body">
-                        <screenlet title="eFinance Member">
+                        <screenlet title="${uiLabelMap.EfinanceViewMember}">
                             <include-form name="ViewEfMember"
                                           location="component://efinance/widget/EfinanceAdminForms.xml"/>
                         </screenlet>
-                        <screenlet title="Account Actions">
+                        <screenlet title="${uiLabelMap.EfinanceAdminAccountActions}">
                             <include-form name="UnlockEfMember"
                                           location="component://efinance/widget/EfinanceAdminForms.xml"/>
                         </screenlet>
@@ -92,6 +133,7 @@ under the License.
         <section>
             <actions>
                 <set field="titleProperty" value="EfinanceFindKycCheck"/>
+                <set field="headerItem" value="KycChecks"/>
                 <entity-condition entity-name="EfKycCheck" list="efKycChecks">
                     <order-by field-name="-createdDate"/>
                 </entity-condition>
@@ -99,7 +141,7 @@ under the License.
             <widgets>
                 <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="body">
-                        <screenlet title="eFinance KYC Checks">
+                        <screenlet title="${uiLabelMap.EfinanceFindKycCheck}">
                             <include-form name="ListEfKycChecks"
                                           location="component://efinance/widget/EfinanceAdminForms.xml"/>
                         </screenlet>
@@ -114,6 +156,7 @@ under the License.
         <section>
             <actions>
                 <set field="titleProperty" value="EfinanceViewKycCheck"/>
+                <set field="headerItem" value="KycChecks"/>
                 <entity-one entity-name="EfKycCheck" value-field="efKycCheck">
                     <field-map field-name="kycCheckId" from-field="parameters.kycCheckId"/>
                 </entity-one>
@@ -125,11 +168,11 @@ under the License.
             <widgets>
                 <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="body">
-                        <screenlet title="eFinance KYC Check">
+                        <screenlet title="${uiLabelMap.EfinanceViewKycCheck}">
                             <include-form name="ViewEfKycCheck"
                                           location="component://efinance/widget/EfinanceAdminForms.xml"/>
                         </screenlet>
-                        <screenlet title="Uploaded Images">
+                        <screenlet title="${uiLabelMap.EfinanceAdminUploadedImages}">
                             <include-form name="ListEfKycImages"
                                           location="component://efinance/widget/EfinanceAdminForms.xml"/>
                         </screenlet>
@@ -144,6 +187,7 @@ under the License.
         <section>
             <actions>
                 <set field="titleProperty" value="EfinanceFindDocumentRequest"/>
+                <set field="headerItem" value="DocumentRequests"/>
                 <entity-condition entity-name="EfDocumentRequest" list="efDocumentRequests">
                     <order-by field-name="-requestedDate"/>
                 </entity-condition>
@@ -151,7 +195,7 @@ under the License.
             <widgets>
                 <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="body">
-                        <screenlet title="eFinance Document Requests">
+                        <screenlet title="${uiLabelMap.EfinanceFindDocumentRequest}">
                             <include-form name="ListEfDocumentRequests"
                                           location="component://efinance/widget/EfinanceAdminForms.xml"/>
                         </screenlet>
@@ -166,6 +210,7 @@ under the License.
         <section>
             <actions>
                 <set field="titleProperty" value="EfinanceFindServiceRequest"/>
+                <set field="headerItem" value="ServiceRequests"/>
                 <entity-condition entity-name="EfServiceRequest" list="efServiceRequests">
                     <order-by field-name="-requestedDate"/>
                 </entity-condition>
@@ -173,7 +218,7 @@ under the License.
             <widgets>
                 <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="body">
-                        <screenlet title="eFinance Service Requests">
+                        <screenlet title="${uiLabelMap.EfinanceFindServiceRequest}">
                             <include-form name="ListEfServiceRequests"
                                           location="component://efinance/widget/EfinanceAdminForms.xml"/>
                         </screenlet>
@@ -187,6 +232,7 @@ under the License.
         <section>
             <actions>
                 <set field="titleProperty" value="EfinanceViewServiceRequest"/>
+                <set field="headerItem" value="ServiceRequests"/>
                 <entity-one entity-name="EfServiceRequest" value-field="efServiceRequest">
                     <field-map field-name="serviceRequestId" from-field="parameters.serviceRequestId"/>
                 </entity-one>
@@ -194,7 +240,7 @@ under the License.
             <widgets>
                 <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="body">
-                        <screenlet title="eFinance Service Request">
+                        <screenlet title="${uiLabelMap.EfinanceViewServiceRequest}">
                             <include-form name="ViewEfServiceRequest"
                                           location="component://efinance/widget/EfinanceAdminForms.xml"/>
                         </screenlet>
@@ -209,6 +255,7 @@ under the License.
         <section>
             <actions>
                 <set field="titleProperty" value="EfinanceFindDirectDebit"/>
+                <set field="headerItem" value="DirectDebits"/>
                 <entity-condition entity-name="EfDirectDebitMandate" list="efDirectDebits">
                     <order-by field-name="-requestedDate"/>
                 </entity-condition>
@@ -216,7 +263,7 @@ under the License.
             <widgets>
                 <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="body">
-                        <screenlet title="eFinance Direct Debit Mandates">
+                        <screenlet title="${uiLabelMap.EfinanceFindDirectDebit}">
                             <include-form name="ListEfDirectDebits"
                                           location="component://efinance/widget/EfinanceAdminForms.xml"/>
                         </screenlet>
@@ -230,6 +277,7 @@ under the License.
         <section>
             <actions>
                 <set field="titleProperty" value="EfinanceViewDirectDebit"/>
+                <set field="headerItem" value="DirectDebits"/>
                 <entity-one entity-name="EfDirectDebitMandate" value-field="efDirectDebit">
                     <field-map field-name="mandateId" from-field="parameters.mandateId"/>
                 </entity-one>
@@ -237,7 +285,7 @@ under the License.
             <widgets>
                 <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="body">
-                        <screenlet title="eFinance Direct Debit Mandate">
+                        <screenlet title="${uiLabelMap.EfinanceViewDirectDebit}">
                             <include-form name="UpdateEfDirectDebit"
                                           location="component://efinance/widget/EfinanceAdminForms.xml"/>
                         </screenlet>
@@ -252,13 +300,14 @@ under the License.
         <section>
             <actions>
                 <set field="titleProperty" value="EfinanceFindAuditLog"/>
+                <set field="headerItem" value="AuditLog"/>
                 <service service-name="efListAuditLogs" result-map="auditLogResult" auto-field-map="true"/>
                 <set field="auditLogs" type="List" from-field="auditLogResult.auditLogs"/>
             </actions>
             <widgets>
                 <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="body">
-                        <screenlet title="eFinance Audit Logs">
+                        <screenlet title="${uiLabelMap.EfinanceFindAuditLog}">
                             <include-form name="FindEfAuditLog"
                                           location="component://efinance/widget/EfinanceAdminForms.xml"/>
                             <include-form name="ListEfAuditLogs"

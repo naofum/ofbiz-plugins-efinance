@@ -274,6 +274,19 @@ under the License.
         <attribute name="auditLogs" type="List" mode="OUT" optional="true"/>
     </service>
 
+    <service name="efGetAdminDashboard" engine="java" auth="true" export="false"
+             location="org.apache.ofbiz.efinance.admin.EfAdminServices" invoke="efGetAdminDashboard">
+        <description>Summary counts for the eFinance admin dashboard.</description>
+        <permission-service service-name="efinanceAdminPermission"/>
+        <attribute name="memberCount" type="Long" mode="OUT" optional="true"/>
+        <attribute name="activeMemberCount" type="Long" mode="OUT" optional="true"/>
+        <attribute name="lockedMemberCount" type="Long" mode="OUT" optional="true"/>
+        <attribute name="kycPendingCount" type="Long" mode="OUT" optional="true"/>
+        <attribute name="documentRequestPendingCount" type="Long" mode="OUT" optional="true"/>
+        <attribute name="openServiceRequestCount" type="Long" mode="OUT" optional="true"/>
+        <attribute name="directDebitPendingCount" type="Long" mode="OUT" optional="true"/>
+    </service>
+
     <!-- ========================================================= -->
     <!-- W1: Product catalog (no auth)                            -->
     <!-- ========================================================= -->
