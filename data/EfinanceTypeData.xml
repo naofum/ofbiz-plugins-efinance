@@ -48,6 +48,7 @@ under the License.
     <EnumerationType enumTypeId="EFMBR_TYPE" description="eFinance member type"/>
     <Enumeration enumId="EFMBR_PERSONAL" enumTypeId="EFMBR_TYPE" enumCode="PERSONAL" sequenceId="01" description="Personal"/>
     <Enumeration enumId="EFMBR_CORP_USER" enumTypeId="EFMBR_TYPE" enumCode="CORPORATE_USER" sequenceId="02" description="Corporate user"/>
+    <Enumeration enumId="EFMBR_DEALER" enumTypeId="EFMBR_TYPE" enumCode="DEALER" sequenceId="03" description="Dealer staff"/>
 
     <EnumerationType enumTypeId="EFMFA_METHOD" description="eFinance MFA method"/>
     <Enumeration enumId="EFMFA_EMAIL" enumTypeId="EFMFA_METHOD" enumCode="EMAIL" sequenceId="01" description="Email OTP"/>
@@ -102,12 +103,15 @@ under the License.
     <!-- ========================================================= -->
     <SecurityPermission permissionId="EFINANCE_ADMIN" description="Administer the eFinance portal"/>
     <SecurityPermission permissionId="EFINANCE_CUSTOMER" description="Customer operations in the eFinance portal"/>
+    <SecurityPermission permissionId="EFINANCE_DEALER" description="Dealer operations in the eFinance portal"/>
 
     <SecurityGroup groupId="EF_ADMIN_GROUP" groupName="eFinance Admin" description="eFinance administrator group"/>
     <SecurityGroup groupId="EF_CUSTOMER_GROUP" groupName="eFinance Customer" description="eFinance customer group"/>
+    <SecurityGroup groupId="EF_DEALER_GROUP" groupName="eFinance Dealer" description="eFinance dealer group"/>
 
     <SecurityGroupPermission groupId="EF_ADMIN_GROUP" permissionId="EFINANCE_ADMIN" fromDate="2026-10-21 00:00:00.0"/>
     <SecurityGroupPermission groupId="EF_CUSTOMER_GROUP" permissionId="EFINANCE_CUSTOMER" fromDate="2026-10-21 00:00:00.0"/>
+    <SecurityGroupPermission groupId="EF_DEALER_GROUP" permissionId="EFINANCE_DEALER" fromDate="2026-10-21 00:00:00.0"/>
     <SecurityGroupPermission groupId="SUPER" permissionId="EFINANCE_ADMIN" fromDate="2026-10-21 00:00:00.0"/>
 
     <!-- ========================================================= -->
@@ -152,6 +156,7 @@ under the License.
     <EnumerationType enumTypeId="EFAPP_SOURCE" description="eFinance application source"/>
     <Enumeration enumId="EFSRC_DIRECT" enumTypeId="EFAPP_SOURCE" enumCode="DIRECT" sequenceId="01" description="Direct (portal)"/>
     <Enumeration enumId="EFSRC_PARTNER" enumTypeId="EFAPP_SOURCE" enumCode="PARTNER" sequenceId="02" description="Partner/affiliate"/>
+    <Enumeration enumId="EFSRC_DEALER" enumTypeId="EFAPP_SOURCE" enumCode="DEALER" sequenceId="03" description="Dealer"/>
 
     <!-- W2 Audit actions -->
     <Enumeration enumId="EFAUD_DRAFT_CREATE" enumTypeId="EFAUDIT_ACTION" enumCode="DRAFT_CREATE" sequenceId="11" description="Draft created"/>
@@ -297,6 +302,9 @@ under the License.
     <Enumeration enumId="EFAUD_CORP_USER_SAVE" enumTypeId="EFAUDIT_ACTION" enumCode="CORP_USER_SAVE" sequenceId="57" description="Corporate member role saved"/>
     <Enumeration enumId="EFAUD_DD_REQUEST" enumTypeId="EFAUDIT_ACTION" enumCode="DD_REQUEST" sequenceId="58" description="Direct debit mandate requested"/>
     <Enumeration enumId="EFAUD_DD_UPDATE" enumTypeId="EFAUDIT_ACTION" enumCode="DD_UPDATE" sequenceId="59" description="Direct debit mandate status updated"/>
+    <Enumeration enumId="EFAUD_DEALER_CREATE" enumTypeId="EFAUDIT_ACTION" enumCode="DEALER_CREATE" sequenceId="60" description="Dealer account created"/>
+    <Enumeration enumId="EFAUD_DEALER_USER" enumTypeId="EFAUDIT_ACTION" enumCode="DEALER_USER" sequenceId="61" description="Dealer user saved"/>
+    <Enumeration enumId="EFAUD_DEALER_CONSENT" enumTypeId="EFAUDIT_ACTION" enumCode="DEALER_CONSENT" sequenceId="62" description="Dealer customer consent saved"/>
 
     <!-- W7 direct debit mandate status and account types -->
     <StatusType statusTypeId="EFDD_STATUS" description="eFinance direct debit mandate status" hasTable="N"/>
@@ -318,6 +326,15 @@ under the License.
     <StatusValidChange statusId="EFREQ_IN_PROGRESS" statusIdTo="EFREQ_COMPLETED" transitionName="Complete"/>
     <StatusValidChange statusId="EFREQ_IN_PROGRESS" statusIdTo="EFREQ_FAILED" transitionName="Fail"/>
     <StatusValidChange statusId="EFREQ_FAILED" statusIdTo="EFREQ_IN_PROGRESS" transitionName="Retry"/>
+
+    <!-- W8 dealer status and customer consent status -->
+    <StatusType statusTypeId="EFDEALER_STATUS" description="eFinance dealer status" hasTable="N"/>
+    <StatusItem statusId="EFDEALER_ACTIVE" statusTypeId="EFDEALER_STATUS" statusCode="ACTIVE" sequenceId="01" description="Active"/>
+    <StatusItem statusId="EFDEALER_SUSPENDED" statusTypeId="EFDEALER_STATUS" statusCode="SUSPENDED" sequenceId="02" description="Suspended"/>
+    <StatusType statusTypeId="EFDEALER_CONSENT" description="eFinance dealer customer consent status" hasTable="N"/>
+    <StatusItem statusId="EFDEALER_CONSENT_OK" statusTypeId="EFDEALER_CONSENT" statusCode="ACTIVE" sequenceId="01" description="Active"/>
+    <StatusItem statusId="EFDEALER_CONSENT_NO" statusTypeId="EFDEALER_CONSENT" statusCode="REVOKED" sequenceId="02" description="Revoked"/>
+    <StatusValidChange statusId="EFDEALER_CONSENT_OK" statusIdTo="EFDEALER_CONSENT_NO" transitionName="Revoke"/>
 
     <!-- ========================================================= -->
     <!-- Dynamic application form fields (application-type default) -->

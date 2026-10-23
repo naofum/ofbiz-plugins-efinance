@@ -430,6 +430,10 @@ under the License.
         <value xml:lang="en">The uploaded file failed the security scan.</value>
         <value xml:lang="ja">アップロードされたファイルは安全確認に失敗しました。</value>
     </property>
+    <property key="EfinanceDealerPermissionError">
+        <value xml:lang="en">You do not have permission for this dealer operation.</value>
+        <value xml:lang="ja">この販売店操作の権限がありません。</value>
+    </property>
 
     <!-- W6: MyPage labels -->
     <property key="EfinanceContractNotFound">

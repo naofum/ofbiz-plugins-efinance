@@ -58,4 +58,11 @@ under the License.
         server="default-server"
         location="webapp/portal"
         mount-point="/portal"/>
+
+    <!-- dealer portal web application (W8) -->
+    <webapp name="dealer"
+        title="eFinance Dealer Portal"
+        server="default-server"
+        location="webapp/dealer"
+        mount-point="/dealer"/>
 </ofbiz-component>

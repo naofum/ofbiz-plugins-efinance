@@ -85,7 +85,7 @@ class EfCatalogTests extends OFBizTestCase {
             ])
             assert !ServiceUtil.isSuccess(result)
         } finally {
-            delegator.removeByAnd('EfRateLimitBucket', [bucketId: bucketId])
+            // The test transaction is rolled back by the test framework.
         }
     }
 

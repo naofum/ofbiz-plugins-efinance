@@ -254,8 +254,9 @@ under the License.
     <entity entity-name="EfApplicationDraft" package-name="org.apache.ofbiz.efinance.application"
             title="eFinance application draft">
         <field name="draftId" type="id"><description>sequenced</description></field>
-        <field name="memberPartyId" type="id"><description>EfMember.partyId</description></field>
+        <field name="memberPartyId" type="id"><description>EfMember.partyId (applicant)</description></field>
         <field name="corporatePartyId" type="id"><description>for corporate applications</description></field>
+        <field name="dealerPartyId" type="id"><description>dealer proxy application owner, if any</description></field>
         <field name="productId" type="id"/>
         <field name="applicationTypeId" type="id"><description>LOAN or LEASE</description></field>
         <field name="currentStep" type="numeric"><description>1-based step number</description></field>
@@ -278,6 +279,70 @@ under the License.
         <index name="EFDRF_MBR_IDX"><index-field name="memberPartyId"/></index>
         <index name="EFDRF_PROD_IDX"><index-field name="productId"/></index>
         <index name="EFDRF_STS_IDX"><index-field name="statusId"/></index>
+        <index name="EFDRF_DLR_IDX"><index-field name="dealerPartyId"/></index>
+    </entity>
+
+    <!-- ========================================================= -->
+    <!-- W8 dealer portal                                          -->
+    <!-- ========================================================= -->
+    <entity entity-name="EfDealer" package-name="org.apache.ofbiz.efinance.dealer"
+            title="eFinance dealer account">
+        <field name="dealerPartyId" type="id"><description>Party (PARTY_GROUP) of the dealer</description></field>
+        <field name="dealerCode" type="short-varchar"/>
+        <field name="dealerName" type="short-varchar"/>
+        <field name="statusId" type="id"><description>EFDEALER_STATUS</description></field>
+        <field name="createdDate" type="date-time"/>
+        <prim-key field="dealerPartyId"/>
+        <relation type="one" fk-name="EFDEALER_PTY" rel-entity-name="Party">
+            <key-map field-name="dealerPartyId" rel-field-name="partyId"/>
+        </relation>
+        <index name="EFDEALER_CODE_UQ" unique="true"><index-field name="dealerCode"/></index>
+        <index name="EFDEALER_STS_IDX"><index-field name="statusId"/></index>
+    </entity>
+
+    <entity entity-name="EfDealerUser" package-name="org.apache.ofbiz.efinance.dealer"
+            title="eFinance dealer staff member">
+        <field name="dealerPartyId" type="id"/>
+        <field name="memberPartyId" type="id"/>
+        <field name="fromDate" type="date-time"/>
+        <field name="roleApply" type="indicator"/>
+        <field name="roleView" type="indicator"/>
+        <field name="rolePayment" type="indicator"/>
+        <field name="roleAdmin" type="indicator"/>
+        <field name="thruDate" type="date-time"/>
+        <prim-key field="dealerPartyId"/>
+        <prim-key field="memberPartyId"/>
+        <prim-key field="fromDate"/>
+        <relation type="one" fk-name="EFDEALERU_DLR" rel-entity-name="EfDealer">
+            <key-map field-name="dealerPartyId"/>
+        </relation>
+        <relation type="one" fk-name="EFDEALERU_MBR" rel-entity-name="Party">
+            <key-map field-name="memberPartyId" rel-field-name="partyId"/>
+        </relation>
+        <index name="EFDEALERU_MBR_IDX"><index-field name="memberPartyId"/></index>
+    </entity>
+
+    <entity entity-name="EfDealerCustomer" package-name="org.apache.ofbiz.efinance.dealer"
+            title="eFinance dealer customer consent">
+        <field name="dealerPartyId" type="id"/>
+        <field name="customerPartyId" type="id"/>
+        <field name="statusId" type="id"><description>EFDEALER_CONSENT_STATUS</description></field>
+        <field name="consentReference" type="short-varchar"><description>signed consent / document reference</description></field>
+        <field name="consentDate" type="date-time"/>
+        <field name="fromDate" type="date-time"/>
+        <field name="thruDate" type="date-time"/>
+        <field name="createdByPartyId" type="id"/>
+        <field name="createdDate" type="date-time"/>
+        <prim-key field="dealerPartyId"/>
+        <prim-key field="customerPartyId"/>
+        <relation type="one" fk-name="EFDEALERC_DLR" rel-entity-name="EfDealer">
+            <key-map field-name="dealerPartyId"/>
+        </relation>
+        <relation type="one" fk-name="EFDEALERC_CUST" rel-entity-name="Party">
+            <key-map field-name="customerPartyId" rel-field-name="partyId"/>
+        </relation>
+        <index name="EFDEALERC_CUST_IDX"><index-field name="customerPartyId"/></index>
+        <index name="EFDEALERC_STS_IDX"><index-field name="statusId"/></index>
     </entity>
 
     <entity entity-name="EfFormField" package-name="org.apache.ofbiz.efinance.application"
@@ -339,6 +404,7 @@ under the License.
         <field name="draftId" type="id"/>
         <field name="memberPartyId" type="id"/>
         <field name="corporatePartyId" type="id"/>
+        <field name="dealerPartyId" type="id"><description>dealer that submitted on behalf, if any</description></field>
         <field name="financeApplicationId" type="id"><description>loanApplicationId or leaseApplicationId</description></field>
         <field name="financeApplicationTypeId" type="id"><description>LOAN or LEASE</description></field>
         <field name="linkedDate" type="date-time"/>
@@ -351,6 +417,7 @@ under the License.
         </relation>
         <index name="EFLINK_MBR_IDX"><index-field name="memberPartyId"/></index>
         <index name="EFLINK_DRF_IDX"><index-field name="draftId"/></index>
+        <index name="EFLINK_DLR_IDX"><index-field name="dealerPartyId"/></index>
     </entity>
 
     <entity entity-name="EfFraudCheck" package-name="org.apache.ofbiz.efinance.application"

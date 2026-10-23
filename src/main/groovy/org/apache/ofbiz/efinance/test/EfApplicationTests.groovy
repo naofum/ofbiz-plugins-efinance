@@ -113,7 +113,7 @@ class EfApplicationTests extends OFBizTestCase {
             assert r.formSource == 'DB'
             assert r.steps[0].fields.any { it.fieldName == 'promotionCode' }
         } finally {
-            delegator.removeByAnd('EfFormField', [formFieldId: fieldId])
+            // The test transaction is rolled back by the test framework.
         }
     }
 

@@ -35,6 +35,8 @@ under the License.
                enabled="Y" hasLoggedOut="N"/>
     <UserLoginSecurityGroup userLoginId="test-ef-customer" groupId="EF_CUSTOMER_GROUP"
                             fromDate="2026-10-21 00:00:00.0"/>
+    <UserLoginSecurityGroup userLoginId="test-ef-customer" groupId="EF_DEALER_GROUP"
+                            fromDate="2026-10-21 00:00:00.0"/>
 
     <!-- Test EfMember (pre-activated for functional tests) -->
     <EfMember partyId="TEST_EF_CUST" userLoginId="test-ef-customer"

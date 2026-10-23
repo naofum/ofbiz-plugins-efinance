@@ -176,6 +176,82 @@ public final class EfAccessGuard {
         return hasCorporateRole(delegator, corporatePartyId, memberPartyId, "roleAdmin");
     }
 
+    /** True when the member has the requested role in an active dealer account. */
+    public static boolean hasDealerRole(Delegator delegator, String dealerPartyId, String memberPartyId,
+            String roleField) throws GenericEntityException {
+        if (UtilValidate.isEmpty(dealerPartyId) || UtilValidate.isEmpty(memberPartyId)
+                || UtilValidate.isEmpty(roleField)) {
+            return false;
+        }
+        GenericValue dealer = EntityQuery.use(delegator).from("EfDealer")
+                .where("dealerPartyId", dealerPartyId, "statusId", "EFDEALER_ACTIVE").queryOne();
+        if (dealer == null) {
+            return false;
+        }
+        Timestamp now = UtilDateTime.nowTimestamp();
+        return EntityQuery.use(delegator).from("EfDealerUser")
+                .where(EntityCondition.makeCondition(EntityOperator.AND,
+                        EntityCondition.makeCondition("dealerPartyId", dealerPartyId),
+                        EntityCondition.makeCondition("memberPartyId", memberPartyId),
+                        EntityCondition.makeCondition(roleField, "Y"),
+                        EntityCondition.makeCondition("fromDate",
+                                EntityOperator.LESS_THAN_EQUAL_TO, now),
+                        EntityCondition.makeCondition(EntityOperator.OR,
+                                EntityCondition.makeCondition("thruDate", EntityOperator.EQUALS, null),
+                                EntityCondition.makeCondition("thruDate",
+                                        EntityOperator.GREATER_THAN_EQUAL_TO, now))))
+                .queryFirst() != null;
+    }
+
+    /** Active dealer accounts in which the member has the requested role. */
+    public static List<String> getDealerPartyIds(Delegator delegator, String memberPartyId,
+            String roleField) throws GenericEntityException {
+        if (UtilValidate.isEmpty(memberPartyId) || UtilValidate.isEmpty(roleField)) {
+            return new ArrayList<>();
+        }
+        Timestamp now = UtilDateTime.nowTimestamp();
+        List<GenericValue> users = EntityQuery.use(delegator).from("EfDealerUser")
+                .where(EntityCondition.makeCondition(EntityOperator.AND,
+                        EntityCondition.makeCondition("memberPartyId", memberPartyId),
+                        EntityCondition.makeCondition(roleField, "Y"),
+                        EntityCondition.makeCondition("fromDate",
+                                EntityOperator.LESS_THAN_EQUAL_TO, now),
+                        EntityCondition.makeCondition(EntityOperator.OR,
+                                EntityCondition.makeCondition("thruDate", EntityOperator.EQUALS, null),
+                                EntityCondition.makeCondition("thruDate",
+                                        EntityOperator.GREATER_THAN_EQUAL_TO, now))))
+                .queryList();
+        List<String> dealerPartyIds = new ArrayList<>();
+        for (GenericValue user : users) {
+            String dealerPartyId = user.getString("dealerPartyId");
+            GenericValue dealer = EntityQuery.use(delegator).from("EfDealer")
+                    .where("dealerPartyId", dealerPartyId, "statusId", "EFDEALER_ACTIVE").queryOne();
+            if (dealer != null) {
+                dealerPartyIds.add(dealerPartyId);
+            }
+        }
+        return dealerPartyIds;
+    }
+
+    /** True when the dealer has an active customer-consent record. */
+    public static boolean isDealerCustomer(Delegator delegator, String dealerPartyId,
+            String customerPartyId) throws GenericEntityException {
+        if (UtilValidate.isEmpty(dealerPartyId) || UtilValidate.isEmpty(customerPartyId)) {
+            return false;
+        }
+        Timestamp now = UtilDateTime.nowTimestamp();
+        return EntityQuery.use(delegator).from("EfDealerCustomer")
+                .where(EntityCondition.makeCondition(EntityOperator.AND,
+                        EntityCondition.makeCondition("dealerPartyId", dealerPartyId),
+                        EntityCondition.makeCondition("customerPartyId", customerPartyId),
+                        EntityCondition.makeCondition("statusId", "EFDEALER_CONSENT_OK"),
+                        EntityCondition.makeCondition(EntityOperator.OR,
+                                EntityCondition.makeCondition("thruDate", EntityOperator.EQUALS, null),
+                                EntityCondition.makeCondition("thruDate",
+                                        EntityOperator.GREATER_THAN_EQUAL_TO, now))))
+                .queryFirst() != null;
+    }
+
     /**
      * True when the member owns the draft personally, or has the requested
      * role on the draft's corporate account.
@@ -187,6 +263,11 @@ public final class EfAccessGuard {
         }
         if (partyId.equals(draft.getString("memberPartyId"))) {
             return true;
+        }
+        String dealerPartyId = draft.getString("dealerPartyId");
+        if (UtilValidate.isNotEmpty(dealerPartyId)
+                && isDealerCustomer(delegator, dealerPartyId, draft.getString("memberPartyId"))) {
+            return hasDealerRole(delegator, dealerPartyId, partyId, roleField);
         }
         String corporatePartyId = draft.getString("corporatePartyId");
         if (UtilValidate.isEmpty(corporatePartyId)) {
@@ -223,6 +304,11 @@ public final class EfAccessGuard {
         }
         if (partyId.equals(ownerPartyId)) {
             return true;
+        }
+        for (String dealerPartyId : getDealerPartyIds(delegator, partyId, roleField)) {
+            if (isDealerCustomer(delegator, dealerPartyId, ownerPartyId)) {
+                return true;
+            }
         }
         return hasCorporateRole(delegator, ownerPartyId, partyId, roleField);
     }

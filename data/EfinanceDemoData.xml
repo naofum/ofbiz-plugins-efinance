@@ -174,4 +174,31 @@ under the License.
                            notificationTypeEnumId="EFNOTIF_INFO"
                            emailEnabled="Y" smsEnabled="Y" pushEnabled="N"
                            lastModifiedDate="2026-10-01 00:00:00.0"/>
+
+    <!-- W8 demo dealer. Login: demo-ef-dealer / ofbiz -->
+    <Party partyId="DEMO_EF_DEALER" partyTypeId="PARTY_GROUP"/>
+    <PartyGroup partyId="DEMO_EF_DEALER" groupName="Demo Dealer"/>
+    <Party partyId="DEMO_EF_DEALER_USER" partyTypeId="PERSON"/>
+    <Person partyId="DEMO_EF_DEALER_USER" firstName="Dealer" lastName="Demo"
+            birthDate="1980-01-01" gender="M"/>
+    <UserLogin userLoginId="demo-ef-dealer" partyId="DEMO_EF_DEALER_USER"
+               currentPassword="{SHA}47b56994cbc2b6d10aa1be30f70165adb305a41a"
+               enabled="Y" hasLoggedOut="N"/>
+    <UserLoginSecurityGroup userLoginId="demo-ef-dealer" groupId="EF_DEALER_GROUP"
+                            fromDate="2026-10-01 00:00:00.0"/>
+    <EfMember partyId="DEMO_EF_DEALER_USER" userLoginId="demo-ef-dealer"
+              memberTypeEnumId="EFMBR_DEALER" statusId="EFMBR_ACTIVE"
+              mfaMethodEnumId="EFMFA_NONE" createdDate="2026-10-01 00:00:00.0"
+              emailVerifiedDate="2026-10-01 00:00:00.0"/>
+    <EfDealer dealerPartyId="DEMO_EF_DEALER" dealerCode="DEMO_DEALER"
+              dealerName="Demo Dealer" statusId="EFDEALER_ACTIVE"
+              createdDate="2026-10-01 00:00:00.0"/>
+    <EfDealerUser dealerPartyId="DEMO_EF_DEALER" memberPartyId="DEMO_EF_DEALER_USER"
+                  fromDate="2026-10-01 00:00:00.0" roleApply="Y" roleView="Y"
+                  rolePayment="N" roleAdmin="Y"/>
+    <EfDealerCustomer dealerPartyId="DEMO_EF_DEALER" customerPartyId="DEMO_EF_CUST"
+                      statusId="EFDEALER_CONSENT_OK" consentReference="DEMO-DEALER-CONSENT"
+                      consentDate="2026-10-01 00:00:00.0" fromDate="2026-10-01 00:00:00.0"
+                      createdByPartyId="DEMO_EF_DEALER_USER"
+                      createdDate="2026-10-01 00:00:00.0"/>
 </entity-engine-xml>

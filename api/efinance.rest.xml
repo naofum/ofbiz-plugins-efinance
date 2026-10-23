@@ -330,6 +330,57 @@ under the License.
         </operation>
     </resource>
 
+    <resource name="adminDealers" path="/ef/admin/dealers" auth="true">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efCreateDealer"/>
+        </operation>
+    </resource>
+    <resource name="dealerProfile" path="/ef/dealer/profile" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efGetDealerProfile"/>
+        </operation>
+    </resource>
+    <resource name="dealerUsers" path="/ef/dealer/{dealerPartyId}/users" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efListDealerUsers"/>
+        </operation>
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efAddDealerUser"/>
+        </operation>
+    </resource>
+    <resource name="dealerCustomers" path="/ef/dealer/{dealerPartyId}/customers" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efListDealerCustomers"/>
+        </operation>
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efRegisterDealerCustomer"/>
+        </operation>
+    </resource>
+    <resource name="dealerCustomerRevoke"
+              path="/ef/dealer/{dealerPartyId}/customers/{customerPartyId}/revoke" auth="true">
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efRevokeDealerCustomer"/>
+        </operation>
+    </resource>
+    <resource name="dealerDrafts" path="/ef/dealer/{dealerPartyId}/drafts" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efListDealerDrafts"/>
+        </operation>
+        <operation verb="post" consumes="application/json" produces="application/json">
+            <service name="efCreateDealerDraft"/>
+        </operation>
+    </resource>
+    <resource name="dealerApplications" path="/ef/dealer/{dealerPartyId}/applications" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efListDealerApplications"/>
+        </operation>
+    </resource>
+    <resource name="dealerContracts" path="/ef/dealer/{dealerPartyId}/contracts" auth="true">
+        <operation verb="get" produces="application/json">
+            <service name="efListDealerContracts"/>
+        </operation>
+    </resource>
+
     <resource name="corporateAccounts" path="/ef/corporate/accounts" auth="true">
         <operation verb="get" produces="application/json">
             <service name="efListCorporateAccounts"/>

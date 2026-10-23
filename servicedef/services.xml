@@ -42,6 +42,14 @@ under the License.
         <attribute name="failMessage" type="String" mode="OUT" optional="true"/>
     </service>
 
+    <service name="efinanceDealerPermission" engine="simple" auth="true" export="false"
+             location="component://efinance/minilang/EfinancePermissionServices.xml"
+             invoke="efinanceDealerPermission">
+        <description>Check whether the current user has EFINANCE_DEALER or EFINANCE_ADMIN permission</description>
+        <attribute name="hasPermission" type="Boolean" mode="OUT" optional="false"/>
+        <attribute name="failMessage" type="String" mode="OUT" optional="true"/>
+    </service>
+
     <!-- ========================================================= -->
     <!-- Member registration and authentication                    -->
     <!-- ========================================================= -->
@@ -876,6 +884,111 @@ under the License.
         <attribute name="emailEnabled" type="Boolean" mode="IN" optional="true"/>
         <attribute name="smsEnabled" type="Boolean" mode="IN" optional="true"/>
         <attribute name="pushEnabled" type="Boolean" mode="IN" optional="true"/>
+    </service>
+
+    <!-- ========================================================= -->
+    <!-- W8: dealer portal                                         -->
+    <!-- ========================================================= -->
+    <service name="efGetDealerProfile" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.dealer.EfDealerServices" invoke="efGetDealerProfile">
+        <description>List dealer accounts and roles for the logged-in dealer staff.</description>
+        <permission-service service-name="efinanceDealerPermission"/>
+        <attribute name="dealers" type="List" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efCreateDealer" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.dealer.EfDealerServices" invoke="efCreateDealer">
+        <description>Create a dealer account (efinance administrator).</description>
+        <permission-service service-name="efinanceAdminPermission"/>
+        <attribute name="dealerName" type="String" mode="IN" optional="false"/>
+        <attribute name="dealerCode" type="String" mode="IN" optional="false"/>
+        <attribute name="adminPartyId" type="String" mode="IN" optional="true"/>
+        <attribute name="dealerPartyId" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efAddDealerUser" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.dealer.EfDealerServices" invoke="efAddDealerUser">
+        <description>Add or update a dealer staff member and roles.</description>
+        <permission-service service-name="efinanceDealerPermission"/>
+        <attribute name="dealerPartyId" type="String" mode="IN" optional="false"/>
+        <attribute name="memberPartyId" type="String" mode="IN" optional="false"/>
+        <attribute name="roleApply" type="Boolean" mode="IN" optional="true"/>
+        <attribute name="roleView" type="Boolean" mode="IN" optional="true"/>
+        <attribute name="rolePayment" type="Boolean" mode="IN" optional="true"/>
+        <attribute name="roleAdmin" type="Boolean" mode="IN" optional="true"/>
+        <attribute name="dealerPartyId" type="String" mode="OUT" optional="true"/>
+        <attribute name="memberPartyId" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efListDealerUsers" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.dealer.EfDealerServices" invoke="efListDealerUsers">
+        <description>List staff of a dealer.</description>
+        <permission-service service-name="efinanceDealerPermission"/>
+        <attribute name="dealerPartyId" type="String" mode="IN" optional="false"/>
+        <attribute name="users" type="List" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efRegisterDealerCustomer" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.dealer.EfDealerServices" invoke="efRegisterDealerCustomer">
+        <description>Record customer consent for dealer assistance.</description>
+        <permission-service service-name="efinanceDealerPermission"/>
+        <attribute name="dealerPartyId" type="String" mode="IN" optional="false"/>
+        <attribute name="customerPartyId" type="String" mode="IN" optional="false"/>
+        <attribute name="consentReference" type="String" mode="IN" optional="false"/>
+        <attribute name="statusId" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efRevokeDealerCustomer" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.dealer.EfDealerServices" invoke="efRevokeDealerCustomer">
+        <description>Revoke a dealer customer consent.</description>
+        <permission-service service-name="efinanceDealerPermission"/>
+        <attribute name="dealerPartyId" type="String" mode="IN" optional="false"/>
+        <attribute name="customerPartyId" type="String" mode="IN" optional="false"/>
+    </service>
+
+    <service name="efListDealerCustomers" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.dealer.EfDealerServices" invoke="efListDealerCustomers">
+        <description>List customers who consented to dealer assistance.</description>
+        <permission-service service-name="efinanceDealerPermission"/>
+        <attribute name="dealerPartyId" type="String" mode="IN" optional="false"/>
+        <attribute name="customers" type="List" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efCreateDealerDraft" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.dealer.EfDealerServices" invoke="efCreateDealerDraft">
+        <description>Create an application draft on behalf of a consenting customer.</description>
+        <permission-service service-name="efinanceDealerPermission"/>
+        <attribute name="dealerPartyId" type="String" mode="IN" optional="false"/>
+        <attribute name="customerPartyId" type="String" mode="IN" optional="false"/>
+        <attribute name="productId" type="String" mode="IN" optional="false"/>
+        <attribute name="applicationTypeId" type="String" mode="IN" optional="false"/>
+        <attribute name="draftId" type="String" mode="OUT" optional="true"/>
+        <attribute name="expiresAt" type="Timestamp" mode="OUT" optional="true"/>
+        <attribute name="existingDraft" type="Boolean" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efListDealerDrafts" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.dealer.EfDealerServices" invoke="efListDealerDrafts">
+        <description>List dealer-created editable drafts.</description>
+        <permission-service service-name="efinanceDealerPermission"/>
+        <attribute name="dealerPartyId" type="String" mode="IN" optional="false"/>
+        <attribute name="drafts" type="List" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efListDealerApplications" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.dealer.EfDealerServices" invoke="efListDealerApplications">
+        <description>List applications of consenting dealer customers.</description>
+        <permission-service service-name="efinanceDealerPermission"/>
+        <attribute name="dealerPartyId" type="String" mode="IN" optional="false"/>
+        <attribute name="applications" type="List" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efListDealerContracts" engine="java" auth="true" export="true"
+             location="org.apache.ofbiz.efinance.dealer.EfDealerServices" invoke="efListDealerContracts">
+        <description>List contracts of consenting dealer customers.</description>
+        <permission-service service-name="efinanceDealerPermission"/>
+        <attribute name="dealerPartyId" type="String" mode="IN" optional="false"/>
+        <attribute name="contracts" type="List" mode="OUT" optional="true"/>
     </service>
 
 </services>

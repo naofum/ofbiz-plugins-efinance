@@ -2,7 +2,7 @@
 
 `REQUIREMENTS_EFINANCE.md` の要件に対する設計。各 STEP の実装後に「実装」「テスト」「検証」を追記する。
 
-> **状態：W0〜W7 の API・DB は実装済み（2026-10-23 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト（CORS・エラーチェーンを含む）、JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）、口座振替・振込案内、冪等性・重複下書き防止・レート制限、ファイルスキャン Adapter、`EfFormField` による商品別フォーム定義、公開シミュレーションの IP レート制限を追加した。最新のテストは **79 件成功（errors="0" / failures="0"）**。残る主要ギャップは W8 販売店ポータル、W9 提携先組込み・チャット。
+> **状態：W0〜W8 の API・DB は実装済み（2026-10-23 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト（CORS・エラーチェーンを含む）、JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）、口座振替・振込案内、冪等性・重複下書き防止・レート制限、ファイルスキャン Adapter、`EfFormField` による商品別フォーム定義、公開シミュレーションの IP レート制限、`/dealer` 販売店ポータルを追加した。最新のテストは **81 件成功（errors="0" / failures="0"）**。残る主要ギャップは W9 提携先組込み・チャット。
 
 ## 進捗
 
@@ -16,14 +16,14 @@
 | W5 | 電子契約と電子交付（7 章） | API 実装済み（2026-10-22）。KYC・同意ゲート、JasperReports PDF・電子交付、再認証、`ESignatureAdapter`（クリック同意・外部 HTTP）を追加 |
 | W6 | マイページ（8 章） | API 実装済み（2026-10-22）。support ブリッジ、管理画面（KYC 審査・書類要請一覧・手続き依頼・ロック解除）を追加。タスク自動化は未実装 |
 | W7 | 支払（9 章） | API/DB 実装済み（2026-10-23） |
-| W8 | 販売店のポータル（10 章） | 設計（未着手） |
+| W8 | 販売店のポータル（10 章） | API/DB・サンプル画面 実装済み（2026-10-23） |
 | W9 | 組込み・チャット（10 章） | 設計（未着手） |
 
 ### 実装・テスト・検証（2026-10-21）
 
 | STEP | 実装した主なもの | テスト |
 |------|------------------|--------|
-| W0 | 27 entity のうち会員・法人・OTP・トークン・同意・監査 9 entity、20 サービス（同意文書一覧を含む）、REST 認証、法人サービス、管理画面の会員一覧・詳細・ロック解除 | `EfMemberTests` / `EfCorporateTests` / `EfAuthTests` |
+| W0 | 30 entity のうち会員・法人・OTP・トークン・同意・監査 9 entity、20 サービス（同意文書一覧を含む）、REST 認証、法人サービス、管理画面の会員一覧・詳細・ロック解除 | `EfMemberTests` / `EfCorporateTests` / `EfAuthTests` |
 | W1 | `EfProductPublication`、商品一覧・詳細、ローン・リースシミュレーション、REST 4 本 | `EfCatalogTests` |
 | W2 | `EfApplicationDraft` / `EfDraftDocument` / `EfApplicationLink` / `EfFraudCheck`、下書き CRUD、書類、申込送信、REST 6 本 | `EfApplicationTests` |
 | W3 | `EfKycCheck` / `EfKycImage`、KYC 開始・画像・提出・審査・確認判定、REST 4 本 | `EfKycTests` |
@@ -31,11 +31,12 @@
 | W5 | `EfSigningSession` / `EfDeliveredDocument`、見積受理、署名、契約作成、交付書類、REST 6 本 | `EfContractTests` |
 | W6 | `EfServiceRequest` / `EfNotificationSetting`、申込・契約照会、繰上返済、手続き、メッセージ、通知設定、REST 10 本、support 顧客 API ブリッジ 8 サービス | `EfMyPageTests` / `EfSupportTests` |
 | W7 | `EfDirectDebitMandate`、口座振替依頼・照会、振込案内、担当者登録、REST 2 本、管理画面 | `EfPaymentTests` |
+| W8 | `EfDealer` / `EfDealerUser` / `EfDealerCustomer`、販売店プロフィール、顧客同意、代理下書き、申込・契約照会、`/dealer` サンプル画面 | `EfDealerTests` |
 
-- 全体：**80 サービス**（`auth=true` 68、`auth=false` 12）、**27 entity**、**15 テストクラス / 79 テスト**。
-- 実行：`.\gradlew.bat compileJava compileGroovy` 成功。`.\gradlew.bat "ofbiz --test component=efinance"` で **79 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
+- 全体：**92 サービス**（`auth=true` 80、`auth=false` 12）、**30 entity**、**16 テストクラス / 81 テスト**。
+- 実行：`.\gradlew.bat compileJava compileGroovy` 成功。`.\gradlew.bat "ofbiz --test component=efinance"` で **81 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
 - seed/demo：`data/EfinanceTypeData.xml`（状態・列挙・権限・`efinance-system`・同意文書）、`data/EfinanceDemoData.xml`（公開商品・デモ会員・サンプル申込・契約）、`testdef/data/EfinanceTestData.xml`（テスト会員・KYC/同意フィクスチャ）。
-- **残作業**：W8 販売店ポータル、W9 提携先組込み・チャット。finance 全体回帰は 217 テスト成功、support はユーザー実行で OK。CORS・エラーチェーン・外部署名 HTTP アダプタ・W7 は自動テスト済み。
+- **残作業**：W9 提携先組込み・チャット。finance 全体回帰は 217 テスト成功、support はユーザー実行で OK。CORS・エラーチェーン・外部署名 HTTP アダプタ・W7・W8 は自動テスト済み。
 
 ### 既知のギャップ（重要度順）
 
@@ -214,7 +215,7 @@ rest-api の応答形式（`statusCode`・`statusDescription`・`errorMessage`�
 
 ## 2. データモデル
 
-### 2.1 エンティティ一覧（27）
+### 2.1 エンティティ一覧（30）
 
 | エンティティ | パッケージ | 主キー | 主な項目 |
 |--------------|-----------|--------|----------|
@@ -227,10 +228,13 @@ rest-api の応答形式（`statusCode`・`statusDescription`・`errorMessage`�
 | `EfConsentDocument` | consent | `documentId` | `documentTypeEnumId`、`version`、`language`、`contentId`、`effectiveDate`、`expiresDate` |
 | `EfConsent` | consent | `consentId` | `partyId`、`documentId`、`consentDate`、`ipAddress`、`deviceId`、`revokedDate` |
 | `EfProductPublication` | catalog | `publicationId` | `productId`、`fromDate`、`thruDate`、`displayOrder`、`targetEnumId`、`active` |
-| `EfApplicationDraft` | application | `draftId` | `memberPartyId`、`corporatePartyId`、`productId`、`applicationTypeId`、`currentStep`、`totalSteps`、`draftJson`、`statusId`、`sourceEnumId`、`submittedApplicationId`、`submittedApplicationTypeId`、`expiresAt` |
+| `EfApplicationDraft` | application | `draftId` | `memberPartyId`、`corporatePartyId`、`dealerPartyId`、`productId`、`applicationTypeId`、`currentStep`、`totalSteps`、`draftJson`、`statusId`、`sourceEnumId`、`submittedApplicationId`、`submittedApplicationTypeId`、`expiresAt` |
 | `EfFormField` | application | `formFieldId` | `productId`（`*` は既定）、`applicationTypeId`、`stepNumber`、`stepKey`、`fieldName`、`fieldType`、`requiredFlag`、`label`、`displayOrder`、`optionsJson`、`active` |
+| `EfDealer` | dealer | `dealerPartyId` | `dealerCode`、`dealerName`、`statusId`、`createdDate` |
+| `EfDealerUser` | dealer | `dealerPartyId` + `memberPartyId` + `fromDate` | `roleApply`、`roleView`、`rolePayment`、`roleAdmin`、`thruDate` |
+| `EfDealerCustomer` | dealer | `dealerPartyId` + `customerPartyId` | `statusId`、`consentReference`、`consentDate`、`fromDate`、`thruDate`、`createdByPartyId`、`createdDate` |
 | `EfDraftDocument` | application | `draftDocumentId` | `draftId`、`contentId`、`documentTypeEnumId`、`fileName`、`mimeTypeId`、`fileSizeBytes`、`scanStatus`、`uploadedDate` |
-| `EfApplicationLink` | application | `linkId` | `draftId`、`memberPartyId`、`corporatePartyId`、`financeApplicationId`、`financeApplicationTypeId`、`linkedDate` |
+| `EfApplicationLink` | application | `linkId` | `draftId`、`memberPartyId`、`corporatePartyId`、`dealerPartyId`、`financeApplicationId`、`financeApplicationTypeId`、`linkedDate` |
 | `EfFraudCheck` | application | `fraudCheckId` | `draftId`、`memberPartyId`、`checkDate`、`resultEnumId`、`triggeredRules`、`ipAddress`、`deviceId` |
 | `EfKycCheck` | kyc | `kycCheckId` | `memberPartyId`、`kycSubjectPartyId`、`draftId`、`kycMethodEnumId`、`statusId`、`confirmerPartyId`、`confirmedDate`、`confirmerNote`、`adapterResultCode`、`adapterExternalId`、`expiresDate` |
 | `EfKycImage` | kyc | `kycImageId` | `kycCheckId`、`contentId`、`imageTypeEnumId`、`scanStatus`、`uploadedDate` |
@@ -988,7 +992,29 @@ sequenceDiagram
 
 ---
 
-## 12. support 連携
+## 12. STEP W8 — 販売店ポータル（実装済み）
+
+| エンティティ・API | 内容 |
+|-------------------|------|
+| `EfDealer` | 販売店の Party（`PARTY_GROUP`）、コード、名称、状態 |
+| `EfDealerUser` | 販売店の担当者と `roleApply` / `roleView` / `rolePayment` / `roleAdmin` |
+| `EfDealerCustomer` | 顧客の販売店支援同意。状態 `EFDEALER_CONSENT_OK` / `EFDEALER_CONSENT_NO`、同意書参照、期間 |
+| `efGetDealerProfile` | ログイン中の担当者が属する販売店と権限 |
+| `efCreateDealer` | efinance 管理者による販売店作成 |
+| `efAddDealerUser` / `efListDealerUsers` | 販売店担当者の追加・一覧 |
+| `efRegisterDealerCustomer` / `efRevokeDealerCustomer` / `efListDealerCustomers` | 顧客同意の登録・取消・一覧 |
+| `efCreateDealerDraft` / `efListDealerDrafts` | 同意済み顧客の代理申込下書き |
+| `efListDealerApplications` / `efListDealerContracts` | 同意済み顧客の申込・契約照会 |
+
+- `EfAccessGuard` は `EfDealerUser` と有効な `EfDealerCustomer` を確認する。販売店担当者が顧客の下書き・契約へアクセスできるのは、同意がある顧客だけである。
+- 代理申込の送信は既存 `efSubmitApplication` を使う。申込・同意・不正検知・finance 申込の applicant はログイン担当者ではなく `EfApplicationDraft.memberPartyId` の顧客とし、`EfApplicationLink.dealerPartyId` に販売店を記録する。
+- REST は `/ef/dealer/profile`、`/ef/dealer/{dealerPartyId}/customers`、`/drafts`、`/applications`、`/contracts`、`/users`。
+- サンプル画面は `/dealer`。デモは `demo-ef-dealer` / `ofbiz`、顧客 `DEMO_EF_CUST` の同意済みデータを使用する。
+- 販売店の見積提示・検収連絡・契約締結の専用画面、販売店管理画面は今後の拡張とする。
+
+---
+
+## 13. support 連携
 
 ### 12.1 原則
 
@@ -1039,9 +1065,9 @@ sequenceDiagram
 
 ---
 
-## 13. 担当者向け管理画面
+## 14. 担当者向け管理画面
 
-### 13.1 現在の画面
+### 16.1 現在の画面
 
 | request-map | view | 内容 |
 |-------------|------|------|
@@ -1054,7 +1080,7 @@ sequenceDiagram
 - 権限は `OFBTOOLS,EFINANCE_ADMIN`。
 - 会員ロック解除、KYC 審査、追加書類要請、手続き依頼、申込・契約照会のうち、申込・契約照会と書類要請の新規作成画面は未実装。
 
-### 13.2 追加予定
+### 16.2 追加予定
 
 | 画面 | 内容 | 追加 STEP |
 |------|------|-----------|
@@ -1071,15 +1097,15 @@ sequenceDiagram
 
 ---
 
-## 14. 顧客サンプル画面（`/portal`）
+## 15. 顧客サンプル画面（`/portal`）
 
-### 14.1 実装状況
+### 16.1 実装状況
 
 - `PortalHome.ftl` は、eFinance の REST API を呼び出すサンプル SPA。
 - 認証、商品一覧・シミュレーション、申込、本人確認、見積・署名、マイページ、support ケースを画面から確認できる。
 - デモアカウント `demo-ef-customer` / `ofbiz` は `data/EfinanceDemoData.xml` の demo データで、KYC・同意・サンプル申込・有効なローン契約・メッセージ・通知設定を含む。`test-ef-customer` はテスト専用で demo には投入しない。
 
-### 14.2 実装内容
+### 16.2 実装内容
 
 | 画面 | 内容 |
 |------|------|
@@ -1097,9 +1123,9 @@ sequenceDiagram
 
 ---
 
-## 15. テスト・検証
+## 16. テスト・検証
 
-### 15.1 テストスイート
+### 16.1 テストスイート
 
 | スイート | 内容 |
 |----------|------|
@@ -1116,15 +1142,16 @@ sequenceDiagram
 | `EfCorporateTests` | 法人作成・担当者権限・一覧 |
 | `EfAuthTests` | 有効トークン・失効トークン・ロック会員・再認証トークン |
 | `EfAdminTests` | 会員ロック解除・手続き依頼の状態更新 |
+| `EfDealerTests` | 販売店作成・担当者権限・顧客同意・代理下書き・申込/契約照会 |
 
-### 15.2 実行結果
+### 16.2 実行結果
 
 ```powershell
 .\gradlew.bat compileJava compileGroovy
 .\gradlew.bat "ofbiz --test component=efinance"
 ```
 
-- 2026-10-23：**79 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
+- 2026-10-23：**81 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
 - REST 経由の JWT 取得・Authorization・公開 API・無効トークン・認証なし 401・不正 JSON・必須項目不足・404・CORS 応答ヘッダーを `EfRestIntegrationTests` で確認済み。
 - finance 全体回帰は **217 テスト成功**、support はユーザー実行で OK。
 - JasperReports テンプレート、PDF の `Content` 保存、`EfDeliveredDocument.contentId`、Base64 ダウンロード、クリック同意・外部署名 HTTP アダプタを `EfContractTests` で確認済み。
@@ -1133,10 +1160,11 @@ sequenceDiagram
 - ファイルスキャンの既定 PENDING と EICAR 検知を `EfFileScanTests` で確認済み。KYC 画像・追加書類の `scanStatus` は `EfKycTests` / `EfPreScreenTests` で確認済み。
 - `EfFormField` の DB 定義と商品別上書きを `EfApplicationTests` で確認済み。
 - 公開シミュレーションの IP レート制限を `EfCatalogTests` で確認済み。
-- 未実装のテストは W8/W9 の設計機能のみ。
+- 販売店作成、顧客同意、代理下書き、申込・契約照会を `EfDealerTests` で確認済み。
+- 未実装のテストは W9 の設計機能のみ。
 
 
-### 15.3 受入シナリオ
+### 16.3 受入シナリオ
 
 1. 個人ローン：登録 → 申込 → KYC → 仮審査 → 審査 → 見積 → 受理 → 署名 → 契約 → マイページ照会。
 2. 法人リース：法人アカウント → 担当者招待 → 申込 → KYC → 審査 → 契約 → 支払案内。
@@ -1147,7 +1175,7 @@ sequenceDiagram
 
 ---
 
-## 16. core / finance / support への影響
+## 17. core / finance / support への影響
 
 | 対象 | 変更 | 内容 |
 |------|------|------|
@@ -1161,7 +1189,7 @@ sequenceDiagram
 
 ---
 
-## 17. 未決事項
+## 18. 未決事項
 
 | # | 事項 | 現状 |
 |---|------|------|
@@ -1178,7 +1206,7 @@ sequenceDiagram
 
 ---
 
-## 18. 変更履歴
+## 19. 変更履歴
 
 | 日付 | 内容 |
 |------|------|
@@ -1204,10 +1232,11 @@ sequenceDiagram
 | 2026-10-23（P2 ファイルスキャン） | `FileScanAdapter` / `NoopFileScanAdapter` / `BasicFileScanAdapter` を追加。KYC 画像・追加書類・下書き書類に `scanStatus` を保存し、感染ファイルを拒否。**77 テスト成功** |
 | 2026-10-23（P2 フォーム定義） | `EfFormField` とローン/リースの既定 seed を追加。`efGetApplicationForm` を DB 定義優先・Java フォールバックに変更し、商品別の上書き・追加項目に対応。**78 テスト成功** |
 | 2026-10-23（公開 IP 制限） | REST のリモート IP を公開シミュレーションに渡し、`EfRateLimitBucket` で IP 単位の制限を追加。**79 テスト成功** |
+| 2026-10-23（W8） | `EfDealer` / `EfDealerUser` / `EfDealerCustomer`、販売店プロフィール、顧客同意、代理下書き、申込・契約照会、`/dealer` サンプル画面を追加。**81 テスト成功** |
 
 ---
 
-## 19. rest-api への変更（2026-10-22）
+## 20. rest-api への変更（2026-10-22）
 
 - 変更ファイル：
   - `plugins/rest-api/src/main/java/org/apache/ofbiz/ws/rs/security/auth/EfAuthFilter.java`
@@ -1232,6 +1261,6 @@ sequenceDiagram
 - 配布：efinance プラグイン単体には含まれないため、rest-api の差分も同時にデプロイする。
 - 検証：
   - `EfAuthTests` で `EfRequestValidator` の有効トークン・失効トークン・ロック会員判定と再認証トークンのワンタイム性を確認。
-  - `compileJava compileGroovy` 成功、efinance 79 テスト成功。
+  - `compileJava compileGroovy` 成功、efinance 81 テスト成功。
   - REST 手動結合確認：`demo-ef-customer` でログイン 200、商品 2 件、申込 1 件、契約 1 件、契約詳細の返済表 2 行、メッセージ、通知設定、`/portal/control/main` 200 を確認。
   - `EfRestIntegrationTests` で公開商品、ログイン、Bearer 認証、無効トークン 401 を自動確認する。CORS とエラーチェーンの網羅は未整備。

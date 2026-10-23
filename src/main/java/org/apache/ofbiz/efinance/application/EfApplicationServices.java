@@ -726,6 +726,8 @@ public final class EfApplicationServices {
             if (!ownsDraft(draft, partyId)) {
                 return ServiceUtil.returnError(UtilProperties.getMessage(RESOURCE, "EfinanceDraftNotOwned", locale));
             }
+            String applicantPartyId = draft.getString("memberPartyId");
+            String dealerPartyId = draft.getString("dealerPartyId");
 
             String requestHash = EfRequestGuard.hash(partyId, draftId);
             idempotency = EfRequestGuard.begin(delegator, partyId,
@@ -784,14 +786,14 @@ public final class EfApplicationServices {
                 return err;
             }
 
-            String consentError = validateRequiredConsents(delegator, partyId, locale);
+            String consentError = validateRequiredConsents(delegator, applicantPartyId, locale);
             if (consentError != null) {
                 EfRequestGuard.fail(delegator, idempotency);
                 return ServiceUtil.returnError(consentError);
             }
 
             // Fraud check
-            String fraudResult = performFraudCheck(delegator, draftId, partyId, ipAddress, deviceId);
+            String fraudResult = performFraudCheck(delegator, draftId, applicantPartyId, ipAddress, deviceId);
             if (FRAUD_BLOCK.equals(fraudResult)) {
                 EfRequestGuard.fail(delegator, idempotency);
                 return ServiceUtil.returnError(
@@ -813,10 +815,10 @@ public final class EfApplicationServices {
             String financeApplicationId;
             if ("LEASE".equals(applicationTypeId)) {
                 financeApplicationId = submitLeaseApplication(dispatcher, systemUser, productId,
-                        partyId, step1, allSteps);
+                        applicantPartyId, step1, allSteps);
             } else {
                 financeApplicationId = submitLoanApplication(dispatcher, systemUser, productId,
-                        partyId, step1);
+                        applicantPartyId, step1);
             }
 
             if (financeApplicationId == null) {
@@ -836,7 +838,8 @@ public final class EfApplicationServices {
             GenericValue link = delegator.makeValue("EfApplicationLink");
             link.set("linkId", linkId);
             link.set("draftId", draftId);
-            link.set("memberPartyId", partyId);
+            link.set("memberPartyId", applicantPartyId);
+            link.set("dealerPartyId", dealerPartyId);
             link.set("financeApplicationId", financeApplicationId);
             link.set("financeApplicationTypeId", applicationTypeId);
             link.set("linkedDate", UtilDateTime.nowTimestamp());
