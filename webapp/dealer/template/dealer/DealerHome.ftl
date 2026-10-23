@@ -108,6 +108,6 @@ under the License.
         <section><h2>契約一覧</h2><table><thead><tr><th>契約ID</th><th>顧客</th><th>種別</th><th>状態</th><th>金額</th></tr></thead><tbody id="contractsBody"></tbody></table></section>
     </div>
 </main>
-<script src="js/dealer.js"></script>
+<script src="/dealer/js/dealer.js"></script>
 </body>
 </html>
