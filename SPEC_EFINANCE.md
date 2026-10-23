@@ -167,7 +167,7 @@ flowchart LR
 | ファイル | 用途 | 内容 |
 |----------|------|------|
 | `data/EfinanceTypeData.xml` | seed | 会員・法人・KYC・下書き・書類・署名・手続きの状態、列挙、権限、`efinance-system` |
-| `data/EfinanceDemoData.xml` | demo | `EFPUB1`（`DEMO_LOANPROD1`）、`EFPUB2`（`DEMO_LEASEPROD1`）の公開設定。デモ会員 `DEMO_EF_CUST` / `demo-ef-customer`（パスワード `ofbiz`、KYC・同意済み）、サンプル申込、有効なローン契約、メッセージ、通知設定 |
+| `data/EfinanceDemoData.xml` | demo | `EFPUB1`（`DEMO_LOANPROD1`）、`EFPUB2`（`DEMO_LEASEPROD1`）の公開設定。デモ会員 `DEMO_EF_CUST` / `demo-ef-customer`（パスワード `ofbiz`、KYC・同意済み）、サンプル申込、有効なローン契約、契約フロー用の提示済み見積（`DEMO_EF_DRAFT2`）、メッセージ、通知設定 |
 | `testdef/data/EfinanceTestData.xml` | test | テスト会員 `TEST_EF_CUST` / `test-ef-customer`（パスワード `ofbiz`）。demo とは分離する |
 
 - `efinance-system` は `SUPER` グループに所属し、finance・support の内部サービスを呼ぶ。
@@ -850,7 +850,7 @@ sequenceDiagram
 
 | サービス | auth | 主な IN / OUT | 内容 |
 |----------|:---:|---------------|------|
-| `efGetOffer` | true | IN: draftId / OUT: offer, quoteId, quoteTypeId | 提示中の見積 |
+| `efGetOffer` | true | IN: draftId / OUT: offerAvailable, offer, quoteId, quoteTypeId, quoteStatusId | 提示中または受理済み（契約作成前）の見積。未提示時は `offerAvailable=false` |
 | `efAcceptOffer` | true | IN: draftId, quoteId, quoteTypeId / OUT: acceptedQuoteId | 見積受理 |
 | `efStartSigning` | true | IN: draftId, quoteId, quoteTypeId / OUT: signingSessionId, contractSummary | 署名セッション作成 |
 | `efCompleteSigning` | true | IN: signingSessionId, confirmContent, ipAddress, deviceId / OUT: agreementId, agreementTypeId | 同意記録→契約作成 |
@@ -864,6 +864,7 @@ sequenceDiagram
 - `confirmContent=true` でなければ署名できない。
 - finance の契約作成が失敗した場合、セッションは `EFSIG_PENDING` のままにし、顧客に定型の案内を返す（担当者確認に回す）。
 - **現状（2026-10-22）**：`efCompleteSigning` は KYC の VERIFIED、電子契約同意、再認証を確認し、未確認なら契約を作成しない。契約作成後に `JasperContractDocumentRenderer` で `EfinanceContractReport.jrxml` を描画し、jasperreports プラグインがない場合は `ContractDocumentPdf` の簡易 PDF にフォールバックする。PDF は `Content` に保存し、`EfDeliveredDocument.contentId` と `EfSigningSession.signedContentId` を設定する。`efDownloadDocument` は PDF を Base64 で返す。署名は `ESignatureAdapter` 経由で実行し、既定の `ClickWrapSignatureAdapter` が署名方式と証跡ハッシュを返す。`ExternalSignatureAdapter` は設定された HTTP 署名 API に署名要求を送り、成功応答の署名日時・証跡を保存する。
+- **見積未提示（2026-10-23）**：finance 側で審査・見積提示が完了するまで `efGetOffer` は `offerAvailable=false` を返す。`/portal` は「見積はまだ提示されていません」と申込ステータスを表示し、受理・署名ボタンを無効化する。受理後に画面を再読み込みしても、契約作成前なら `quoteStatusId=..._ACCEPTED` の見積を返して署名を再開できる。デモ環境では `DEMO_EF_DRAFT2`（`LOANAPP_APPROVED`、`LOANQT_PRESENTED`）で契約フローを確認できる。
 
 ### 9.5 REST
 
@@ -1233,6 +1234,7 @@ sequenceDiagram
 | 2026-10-23（P2 フォーム定義） | `EfFormField` とローン/リースの既定 seed を追加。`efGetApplicationForm` を DB 定義優先・Java フォールバックに変更し、商品別の上書き・追加項目に対応。**78 テスト成功** |
 | 2026-10-23（公開 IP 制限） | REST のリモート IP を公開シミュレーションに渡し、`EfRateLimitBucket` で IP 単位の制限を追加。**79 テスト成功** |
 | 2026-10-23（W8） | `EfDealer` / `EfDealerUser` / `EfDealerCustomer`、販売店プロフィール、顧客同意、代理下書き、申込・契約照会、`/dealer` サンプル画面を追加。**81 テスト成功** |
+| 2026-10-23（W5 見積未提示） | `efGetOffer` に `offerAvailable` / `quoteStatusId` を追加し、受理済み見積の再取得に対応。`/portal` は見積未提示時に申込ステータスを表示して受理・署名を無効化し、`DEMO_EF_DRAFT2` の提示済み見積デモを追加。**81 テスト成功** |
 
 ---
 

@@ -111,6 +111,7 @@ public final class EfContractServices {
             }
 
             Map<String, Object> result = ServiceUtil.returnSuccess();
+            result.put("offerAvailable", false);
 
             if (QUOTE_TYPE_LEASE.equals(financeApplicationTypeId)) {
                 GenericValue leaseQuote = EntityQuery.use(delegator).from("LeaseQuote")
@@ -121,15 +122,33 @@ public final class EfContractServices {
                         .orderBy("-createdDate")
                         .queryFirst();
                 if (leaseQuote == null) {
+                    // Let the customer resume signing after accepting an offer, unless
+                    // the accepted quote has already been finalized as an agreement.
+                    leaseQuote = EntityQuery.use(delegator).from("LeaseQuote")
+                            .where(EntityCondition.makeCondition(
+                                    EntityCondition.makeCondition("leaseApplicationId", financeApplicationId),
+                                    EntityOperator.AND,
+                                    EntityCondition.makeCondition("statusId", "LEASEQT_ACCEPTED")))
+                            .orderBy("-createdDate")
+                            .queryFirst();
+                    if (leaseQuote != null && EntityQuery.use(delegator).from("LeaseAgreement")
+                            .where("leaseQuoteId", leaseQuote.getString("leaseQuoteId"))
+                            .queryFirst() != null) {
+                        leaseQuote = null;
+                    }
+                }
+                if (leaseQuote == null) {
                     result.put("offer", null);
                     result.put("quoteId", null);
                     result.put("quoteTypeId", null);
                     return result;
                 }
                 Map<String, Object> offer = buildLeaseOffer(leaseQuote);
+                result.put("offerAvailable", true);
                 result.put("offer", offer);
                 result.put("quoteId", leaseQuote.getString("leaseQuoteId"));
                 result.put("quoteTypeId", QUOTE_TYPE_LEASE);
+                result.put("quoteStatusId", leaseQuote.getString("statusId"));
             } else {
                 GenericValue loanQuote = EntityQuery.use(delegator).from("LoanQuote")
                         .where(EntityCondition.makeCondition(
@@ -139,15 +158,33 @@ public final class EfContractServices {
                         .orderBy("-createdDate")
                         .queryFirst();
                 if (loanQuote == null) {
+                    // Let the customer resume signing after accepting an offer, unless
+                    // the accepted quote has already been finalized as an agreement.
+                    loanQuote = EntityQuery.use(delegator).from("LoanQuote")
+                            .where(EntityCondition.makeCondition(
+                                    EntityCondition.makeCondition("loanApplicationId", financeApplicationId),
+                                    EntityOperator.AND,
+                                    EntityCondition.makeCondition("statusId", "LOANQT_ACCEPTED")))
+                            .orderBy("-createdDate")
+                            .queryFirst();
+                    if (loanQuote != null && EntityQuery.use(delegator).from("LoanAgreement")
+                            .where("loanQuoteId", loanQuote.getString("loanQuoteId"))
+                            .queryFirst() != null) {
+                        loanQuote = null;
+                    }
+                }
+                if (loanQuote == null) {
                     result.put("offer", null);
                     result.put("quoteId", null);
                     result.put("quoteTypeId", null);
                     return result;
                 }
                 Map<String, Object> offer = buildLoanOffer(loanQuote);
+                result.put("offerAvailable", true);
                 result.put("offer", offer);
                 result.put("quoteId", loanQuote.getString("loanQuoteId"));
                 result.put("quoteTypeId", QUOTE_TYPE_LOAN);
+                result.put("quoteStatusId", loanQuote.getString("statusId"));
             }
 
             return result;

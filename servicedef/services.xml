@@ -547,9 +547,11 @@ under the License.
         <description>Get the current presented quote (offer) for an application draft.</description>
         <permission-service service-name="efinanceCustomerPermission"/>
         <attribute name="draftId" type="String" mode="IN" optional="false"/>
+        <attribute name="offerAvailable" type="Boolean" mode="OUT" optional="true"/>
         <attribute name="offer" type="Map" mode="OUT" optional="true"/>
         <attribute name="quoteId" type="String" mode="OUT" optional="true"/>
         <attribute name="quoteTypeId" type="String" mode="OUT" optional="true"/>
+        <attribute name="quoteStatusId" type="String" mode="OUT" optional="true"/>
     </service>
 
     <service name="efAcceptOffer" engine="java" auth="true" export="true"

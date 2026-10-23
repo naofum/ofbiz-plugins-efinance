@@ -287,11 +287,12 @@ under the License.
                 <div class="field wide">
                     <label for="contractDraftId">申込下書きID</label>
                     <input id="contractDraftId" placeholder="申込後に自動設定されます"/>
+                    <p class="muted">デモ環境では、提示済み見積のある下書きID「DEMO_EF_DRAFT2」で契約フローを確認できます。</p>
                 </div>
                 <div class="field wide actions">
                     <button type="button" id="loadOfferBtn" class="btn">見積を取得</button>
-                    <button type="button" id="acceptOfferBtn" class="btn secondary">見積を受理</button>
-                    <button type="button" id="startSigningBtn" class="btn secondary">署名を開始</button>
+                    <button type="button" id="acceptOfferBtn" class="btn secondary" disabled>見積を受理</button>
+                    <button type="button" id="startSigningBtn" class="btn secondary" disabled>署名を開始</button>
                     <button type="button" id="loadDocumentsBtn" class="btn secondary">交付書類を表示</button>
                 </div>
                 <div class="field">

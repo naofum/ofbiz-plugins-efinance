@@ -455,7 +455,8 @@ flowchart LR
 
 - `/portal` は API の動作確認とフロントエンドの参考実装を目的とする。本番画面は別リポジトリで置き換える。
 - サンプル画面も、本番 API と同じ認証・所有確認・エラー形式を使う。
-- demo データに `demo-ef-customer`（パスワード `ofbiz`）を用意し、KYC・同意・サンプル申込・有効なローン契約・メッセージ・通知設定を確認できるようにする。`test-ef-customer` はテスト専用とし、demo には投入しない。
+- demo データに `demo-ef-customer`（パスワード `ofbiz`）を用意し、KYC・同意・サンプル申込・有効なローン契約・メッセージ・通知設定を確認できるようにする。契約フロー用に、提示済み見積を持つ `DEMO_EF_DRAFT2` も用意する。`test-ef-customer` はテスト専用とし、demo には投入しない。
+- 見積がまだ提示されていない申込では、`efGetOffer` は `offerAvailable=false` を返し、画面は受理・署名へ進めない理由（審査・見積提示待ち）を表示する。
 
 ### 5.3 販売店サンプル画面（`/dealer`）
 
@@ -763,3 +764,4 @@ flowchart LR
 | 2026-10-23（P2 フォーム定義） | `EfFormField` とローン/リースの既定 seed を追加。`efGetApplicationForm` を DB 定義優先・Java フォールバックに変更し、商品別の上書き・追加項目に対応。78 テスト成功 |
 | 2026-10-23（公開 IP 制限） | REST のリモート IP を公開シミュレーションへ渡し、`EfRateLimitBucket` で IP 単位の制限を追加。79 テスト成功 |
 | 2026-10-23（W8） | `EfDealer` / `EfDealerUser` / `EfDealerCustomer`、顧客同意、代理下書き、申込・契約照会、`/dealer` サンプル画面を追加。81 テスト成功 |
+| 2026-10-23（W5 見積未提示） | 見積未提示時は `offerAvailable=false` と申込ステータスを表示し、受理・署名を無効化。受理済み見積の再取得と、`DEMO_EF_DRAFT2` の契約フロー用デモを追加。81 テスト成功 |

@@ -31,6 +31,8 @@ const state = {
     kycCheckId: sessionStorage.getItem('ef_kyc_check_id'),
     signingSessionId: sessionStorage.getItem('ef_signing_session_id'),
     offer: null,
+    offerDraftId: null,
+    offerAccepted: false,
     mfaTempToken: null
 };
 
@@ -745,6 +747,78 @@ function contractDraftId() {
     return el('contractDraftId').value || state.draftId;
 }
 
+function isAcceptedQuoteStatus(statusId) {
+    return statusId === 'LOANQT_ACCEPTED' || statusId === 'LEASEQT_ACCEPTED';
+}
+
+function formatContractAmount(value) {
+    if (value === null || value === undefined || value === '') {
+        return '-';
+    }
+    const number = Number(value);
+    return Number.isNaN(number) ? String(value) : number.toLocaleString('ja-JP') + ' 円';
+}
+
+function formatContractRate(value) {
+    if (value === null || value === undefined || value === '') {
+        return '-';
+    }
+    const number = Number(value);
+    return Number.isNaN(number) ? String(value) : (number * 100).toFixed(2) + '%';
+}
+
+function renderOffer(data, accepted) {
+    const offer = data.offer || {};
+    const lease = data.quoteTypeId === 'LEASE';
+    const lines = [
+        '見積ID: ' + (data.quoteId || '-'),
+        '種別: ' + (lease ? 'リース' : 'ローン')
+    ];
+    if (lease) {
+        lines.push('取得見積額: ' + formatContractAmount(offer.acquisitionCost));
+        lines.push('期間: ' + (offer.termMonths || '-') + ' ヶ月');
+        lines.push('月額リース料: ' + formatContractAmount(offer.monthlyLeaseAmount));
+        lines.push('総リース料: ' + formatContractAmount(offer.totalLeaseAmount));
+        lines.push('利息相当額: ' + formatContractAmount(offer.totalInterestAmount));
+        lines.push('消費税額: ' + formatContractAmount(offer.totalTaxAmount));
+        lines.push('計算利率: ' + formatContractRate(offer.calcInterestRate));
+    } else {
+        lines.push('借入金額: ' + formatContractAmount(offer.principalAmount));
+        lines.push('年利: ' + formatContractRate(offer.annualInterestRate));
+        lines.push('期間: ' + (offer.termMonths || '-') + ' ヶ月');
+        lines.push('月額返済: ' + formatContractAmount(offer.monthlyPaymentAmount));
+        lines.push('総返済額: ' + formatContractAmount(offer.totalPaymentAmount));
+        lines.push('利息総額: ' + formatContractAmount(offer.totalInterestAmount));
+    }
+    if (offer.firstPaymentDate) {
+        lines.push('初回支払日: ' + offer.firstPaymentDate);
+    }
+    lines.push('');
+    lines.push(accepted
+        ? '状態: 受理済みです。「署名を開始」で契約手続きに進めます。'
+        : '状態: 提示済みです。「見積を受理」で契約手続きに進めます。');
+    el('contractResult').textContent = lines.join('\n');
+    el('contractResult').hidden = false;
+}
+
+function renderNoOffer(draftId, status) {
+    const stage = status && (status.stageDescription || status.stageEnumId)
+        ? (status.stageDescription || status.stageEnumId) : '不明';
+    const financeStatus = status && status.applicationStatus
+        ? status.applicationStatus.applicationStatusId : null;
+    el('contractResult').textContent = '見積はまだ提示されていません。\n\n'
+        + '申込ID: ' + draftId + '\n'
+        + '申込ステータス: ' + stage
+        + (financeStatus ? ' (' + financeStatus + ')' : '') + '\n\n'
+        + '審査完了後にスタッフが見積を提示すると、ここで内容を確認して受理できます。';
+    el('contractResult').hidden = false;
+}
+
+function setContractActions(hasOffer, accepted) {
+    el('acceptOfferBtn').disabled = !hasOffer || accepted;
+    el('startSigningBtn').disabled = !hasOffer || !accepted;
+}
+
 async function loadOffer() {
     const draftId = contractDraftId();
     if (!draftId) {
@@ -753,9 +827,37 @@ async function loadOffer() {
     }
     try {
         const data = await get('/ef/applications/drafts/' + encodeURIComponent(draftId) + '/offer');
+        const hasOffer = Boolean(data && data.offer && data.quoteId);
+        if (!hasOffer) {
+            if (state.offerAccepted && state.offer && state.offerDraftId === draftId) {
+                renderOffer(state.offer, true);
+                setContractActions(true, true);
+                showFlash('この見積は受理済みです。署名を開始できます。', 'ok');
+                return;
+            }
+            state.offer = null;
+            state.offerDraftId = null;
+            state.offerAccepted = false;
+            setContractActions(false, false);
+            let status = null;
+            try {
+                status = await get('/ef/applications/drafts/' + encodeURIComponent(draftId) + '/status');
+            } catch (statusError) {
+                status = null;
+            }
+            renderNoOffer(draftId, status);
+            showFlash('見積はまだ提示されていません。', 'warn');
+            return;
+        }
+        const accepted = isAcceptedQuoteStatus(data.quoteStatusId);
         state.offer = data;
-        el('contractResult').textContent = JSON.stringify(data, null, 2);
-        el('contractResult').hidden = false;
+        state.offerDraftId = draftId;
+        state.offerAccepted = accepted;
+        renderOffer(data, accepted);
+        setContractActions(true, accepted);
+        showFlash(accepted
+            ? '受理済みの見積を取得しました。署名を開始できます。'
+            : '見積を取得しました。内容を確認して受理してください。', 'ok');
     } catch (e) {
         showFlash('見積の取得に失敗しました: ' + e.message, 'error');
     }
@@ -771,7 +873,10 @@ async function acceptOffer() {
             quoteId: state.offer.quoteId,
             quoteTypeId: state.offer.quoteTypeId
         });
-        showFlash('見積を受理しました。', 'ok');
+        state.offerAccepted = true;
+        setContractActions(true, true);
+        renderOffer(state.offer, true);
+        showFlash('見積を受理しました。署名を開始できます。', 'ok');
     } catch (e) {
         showFlash('見積の受理に失敗しました: ' + e.message, 'error');
     }
@@ -823,6 +928,10 @@ async function completeSigning() {
         });
         el('contractResult').textContent = JSON.stringify(data, null, 2);
         el('contractResult').hidden = false;
+        state.offer = null;
+        state.offerDraftId = null;
+        state.offerAccepted = false;
+        setContractActions(false, false);
         showFlash('契約を締結しました。', 'ok');
         await loadMyPage();
     } catch (e) {
@@ -908,6 +1017,7 @@ function bindEvents() {
 async function init() {
     bindEvents();
     setAuthState();
+    setContractActions(false, false);
     if (state.draftId) {
         el('contractDraftId').value = state.draftId;
     }

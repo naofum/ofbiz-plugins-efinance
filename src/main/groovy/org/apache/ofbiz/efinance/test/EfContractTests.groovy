@@ -112,6 +112,7 @@ class EfContractTests extends OFBizTestCase {
         Map result = dispatcher.runSync('efGetOffer', [userLogin: apiUser(), draftId: data.draftId])
         ok(result)
         // No presented quote yet → offer and quoteId should be null
+        assert result.offerAvailable == Boolean.FALSE
         assert result.offer == null
         assert result.quoteId == null
     }
@@ -155,6 +156,7 @@ class EfContractTests extends OFBizTestCase {
         // Test efGetOffer
         Map offerResult = dispatcher.runSync('efGetOffer', [userLogin: apiUser(), draftId: draftId])
         ok(offerResult)
+        assert offerResult.offerAvailable == Boolean.TRUE
         assert offerResult.quoteId == loanQuoteId
         assert offerResult.quoteTypeId == 'LOAN'
         assert offerResult.offer != null
@@ -171,6 +173,14 @@ class EfContractTests extends OFBizTestCase {
         // Verify quote status is now ACCEPTED
         loanQuote.refresh()
         assert loanQuote.statusId == 'LOANQT_ACCEPTED'
+
+        // An accepted quote can still be fetched to resume signing before the
+        // agreement is created.
+        Map resumeOffer = dispatcher.runSync('efGetOffer', [userLogin: apiUser(), draftId: draftId])
+        ok(resumeOffer)
+        assert resumeOffer.offerAvailable == Boolean.TRUE
+        assert resumeOffer.quoteId == loanQuoteId
+        assert resumeOffer.quoteStatusId == 'LOANQT_ACCEPTED'
 
         // Test efStartSigning
         Map signStart = dispatcher.runSync('efStartSigning', [

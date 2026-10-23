@@ -154,6 +154,51 @@ under the License.
                        financeApplicationTypeId="LOAN"
                        linkedDate="2026-10-05 10:00:00.0"/>
 
+    <!-- ========================================================= -->
+    <!-- W5 demo: approved application with a presented loan quote. -->
+    <!-- Use draft DEMO_EF_DRAFT2 to test offer -> signing.         -->
+    <!-- ========================================================= -->
+    <LoanApplication loanApplicationId="DEMO_EF_LOANAPP2" productId="DEMO_LOANPROD1"
+                     applicantPartyId="DEMO_EF_CUST" statusId="LOANAPP_APPROVED"
+                     currencyUomId="JPY" requestedPrincipalAmount="100000"
+                     requestedTermMonths="1" applicationDate="2026-10-18 10:00:00.0"
+                     purpose="Portal contract flow demo"/>
+    <LoanApplicationStatus loanApplicationId="DEMO_EF_LOANAPP2"
+                           statusId="LOANAPP_APPROVED" statusDate="2026-10-20 10:00:00.0"
+                           changeByUserLoginId="admin"/>
+    <LoanUnderwriting loanUnderwritingId="DEMO_EF_LOANUW2"
+                      loanApplicationId="DEMO_EF_LOANAPP2" statusId="LOANUW_APPROVED"
+                      creditScore="740" decision="APPROVED" approvedPrincipalAmount="100000"
+                      approvedAnnualInterestRate="0.150000" reviewerPartyId="Company"
+                      reviewDate="2026-10-20 10:00:00.0" applicationTypeId="LOAN"
+                      applicationId="DEMO_EF_LOANAPP2"/>
+    <LoanQuote loanQuoteId="DEMO_EF_LOANQT2" loanApplicationId="DEMO_EF_LOANAPP2"
+               statusId="LOANQT_PRESENTED" currencyUomId="JPY" principalAmount="100000"
+               annualInterestRate="0.150000" termMonths="1"
+               repaymentMethodEnumId="LOAN_RPM_EQUAL_PRIN" monthlyPaymentAmount="101250"
+               totalPaymentAmount="101250" totalInterestAmount="1250"
+               firstPaymentDate="2026-12-15 00:00:00.0" createdDate="2026-10-20 10:00:00.0"/>
+    <LoanRepaymentSchedule loanQuoteId="DEMO_EF_LOANQT2" installmentNumber="1"
+                          dueDate="2026-12-15 00:00:00.0"
+                          interestFromDate="2026-10-21 00:00:00.0"
+                          interestThruDate="2026-12-15 00:00:00.0"
+                          paymentAmount="101250" principalAmount="100000"
+                          interestAmount="1250" remainingBalance="0"/>
+    <EfApplicationDraft draftId="DEMO_EF_DRAFT2" memberPartyId="DEMO_EF_CUST"
+                        productId="DEMO_LOANPROD1" applicationTypeId="LOAN"
+                        currentStep="3" totalSteps="3" draftJson="{}"
+                        statusId="EFDRF_SUBMITTED" sourceEnumId="EFSRC_DIRECT"
+                        submittedApplicationId="DEMO_EF_LOANAPP2"
+                        submittedApplicationTypeId="LOAN"
+                        expiresAt="2027-10-01 00:00:00.0"
+                        createdDate="2026-10-18 10:00:00.0"
+                        lastModifiedDate="2026-10-20 10:00:00.0"/>
+    <EfApplicationLink linkId="DEMO_EF_LINK2" draftId="DEMO_EF_DRAFT2"
+                       memberPartyId="DEMO_EF_CUST"
+                       financeApplicationId="DEMO_EF_LOANAPP2"
+                       financeApplicationTypeId="LOAN"
+                       linkedDate="2026-10-20 10:00:00.0"/>
+
     <!-- Demo message and notification settings for MyPage. -->
     <CommunicationEvent communicationEventId="DEMO_EF_MSG1"
                         communicationEventTypeId="WEB_SITE_COMMUNICATI"
