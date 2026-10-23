@@ -162,7 +162,7 @@ flowchart LR
 | W3 | 実装済み | KYC 審査 | `FinUwExternalInfo` 連携、KYC 画像の暗号化は未実装 |
 | W4 | 実装済み | 管理画面の書類要請一覧 | `EfStageEvent` と `NotificationAdapter` を実装済み。ECA・バッチ通知は未実装 |
 | W5 | 実装済み | – | JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）は実装済み。プロバイダ固有の認証・L21 承認連携は未実装 |
-| W6 | 実装済み | 手続き依頼・監査ログの管理画面 | `FINWE_OTHER` タスク、`efSendMessage` の support ケース紐付け、契約残高の正確な照会、証明書 PDF は未実装 |
+| W6 | 実装済み | 手続き依頼・監査ログの管理画面 | `FINWE_OTHER` タスク、`efSendMessage` の support ケース紐付け、証明書 PDF は未実装。ローン残高は `getLoanAgreementBalance` 連携で対応済み |
 | W7 | 実装済み | 管理画面（口座振替） | 口座振替依頼・照会、振込案内、担当者登録（2026-10-23）。口座振替結果ファイル取込みは将来 |
 | W8・W9 | 未着手 | – | 販売店ポータル、提携先組込み、チャット |
 
@@ -546,6 +546,7 @@ flowchart LR
 | 申込送信 | `createLoanApplication` / `createLeaseApplication` / `createLeaseApplicationAsset` | `efinance-system` で実行 |
 | 見積受理 | `setLoanQuoteStatus` / `setLeaseQuoteStatus` | ACCEPTED |
 | 契約作成 | `createLoanAgreement` / `createLeaseAgreement` | 審査・見積の前提を finance が検証 |
+| 契約残高（ローン） | `getLoanAgreementBalance` | 参照。入金消込・繰上返済を正本とする |
 | 契約残高（リース） | `getLeaseAgreementBalance` | 参照 |
 | 繰上返済 | `createLoanPrepayment`（担当者実行） | efinance は依頼のみ |
 | 入金 | `receiveLoanPayment` / `receiveLeasePayment` | 担当者・バッチ |
@@ -728,3 +729,4 @@ flowchart LR
 | 2026-10-22（REST error/CORS） | 認証なし 401、不正 JSON、必須項目不足、404、CORS 応答ヘッダーの REST テストを追加。70 テスト成功 |
 | 2026-10-22（External signature） | `ExternalSignatureAdapter` を追加し、設定された HTTP 署名 API と連携。成功・HTTP 失敗をモックサーバーで検証。71 テスト成功 |
 | 2026-10-23（W7） | 口座振替（`EfDirectDebitMandate`・依頼・照会・担当者登録）と振込案内、管理画面、REST を実装。口座番号は暗号化し、表示は下 4 桁のみ。72 テスト成功 |
+| 2026-10-23（P2 ローン残高） | finance の `getLoanAgreementBalance` を追加し、マイページの契約照会・繰上返済シミュレーションを、有効な入金消込と繰上返済を正本とする残高に変更。72 テスト成功 |

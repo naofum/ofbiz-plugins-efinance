@@ -189,6 +189,51 @@ class EfMyPageTests extends OFBizTestCase {
         ok(listContracts)
         assert listContracts.contracts.any { it.agreementId == loanAgreementId }
 
+        // Payment fixture: interest is paid first, then 50,000 of principal.
+        String invoiceId = delegator.getNextSeqId('Invoice')
+        GenericValue invoice = delegator.makeValue('Invoice')
+        invoice.set('invoiceId', invoiceId)
+        invoice.set('invoiceTypeId', 'SALES_INVOICE')
+        invoice.set('partyIdFrom', 'Company')
+        invoice.set('partyId', 'TEST_EF_CUST')
+        invoice.set('roleTypeId', 'BILL_TO_CUSTOMER')
+        invoice.set('statusId', 'INVOICE_READY')
+        invoice.set('invoiceDate', now)
+        invoice.set('currencyUomId', 'JPY')
+        delegator.create(invoice)
+
+        String paymentId = delegator.getNextSeqId('Payment')
+        GenericValue payment = delegator.makeValue('Payment')
+        payment.set('paymentId', paymentId)
+        payment.set('paymentTypeId', 'CUSTOMER_PAYMENT')
+        payment.set('paymentMethodTypeId', 'EFT_ACCOUNT')
+        payment.set('partyIdFrom', 'TEST_EF_CUST')
+        payment.set('partyIdTo', 'Company')
+        payment.set('statusId', 'PMNT_RECEIVED')
+        payment.set('effectiveDate', now)
+        payment.set('amount', new BigDecimal('51000.00'))
+        payment.set('currencyUomId', 'JPY')
+        delegator.create(payment)
+
+        GenericValue application = delegator.makeValue('PaymentApplication')
+        application.set('paymentApplicationId', delegator.getNextSeqId('PaymentApplication'))
+        application.set('paymentId', paymentId)
+        application.set('invoiceId', invoiceId)
+        application.set('amountApplied', new BigDecimal('51000.00'))
+        delegator.create(application)
+
+        GenericValue installment = delegator.makeValue('LoanInstallmentInvoice')
+        installment.set('loanAgreementId', loanAgreementId)
+        installment.set('installmentNumber', 1L)
+        installment.set('invoiceId', invoiceId)
+        installment.set('loanQuoteId', loanQuoteId)
+        installment.set('dueDate', now)
+        installment.set('principalAmount', new BigDecimal('50000.00'))
+        installment.set('interestAmount', new BigDecimal('1000.00'))
+        installment.set('billedAmount', new BigDecimal('51000.00'))
+        installment.set('createdDate', now)
+        delegator.create(installment)
+
         // Test efGetContract
         Map getContract = dispatcher.runSync('efGetContract', [
             userLogin: apiUser(),
@@ -198,14 +243,17 @@ class EfMyPageTests extends OFBizTestCase {
         ok(getContract)
         assert getContract.contract != null
         assert getContract.contract.agreementId == loanAgreementId
+        assert getContract.balance.outstandingPrincipal.compareTo(new BigDecimal('50000.00')) == 0
+        assert getContract.balance.installmentPrincipalPaid.compareTo(new BigDecimal('50000.00')) == 0
+        assert getContract.balance.prepaymentPrincipalPaid.compareTo(BigDecimal.ZERO) == 0
 
-        // Test efSimulatePrepayment (no schedule → falls back to principalAmount)
+        // Test efSimulatePrepayment (uses the live payment-based balance)
         Map simulate = dispatcher.runSync('efSimulatePrepayment', [
             userLogin: apiUser(),
             agreementId: loanAgreementId
         ])
         ok(simulate)
-        assert simulate.outstandingPrincipal != null
+        assert simulate.outstandingPrincipal.compareTo(new BigDecimal('50000.00')) == 0
 
         // Test efRequestPrepayment
         Map prepay = dispatcher.runSync('efRequestPrepayment', [

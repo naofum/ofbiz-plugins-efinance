@@ -286,8 +286,6 @@ public final class EfMyPageServices {
 
                 // Loan repayment schedule – use max revision
                 Long maxRevision = getMaxLoanScheduleRevision(delegator, agreementId);
-                BigDecimal outstanding = agr.getBigDecimal("principalAmount");
-
                 if (maxRevision != null) {
                     List<GenericValue> rows = EntityQuery.use(delegator)
                             .from("LoanAgreementRepaymentSchedule")
@@ -304,15 +302,17 @@ public final class EfMyPageServices {
                         s.put("remainingBalance", row.getBigDecimal("remainingBalance"));
                         schedule.add(s);
                     }
-                    if (!rows.isEmpty()) {
-                        BigDecimal lastBalance = rows.get(rows.size() - 1).getBigDecimal("remainingBalance");
-                        if (lastBalance != null) {
-                            outstanding = lastBalance;
-                        }
-                    }
                 }
 
-                balance.put("outstandingPrincipal", outstanding);
+                // The balance is finance's outstanding principal from valid
+                // PaymentApplications and prepayments, not the schedule's last row.
+                Map<String, Object> loanBalance = getLoanBalance(delegator, dispatcher, agreementId);
+                if (!loanBalance.isEmpty()) {
+                    balance.putAll(loanBalance);
+                }
+                if (!balance.containsKey("outstandingPrincipal")) {
+                    balance.put("outstandingPrincipal", agr.getBigDecimal("principalAmount"));
+                }
             }
 
             Map<String, Object> result = ServiceUtil.returnSuccess();
@@ -347,22 +347,11 @@ public final class EfMyPageServices {
                         UtilProperties.getMessage(RESOURCE, "EfinanceContractNotFound", locale));
             }
 
-            // Get outstanding principal from schedule, fall back to principalAmount
-            BigDecimal outstanding = agr.getBigDecimal("principalAmount");
-            Long maxRevision = getMaxLoanScheduleRevision(delegator, agreementId);
-            if (maxRevision != null) {
-                List<GenericValue> allRows = EntityQuery.use(delegator)
-                        .from("LoanAgreementRepaymentSchedule")
-                        .where("loanAgreementId", agreementId, "scheduleRevisionNumber", maxRevision)
-                        .orderBy("installmentNumber")
-                        .queryList();
-                if (!allRows.isEmpty()) {
-                    BigDecimal lastBalance = allRows.get(allRows.size() - 1).getBigDecimal("remainingBalance");
-                    if (lastBalance != null) {
-                        outstanding = lastBalance;
-                    }
-                }
-            }
+            // Use finance's outstanding principal from valid payments and prepayments.
+            Map<String, Object> loanBalance = getLoanBalance(delegator, dctx.getDispatcher(), agreementId);
+            BigDecimal outstanding = loanBalance.get("outstandingPrincipal") instanceof BigDecimal
+                    ? (BigDecimal) loanBalance.get("outstandingPrincipal")
+                    : agr.getBigDecimal("principalAmount");
 
             if (prepaymentAmount == null || prepaymentAmount.compareTo(BigDecimal.ZERO) <= 0) {
                 prepaymentAmount = outstanding;
@@ -922,6 +911,26 @@ public final class EfMyPageServices {
     }
 
     /** Extract standard balance fields from a service result map, excluding serviceResult metadata. */
+    private static Map<String, Object> getLoanBalance(Delegator delegator, LocalDispatcher dispatcher,
+            String loanAgreementId) {
+        try {
+            GenericValue systemUser = getSystemUser(delegator);
+            Map<String, Object> balanceContext = new LinkedHashMap<>();
+            balanceContext.put("loanAgreementId", loanAgreementId);
+            balanceContext.put("userLogin", systemUser);
+            Map<String, Object> balanceResult = dispatcher.runSync(
+                    "getLoanAgreementBalance", balanceContext);
+            if (ServiceUtil.isSuccess(balanceResult)) {
+                return filterBalanceFields(balanceResult);
+            }
+            Debug.logWarning("getLoanAgreementBalance failed: "
+                    + ServiceUtil.getErrorMessage(balanceResult), MODULE);
+        } catch (Exception e) {
+            Debug.logWarning("getLoanAgreementBalance not available: " + e.getMessage(), MODULE);
+        }
+        return new LinkedHashMap<>();
+    }
+
     private static Map<String, Object> filterBalanceFields(Map<String, Object> serviceResult) {
         Map<String, Object> out = new LinkedHashMap<>();
         for (Map.Entry<String, Object> e : serviceResult.entrySet()) {

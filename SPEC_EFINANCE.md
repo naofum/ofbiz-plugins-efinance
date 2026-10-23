@@ -51,7 +51,7 @@
 | 8 | P2 | `EfFormField` が未実装でフォーム定義が Java 固定 | 商品別の項目定義ができない | W2 追加 |
 | 9 | P2 | ファイルスキャン Adapter がない | アップロードの安全性が保証できない | W2 追加 |
 | 10 | P2 | 重複下書き・冪等性・レート制限が不十分 | 二重申込・乱用のリスク | W2/W3 |
-| 11 | P2 | ローン残高が返済表の最終行の簡易計算 | finance の入金消込と一致しない場合がある | W6 修正 |
+| 11 | P2 | ローン残高が返済表の最終行の簡易計算 | finance の入金消込と一致しない場合がある | 2026-10-23 `getLoanAgreementBalance` 連携で解消済み |
 | 12 | P2 | REST 結合テストは基本フロー・CORS・エラーチェーンを実装済み。外部署名・負荷試験は未実施 | API 契約の回帰は自動化済み | W6 テスト → 2026-10-22 実装済み |
 
 **2026-10-22 に解消した項目**
@@ -63,6 +63,10 @@
 - 同意文書の seed と `efListConsentDocuments` を追加した。
 - `efCompleteSigning` に KYC 確認と電子契約同意のゲートを追加した。
 - `EfAccessGuard` の共通ヘルパーを追加した（所有確認・トークン確認）。
+
+**2026-10-23 に解消した項目**
+
+- ローンの `efGetContract` / `efSimulatePrepayment` が、返済表の最終行ではなく finance の `getLoanAgreementBalance` を参照するようにした。有効な `PaymentApplication` と取消されていない `LoanPrepayment` を正本とする。
 
 ---
 
@@ -901,9 +905,11 @@ sequenceDiagram
 
 ### 10.3 契約・残高
 
-- ローン：`LoanAgreementRepaymentSchedule` の現在の revision を返す。残高は最終行の `remainingBalance` を使う簡易計算。
+- ローン：返済表は `LoanAgreementRepaymentSchedule` の現在の revision を表示用に返す。
+- ローン残高：finance の `getLoanAgreementBalance` を `efinance-system` で呼び、`outstandingPrincipal`、`principalAmount`、`installmentPrincipalPaid`、`prepaymentPrincipalPaid`、`principalPaid` を返す。
+- 残高の正本は、有効な `PaymentApplication`（`PMNT_RECEIVED` / `PMNT_CONFIRMED` の `Payment`）と取消されていない `LoanPrepayment` である。請求しただけでは元本を減額しない。
 - リース：`getLeaseAgreementBalance` を `efinance-system` で呼び、`outstandingPrincipal` 等を返す。
-- **現状の制約**：ローンの残高は finance の「有効な PaymentApplication を正本とする残高」と一致しない場合がある。正確な残高照会は W6 の追加修正で対応する。
+- `efGetContract` と `efSimulatePrepayment` は同じ finance 残高を使う。
 - 支払履歴・延滞・保証金・物件情報は未実装。
 
 ### 10.4 手続き依頼
@@ -946,9 +952,9 @@ sequenceDiagram
 ### 10.8 既知のギャップ
 
 - `FINWE_OTHER` タスク作成。
-- 手続き依頼の管理画面は実装済み。`FINWE_OTHER` タスク生成、`efSendMessage` の support ケース紐付け、契約残高の正確な照会、証明書 PDF は未実装。
+- 手続き依頼の管理画面は実装済み。`FINWE_OTHER` タスク生成、`efSendMessage` の support ケース紐付け、証明書 PDF は未実装。
 - `efSendMessage` と support ケースの自動連携。
-- 正確なローン残高・支払履歴・延滞・保証金・物件情報。
+- 支払履歴・延滞・保証金・物件情報。
 - 証明書 PDF。
 - 通知送信。
 
@@ -1176,6 +1182,7 @@ sequenceDiagram
 | 2026-10-22（REST error/CORS） | `EfRestIntegrationTests` に認証なし 401、不正 JSON、必須項目不足、404、CORS 応答ヘッダーの検証を追加。**70 テスト成功** |
 | 2026-10-22（External signature） | `ExternalSignatureAdapter` を追加。設定された HTTP 署名 API と連携し、成功・HTTP 失敗をモックサーバーで検証。**71 テスト成功** |
 | 2026-10-23（W7） | `EfDirectDebitMandate`、口座振替依頼・照会、振込案内、担当者登録、管理画面、REST を追加。口座番号は暗号化し、表示は下4桁のみ。**72 テスト成功** |
+| 2026-10-23（P2 ローン残高） | `getLoanAgreementBalance` を finance に追加し、efinance の契約照会・繰上返済シミュレーションを入金消込・繰上返済ベースの残高に切り替えた。**72 テスト成功** |
 
 ---
 
