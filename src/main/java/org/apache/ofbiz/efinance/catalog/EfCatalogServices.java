@@ -27,10 +27,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.ofbiz.base.util.Debug;
 import org.apache.ofbiz.base.util.UtilMisc;
+import org.apache.ofbiz.base.util.UtilProperties;
 import org.apache.ofbiz.base.util.UtilValidate;
 import org.apache.ofbiz.entity.Delegator;
 import org.apache.ofbiz.entity.GenericEntityException;
@@ -38,6 +40,7 @@ import org.apache.ofbiz.entity.GenericValue;
 import org.apache.ofbiz.entity.condition.EntityCondition;
 import org.apache.ofbiz.entity.condition.EntityOperator;
 import org.apache.ofbiz.entity.util.EntityQuery;
+import org.apache.ofbiz.efinance.security.EfRequestGuard;
 import org.apache.ofbiz.finance.common.FinanceInterestCalculator;
 import org.apache.ofbiz.finance.lease.LeaseCalculator;
 import org.apache.ofbiz.service.DispatchContext;
@@ -169,8 +172,14 @@ public class EfCatalogServices {
         Integer termMonths = (Integer) context.get("termMonths");
         String repaymentMethod = (String) context.get("repaymentMethod");
         BigDecimal annualInterestRate = (BigDecimal) context.get("annualInterestRate");
+        String ipAddress = (String) context.get("ipAddress");
+        Locale locale = (Locale) context.get("locale");
 
         try {
+            String rateError = simulationRateLimitError(delegator, ipAddress, locale);
+            if (rateError != null) {
+                return ServiceUtil.returnError(rateError);
+            }
             GenericValue fp = EntityQuery.use(delegator).from("FinancialProduct").where("productId", productId).queryOne();
             if (fp == null) {
                 return ServiceUtil.returnError("Product not found or not published");
@@ -317,8 +326,14 @@ public class EfCatalogServices {
         BigDecimal acquisitionCost = (BigDecimal) context.get("acquisitionCost");
         Integer termMonths = (Integer) context.get("termMonths");
         BigDecimal taxRate = (BigDecimal) context.get("taxRate");
+        String ipAddress = (String) context.get("ipAddress");
+        Locale locale = (Locale) context.get("locale");
 
         try {
+            String rateError = simulationRateLimitError(delegator, ipAddress, locale);
+            if (rateError != null) {
+                return ServiceUtil.returnError(rateError);
+            }
             GenericValue fp = EntityQuery.use(delegator).from("FinancialProduct").where("productId", productId).queryOne();
             if (fp == null) {
                 return ServiceUtil.returnError("Product not found or not published");
@@ -418,6 +433,18 @@ public class EfCatalogServices {
     // -----------------------------------------------------------------------
 
     /** Check active='Y' and fromDate <= now and (thruDate null or thruDate >= now). */
+    private static String simulationRateLimitError(Delegator delegator, String ipAddress,
+            Locale locale) throws GenericEntityException {
+        int limit = UtilProperties.getPropertyAsInteger("efinance",
+                "efinance.rate.limit.simulation", 60);
+        int window = UtilProperties.getPropertyAsInteger("efinance",
+                "efinance.rate.limit.simulation.window.seconds", 60);
+        if (EfRequestGuard.checkRateLimit(delegator, "SIMULATION", ipAddress, limit, window)) {
+            return null;
+        }
+        return UtilProperties.getMessage("EfinanceUiLabels", "EfinanceRateLimited", locale);
+    }
+
     private static boolean isPublished(GenericValue pub, Timestamp now) {
         if (!"Y".equals(pub.getString("active"))) {
             return false;

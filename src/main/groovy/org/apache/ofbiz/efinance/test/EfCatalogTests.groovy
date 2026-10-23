@@ -19,6 +19,8 @@
 
 package org.apache.ofbiz.efinance.test
 
+import java.sql.Timestamp
+
 import org.apache.ofbiz.entity.GenericValue
 import org.apache.ofbiz.service.ServiceUtil
 import org.apache.ofbiz.service.testtools.OFBizTestCase
@@ -59,6 +61,32 @@ class EfCatalogTests extends OFBizTestCase {
         assert result.totalInterest > java.math.BigDecimal.ZERO
         assert result.schedule != null
         assert result.schedule.size() == 24
+    }
+
+    void testSimulationRateLimit() {
+        String ip = 'TEST_SIM_IP_' + System.currentTimeMillis()
+        String bucketId = 'TSTSIM_' + (System.currentTimeMillis() % 100000)
+        long windowMillis = 60L * 1000L
+        Timestamp windowStart = new Timestamp(Math.floorDiv(System.currentTimeMillis(), windowMillis) * windowMillis)
+        GenericValue bucket = delegator.makeValue('EfRateLimitBucket')
+        bucket.set('bucketId', bucketId)
+        bucket.set('scope', 'SIMULATION')
+        bucket.set('subjectKey', ip)
+        bucket.set('windowStart', windowStart)
+        bucket.set('requestCount', 999L)
+        bucket.set('lastUpdatedDate', new Timestamp(System.currentTimeMillis()))
+        try {
+            delegator.create(bucket)
+            Map result = dispatcher.runSync('efSimulateLoan', [
+                    productId: 'DEMO_LOANPROD1',
+                    principalAmount: new java.math.BigDecimal('300000'),
+                    termMonths: 24,
+                    ipAddress: ip
+            ])
+            assert !ServiceUtil.isSuccess(result)
+        } finally {
+            delegator.removeByAnd('EfRateLimitBucket', [bucketId: bucketId])
+        }
     }
 
     void testSimulateLoanOutOfRange() {

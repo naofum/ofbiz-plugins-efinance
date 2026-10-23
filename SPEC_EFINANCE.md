@@ -2,7 +2,7 @@
 
 `REQUIREMENTS_EFINANCE.md` の要件に対する設計。各 STEP の実装後に「実装」「テスト」「検証」を追記する。
 
-> **状態：W0〜W7 の API・DB は実装済み（2026-10-23 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト（CORS・エラーチェーンを含む）、JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）、口座振替・振込案内、冪等性・重複下書き防止・レート制限、ファイルスキャン Adapter、`EfFormField` による商品別フォーム定義を追加した。最新のテストは **78 件成功（errors="0" / failures="0"）**。残る主要ギャップは W8 販売店ポータル、W9 提携先組込み・チャット。
+> **状態：W0〜W7 の API・DB は実装済み（2026-10-23 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト（CORS・エラーチェーンを含む）、JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）、口座振替・振込案内、冪等性・重複下書き防止・レート制限、ファイルスキャン Adapter、`EfFormField` による商品別フォーム定義、公開シミュレーションの IP レート制限を追加した。最新のテストは **79 件成功（errors="0" / failures="0"）**。残る主要ギャップは W8 販売店ポータル、W9 提携先組込み・チャット。
 
 ## 進捗
 
@@ -32,8 +32,8 @@
 | W6 | `EfServiceRequest` / `EfNotificationSetting`、申込・契約照会、繰上返済、手続き、メッセージ、通知設定、REST 10 本、support 顧客 API ブリッジ 8 サービス | `EfMyPageTests` / `EfSupportTests` |
 | W7 | `EfDirectDebitMandate`、口座振替依頼・照会、振込案内、担当者登録、REST 2 本、管理画面 | `EfPaymentTests` |
 
-- 全体：**80 サービス**（`auth=true` 68、`auth=false` 12）、**27 entity**、**15 テストクラス / 78 テスト**。
-- 実行：`.\gradlew.bat compileJava compileGroovy` 成功。`.\gradlew.bat "ofbiz --test component=efinance"` で **78 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
+- 全体：**80 サービス**（`auth=true` 68、`auth=false` 12）、**27 entity**、**15 テストクラス / 79 テスト**。
+- 実行：`.\gradlew.bat compileJava compileGroovy` 成功。`.\gradlew.bat "ofbiz --test component=efinance"` で **79 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
 - seed/demo：`data/EfinanceTypeData.xml`（状態・列挙・権限・`efinance-system`・同意文書）、`data/EfinanceDemoData.xml`（公開商品・デモ会員・サンプル申込・契約）、`testdef/data/EfinanceTestData.xml`（テスト会員・KYC/同意フィクスチャ）。
 - **残作業**：W8 販売店ポータル、W9 提携先組込み・チャット。finance 全体回帰は 217 テスト成功、support はユーザー実行で OK。CORS・エラーチェーン・外部署名 HTTP アダプタ・W7 は自動テスト済み。
 
@@ -151,6 +151,8 @@ flowchart LR
 | `efinance.draft.expire.days` | 30 | 下書きの有効期間 |
 | `efinance.upload.max.bytes` | 10485760 | アップロード上限（10MB） |
 | `efinance.filescan.adapter` | `NoopFileScanAdapter` | ファイルスキャン Adapter。既定は `EFSCAN_PENDING` |
+| `efinance.rate.limit.simulation` | 60 | 公開シミュレーションの IP 単位上限 |
+| `efinance.rate.limit.simulation.window.seconds` | 60 | 公開シミュレーションの固定ウィンドウ |
 | `efinance.kyc.retention.years` | 7 | 本人確認記録の保存期間 |
 | `esignature.adapter` | `ClickWrapSignatureAdapter` | 電子署名アダプタの実装クラス |
 | `esignature.external.endpoint` | 空 | `ExternalSignatureAdapter` の署名 API URL |
@@ -443,7 +445,7 @@ sequenceDiagram
 - 仮審査は同一下書き 1 時間 5 回まで。超過時は `EFPRE_CONSULT`。
 - 登録・ログイン・パスワード再設定・MFA は、DB の `EfRateLimitBucket` による固定ウィンドウ制限を行う（`EfRequestGuard.checkRateLimit`、既定値は `efinance.properties`）。
 - 下書き作成・申込送信も利用者単位で制限する。
-- 公開シミュレーションの IP レート制限は未実装。
+- 公開シミュレーションは、REST のリモート IP をキーに `EfRateLimitBucket` で制限する（既定 60 回 / 60 秒）。IP はリクエスト本文ではなく HTTP 接続から取得する。
 
 ### 3.7 法人の権限
 
@@ -556,15 +558,15 @@ sequenceDiagram
 |----------|:---:|---------------|------|
 | `efListProducts` | false | IN: targetEnumId / OUT: products | 公開中の商品一覧 |
 | `efGetProduct` | false | IN: productId / OUT: product | 商品詳細（ローン・リース項目） |
-| `efSimulateLoan` | false | IN: productId, principalAmount, termMonths, repaymentMethod, annualInterestRate / OUT: monthlyPayment, totalPayment, totalInterest, effectiveAnnualRate, schedule | 元利均等・元金均等の返済予定。保存しない |
-| `efSimulateLease` | false | IN: productId, acquisitionCost, termMonths, taxRate / OUT: monthlyLeaseAmount, totalLeaseAmount, totalTax, calcInterestRate, schedule | `LeaseCalculator` によるリース料。保存しない |
+| `efSimulateLoan` | false | IN: productId, principalAmount, termMonths, repaymentMethod, annualInterestRate, ipAddress / OUT: monthlyPayment, totalPayment, totalInterest, effectiveAnnualRate, schedule | 元利均等・元金均等の返済予定。保存しない。IP 単位で制限 |
+| `efSimulateLease` | false | IN: productId, acquisitionCost, termMonths, taxRate, ipAddress / OUT: monthlyLeaseAmount, totalLeaseAmount, totalTax, calcInterestRate, schedule | `LeaseCalculator` によるリース料。保存しない。IP 単位で制限 |
 
 ### 5.3 計算と検証
 
 - ローン：`FinancialProduct.defaultAnnualInterestRate` を既定に、入力レートを優先。`principalAmount` と `termMonths` の範囲を検証。通貨の端数処理は `FinanceInterestCalculator.resolveScale` / `resolveRoundingMode` を使う。
 - リース：`FinancialProductLease.defaultMonthlyRateFactor` または `defaultCalcInterestRate` を使う。`residualValueRate`、`paymentTimingEnumId`、`taxRate` を反映。
 - 結果には `EfinanceSimulationDisclaimer` を付ける。
-- 公開シミュレーションのレート制限は未実装。
+- 公開シミュレーションは IP 単位でレート制限する（`efinance.rate.limit.simulation` / `...window.seconds`）。
 
 ### 5.4 REST
 
@@ -577,11 +579,10 @@ sequenceDiagram
 
 ### 5.5 テスト
 
-- `EfCatalogTests`：商品一覧、存在しない商品、ローン基本、範囲外、リース基本。
+- `EfCatalogTests`：商品一覧、存在しない商品、ローン基本、範囲外、リース基本、IP レート制限。
 
 ### 5.6 既知のギャップ
 
-- 公開シミュレーションの IP レート制限なし。
 - 公開商品の管理画面なし。
 - 実質年率は簡易表示で、手数料を含む APR 計算は未実装。
 - 商品の広告表示項目（金利幅・返済例）は未実装。
@@ -680,7 +681,6 @@ sequenceDiagram
 - ファイルスキャン Adapter は実装済み。既定の `NoopFileScanAdapter` は安全側で `EFSCAN_PENDING` を返し、外部ウイルススキャンサービスとの接続は未実装。
 - 住所・法人番号の照会 Adapter 未実装。
 - AI 書類読取（U8）未実装。
-- 公開シミュレーションの IP レート制限は未実装。
 - 法人契約の照会所有確認は実装済み（`EfAccessGuard.isContractAccessible`）。
 
 ---
@@ -1124,7 +1124,7 @@ sequenceDiagram
 .\gradlew.bat "ofbiz --test component=efinance"
 ```
 
-- 2026-10-23：**78 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
+- 2026-10-23：**79 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
 - REST 経由の JWT 取得・Authorization・公開 API・無効トークン・認証なし 401・不正 JSON・必須項目不足・404・CORS 応答ヘッダーを `EfRestIntegrationTests` で確認済み。
 - finance 全体回帰は **217 テスト成功**、support はユーザー実行で OK。
 - JasperReports テンプレート、PDF の `Content` 保存、`EfDeliveredDocument.contentId`、Base64 ダウンロード、クリック同意・外部署名 HTTP アダプタを `EfContractTests` で確認済み。
@@ -1132,6 +1132,7 @@ sequenceDiagram
 - レート制限、下書きの冪等作成、重複下書き再利用、申込送信の再実行を `EfRequestGuardTests` / `EfApplicationTests` で確認済み。
 - ファイルスキャンの既定 PENDING と EICAR 検知を `EfFileScanTests` で確認済み。KYC 画像・追加書類の `scanStatus` は `EfKycTests` / `EfPreScreenTests` で確認済み。
 - `EfFormField` の DB 定義と商品別上書きを `EfApplicationTests` で確認済み。
+- 公開シミュレーションの IP レート制限を `EfCatalogTests` で確認済み。
 - 未実装のテストは W8/W9 の設計機能のみ。
 
 
@@ -1202,6 +1203,7 @@ sequenceDiagram
 | 2026-10-23（P2 冪等性） | `EfIdempotencyRecord` / `EfRateLimitBucket` と `EfRequestGuard` を追加。下書き作成・申込送信の `idempotencyKey`、重複下書き再利用、認証操作のレート制限を実装。**75 テスト成功** |
 | 2026-10-23（P2 ファイルスキャン） | `FileScanAdapter` / `NoopFileScanAdapter` / `BasicFileScanAdapter` を追加。KYC 画像・追加書類・下書き書類に `scanStatus` を保存し、感染ファイルを拒否。**77 テスト成功** |
 | 2026-10-23（P2 フォーム定義） | `EfFormField` とローン/リースの既定 seed を追加。`efGetApplicationForm` を DB 定義優先・Java フォールバックに変更し、商品別の上書き・追加項目に対応。**78 テスト成功** |
+| 2026-10-23（公開 IP 制限） | REST のリモート IP を公開シミュレーションに渡し、`EfRateLimitBucket` で IP 単位の制限を追加。**79 テスト成功** |
 
 ---
 
@@ -1210,6 +1212,7 @@ sequenceDiagram
 - 変更ファイル：
   - `plugins/rest-api/src/main/java/org/apache/ofbiz/ws/rs/security/auth/EfAuthFilter.java`
   - `plugins/rest-api/src/main/java/org/apache/ofbiz/ws/rs/security/auth/APIAuthFilter.java`
+  - `plugins/rest-api/src/main/java/org/apache/ofbiz/ws/rs/process/ServiceRequestHandler.java`
   - `plugins/efinance/api/efinance.rest.xml`（公開操作の `auth="false"` 明示）
 - 変更理由：
   - rest-api の `APIAuthFilter` は JWT の署名だけを検証し、efinance の `EfToken` 失効や `EfMember` ロックを参照しない。失効済みトークンが有効期限まで利用できていた。
@@ -1222,12 +1225,13 @@ sequenceDiagram
   - `EfAuthFilter` が `EfRequestValidator` をリフレクションで呼ぶ。efinance から rest-api へのコンパイル依存は追加していない。
   - `APIAuthFilter` は `OFBizApiConfig` の API 定義を参照し、`auth=false` の REST 操作を認証対象外にする。ログインだけでなく、今後の公開 API も同じ仕組みで扱える。
   - `efinance.rest.xml` の公開操作に `auth="false"` を明示した。
+  - `ServiceRequestHandler` は、サービスが `ipAddress` 入力を持つ場合に `HttpServletRequest.getRemoteAddr()` をサービスコンテキストへ設定する。公開シミュレーションの IP 制限はこの値を使い、リクエスト本文の IP は信用しない。
 - 代替案：
   - 各サービス先頭で `EfAccessGuard` を呼ぶ方式は修正漏れが多く、全 REST を一括で守れないため不採用。
   - `APIAuthFilter` に `/ef/auth/` をハードコードする方式は、公開 API の追加ごとに rest-api を修正する必要があるため不採用。
 - 配布：efinance プラグイン単体には含まれないため、rest-api の差分も同時にデプロイする。
 - 検証：
   - `EfAuthTests` で `EfRequestValidator` の有効トークン・失効トークン・ロック会員判定と再認証トークンのワンタイム性を確認。
-  - `compileJava compileGroovy` 成功、efinance 78 テスト成功。
+  - `compileJava compileGroovy` 成功、efinance 79 テスト成功。
   - REST 手動結合確認：`demo-ef-customer` でログイン 200、商品 2 件、申込 1 件、契約 1 件、契約詳細の返済表 2 行、メッセージ、通知設定、`/portal/control/main` 200 を確認。
   - `EfRestIntegrationTests` で公開商品、ログイン、Bearer 認証、無効トークン 401 を自動確認する。CORS とエラーチェーンの網羅は未整備。

@@ -291,6 +291,7 @@ under the License.
         <attribute name="termMonths" type="Integer" mode="IN" optional="false"/>
         <attribute name="repaymentMethod" type="String" mode="IN" optional="true"/>
         <attribute name="annualInterestRate" type="BigDecimal" mode="IN" optional="true"/>
+        <attribute name="ipAddress" type="String" mode="IN" optional="true"/>
         <attribute name="monthlyPayment" type="BigDecimal" mode="OUT" optional="true"/>
         <attribute name="totalPayment" type="BigDecimal" mode="OUT" optional="true"/>
         <attribute name="totalInterest" type="BigDecimal" mode="OUT" optional="true"/>
@@ -305,6 +306,7 @@ under the License.
         <attribute name="acquisitionCost" type="BigDecimal" mode="IN" optional="false"/>
         <attribute name="termMonths" type="Integer" mode="IN" optional="false"/>
         <attribute name="taxRate" type="BigDecimal" mode="IN" optional="true"/>
+        <attribute name="ipAddress" type="String" mode="IN" optional="true"/>
         <attribute name="monthlyLeaseAmount" type="BigDecimal" mode="OUT" optional="true"/>
         <attribute name="totalLeaseAmount" type="BigDecimal" mode="OUT" optional="true"/>
         <attribute name="totalTax" type="BigDecimal" mode="OUT" optional="true"/>
