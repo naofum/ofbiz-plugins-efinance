@@ -280,6 +280,38 @@ under the License.
         <index name="EFDRF_STS_IDX"><index-field name="statusId"/></index>
     </entity>
 
+    <entity entity-name="EfFormField" package-name="org.apache.ofbiz.efinance.application"
+            title="eFinance dynamic application form field">
+        <field name="formFieldId" type="id"><description>sequenced</description></field>
+        <field name="productId" type="id"><description>FinancialProduct id, or * for the application-type default</description></field>
+        <field name="applicationTypeId" type="id"><description>LOAN or LEASE</description></field>
+        <field name="stepNumber" type="numeric"><description>1-based step number</description></field>
+        <field name="stepKey" type="short-varchar"><description>product / applicant / asset / agreement</description></field>
+        <field name="fieldName" type="short-varchar"/>
+        <field name="fieldType" type="short-varchar"><description>text / number / date / checkbox / select / hidden</description></field>
+        <field name="requiredFlag" type="indicator"><description>Y / N</description></field>
+        <field name="label" type="short-varchar"/>
+        <field name="displayOrder" type="numeric"/>
+        <field name="optionsJson" type="very-long"><description>JSON array for select options</description></field>
+        <field name="active" type="indicator"><description>Y / N</description></field>
+        <field name="createdDate" type="date-time"/>
+        <field name="lastModifiedDate" type="date-time"/>
+        <prim-key field="formFieldId"/>
+        <relation type="one-nofk" title="Product" rel-entity-name="FinancialProduct">
+            <key-map field-name="productId"/>
+        </relation>
+        <index name="EFFORM_KEY_IDX">
+            <index-field name="productId"/>
+            <index-field name="applicationTypeId"/>
+            <index-field name="stepNumber"/>
+            <index-field name="fieldName"/>
+        </index>
+        <index name="EFFORM_ACTIVE_IDX">
+            <index-field name="applicationTypeId"/>
+            <index-field name="active"/>
+        </index>
+    </entity>
+
     <entity entity-name="EfDraftDocument" package-name="org.apache.ofbiz.efinance.application"
             title="eFinance draft document attachment">
         <field name="draftDocumentId" type="id"><description>sequenced</description></field>

@@ -2,7 +2,7 @@
 
 ローン・リースを **Web で申込から契約・契約後の手続きまで完結** できるようにする、顧客向けのプラグイン `efinance` の要件定義。OFBiz の ecommerce（order・product の上に乗る顧客向けの店舗）と同じ考え方で、finance の上に乗る顧客向けの仕組みとする。詳細な設計は `SPEC_EFINANCE.md` を正とする。
 
-> **状態：W0〜W7 の API・DB は実装済み（2026-10-23 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト（CORS・エラーチェーンを含む）、JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）、口座振替・振込案内、冪等性・重複下書き防止・レート制限、ファイルスキャン Adapter を追加した。テストは 77 件成功（errors="0" / failures="0"）。残作業は W8 販売店ポータル、W9 提携先組込み・チャット。
+> **状態：W0〜W7 の API・DB は実装済み（2026-10-23 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト（CORS・エラーチェーンを含む）、JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）、口座振替・振込案内、冪等性・重複下書き防止・レート制限、ファイルスキャン Adapter、`EfFormField` による商品別フォーム定義を追加した。テストは 78 件成功（errors="0" / failures="0"）。残作業は W8 販売店ポータル、W9 提携先組込み・チャット。
 
 ---
 
@@ -158,7 +158,7 @@ flowchart LR
 |------|:---:|:---:|-----------|
 | W0 | 実装済み | 管理画面・法人・認証 | リクエスト単位の `EfAuthFilter`、法人ロール管理、申込下書き・法人契約の所有確認、再認証、管理画面（KYC 審査・書類要請・手続き依頼・ロック解除・監査ログ）を 2026-10-22 に実装 |
 | W1 | 実装済み | – | 公開シミュレーションの IP レート制限、公開商品の管理画面 |
-| W2 | 実装済み | – | `EfFormField`、外部ウイルススキャンサービス接続、住所・法人番号の照会 Adapter、AI 読取。重複下書き・冪等性・スキャン Adapter は 2026-10-23 に実装済み |
+| W2 | 実装済み | – | 外部ウイルススキャンサービス接続、住所・法人番号の照会 Adapter、AI 読取。`EfFormField`・重複下書き・冪等性・スキャン Adapter は 2026-10-23 に実装済み |
 | W3 | 実装済み | KYC 審査 | `FinUwExternalInfo` 連携、KYC 画像の暗号化は未実装 |
 | W4 | 実装済み | 管理画面の書類要請一覧 | `EfStageEvent` と `NotificationAdapter` を実装済み。ECA・バッチ通知は未実装 |
 | W5 | 実装済み | – | JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）は実装済み。プロバイダ固有の認証・L21 承認連携は未実装 |
@@ -512,6 +512,7 @@ flowchart LR
 | `EfConsentDocument` / `EfConsent` | 同意文面の版と同意記録 |
 | `EfProductPublication` | 商品の公開設定 |
 | `EfApplicationDraft` | 申込下書き |
+| `EfFormField` | 商品・申込種別ごとのフォーム項目定義 |
 | `EfDraftDocument` | 下書きの添付書類 |
 | `EfApplicationLink` | 下書きと finance 申込のリンク |
 | `EfFraudCheck` | 不正検知の結果 |
@@ -580,7 +581,7 @@ flowchart LR
 |------|------|------|
 | W0 | 基盤、会員登録、ログイン、MFA、トークン、監査 | API/DB 実装済み（2026-10-22）。法人ロール管理・申込下書きの所有確認、リクエスト単位の認証フィルタを追加 |
 | W1 | 商品紹介、ローン・リースシミュレーション | 実装済み（2026-10-21）。公開シミュレーションの IP 制限・公開管理は未完 |
-| W2 | 申込下書き、書類、送信、不正検知 | 実装済み（2026-10-23）。フォーム定義・外部スキャンサービス接続は未完。重複下書き・冪等性・レート制限・スキャン Adapter は実装済み |
+| W2 | 申込下書き、書類、送信、不正検知 | 実装済み（2026-10-23）。外部スキャンサービス接続は未完。フォーム定義・重複下書き・冪等性・レート制限・スキャン Adapter は実装済み |
 | W3 | 本人確認、同意 | API 実装済み（2026-10-22）。同意文書 seed・一覧 API を追加。U6 連携・審査画面は未完 |
 | W4 | 仮審査、進捗、追加書類 | API 実装済み（2026-10-21）。段階イベント・通知は未完 |
 | W5 | 見積受理、署名、契約作成、交付 | API 実装済み（2026-10-22）。KYC・同意ゲート、JasperReports PDF・電子交付、再認証、`ESignatureAdapter`（クリック同意・外部 HTTP）を追加。プロバイダ固有の認証・L21 連携は未完 |
@@ -669,12 +670,13 @@ flowchart LR
 
 **現在の結果（2026-10-23）**
 
-- `.\gradlew.bat "ofbiz --test component=efinance"`：77 テスト、`errors="0"` / `failures="0"`
+- `.\gradlew.bat "ofbiz --test component=efinance"`：78 テスト、`errors="0"` / `failures="0"`
 - REST 経由の JWT 取得・Authorization・公開 API・無効トークン・認証なし 401・不正 JSON・必須項目不足・404・CORS 応答ヘッダーは自動テスト済み。
 - finance 全体回帰は 217 テスト成功、support はユーザー実行で OK。
 - W7 口座振替・振込案内は自動テスト済み。
 - 下書き作成・申込送信の冪等性、重複下書き再利用、認証操作のレート制限は自動テスト済み。
 - ファイルスキャン Adapter（既定 PENDING・EICAR 検知）と KYC 画像・追加書類のスキャン結果保存は自動テスト済み。
+- `EfFormField` の DB 定義・商品別上書きは自動テスト済み。
 - 未実施：W8 販売店ポータル、W9 提携先組込み・チャット。
 
 ---
@@ -737,3 +739,4 @@ flowchart LR
 | 2026-10-23（P2 ローン残高） | finance の `getLoanAgreementBalance` を追加し、マイページの契約照会・繰上返済シミュレーションを、有効な入金消込と繰上返済を正本とする残高に変更。72 テスト成功 |
 | 2026-10-23（P2 冪等性） | `EfIdempotencyRecord`、`EfRateLimitBucket`、`EfRequestGuard` を追加。下書き作成・申込送信の `idempotencyKey`、空の下書き再利用、認証操作のレート制限を実装。75 テスト成功 |
 | 2026-10-23（P2 ファイルスキャン） | `FileScanAdapter` と既定 `NoopFileScanAdapter`、EICAR 検知の `BasicFileScanAdapter` を追加。KYC 画像・追加書類・下書き書類に `scanStatus` を保存。77 テスト成功 |
+| 2026-10-23（P2 フォーム定義） | `EfFormField` とローン/リースの既定 seed を追加。`efGetApplicationForm` を DB 定義優先・Java フォールバックに変更し、商品別の上書き・追加項目に対応。78 テスト成功 |

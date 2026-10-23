@@ -320,6 +320,39 @@ under the License.
     <StatusValidChange statusId="EFREQ_FAILED" statusIdTo="EFREQ_IN_PROGRESS" transitionName="Retry"/>
 
     <!-- ========================================================= -->
+    <!-- Dynamic application form fields (application-type default) -->
+    <!-- ========================================================= -->
+    <EfFormField formFieldId="EFFORM_LN_001" productId="*" applicationTypeId="LOAN" stepNumber="1" stepKey="product" fieldName="productId" fieldType="hidden" requiredFlag="N" label="Product" displayOrder="1" active="Y"/>
+    <EfFormField formFieldId="EFFORM_LN_002" productId="*" applicationTypeId="LOAN" stepNumber="1" stepKey="product" fieldName="principalAmount" fieldType="number" requiredFlag="Y" label="Loan amount" displayOrder="2" active="Y"/>
+    <EfFormField formFieldId="EFFORM_LN_003" productId="*" applicationTypeId="LOAN" stepNumber="1" stepKey="product" fieldName="termMonths" fieldType="number" requiredFlag="Y" label="Term (months)" displayOrder="3" active="Y"/>
+    <EfFormField formFieldId="EFFORM_LN_004" productId="*" applicationTypeId="LOAN" stepNumber="1" stepKey="product" fieldName="repaymentMethod" fieldType="select" requiredFlag="N" label="Repayment method" displayOrder="4" optionsJson="[&quot;EQUAL_PAYMENT&quot;,&quot;EQUAL_PRINCIPAL&quot;]" active="Y"/>
+    <EfFormField formFieldId="EFFORM_LN_005" productId="*" applicationTypeId="LOAN" stepNumber="2" stepKey="applicant" fieldName="firstName" fieldType="text" requiredFlag="Y" label="First name" displayOrder="1" active="Y"/>
+    <EfFormField formFieldId="EFFORM_LN_006" productId="*" applicationTypeId="LOAN" stepNumber="2" stepKey="applicant" fieldName="lastName" fieldType="text" requiredFlag="Y" label="Last name" displayOrder="2" active="Y"/>
+    <EfFormField formFieldId="EFFORM_LN_007" productId="*" applicationTypeId="LOAN" stepNumber="2" stepKey="applicant" fieldName="birthDate" fieldType="date" requiredFlag="Y" label="Date of birth" displayOrder="3" active="Y"/>
+    <EfFormField formFieldId="EFFORM_LN_008" productId="*" applicationTypeId="LOAN" stepNumber="2" stepKey="applicant" fieldName="address1" fieldType="text" requiredFlag="Y" label="Address" displayOrder="4" active="Y"/>
+    <EfFormField formFieldId="EFFORM_LN_009" productId="*" applicationTypeId="LOAN" stepNumber="2" stepKey="applicant" fieldName="postalCode" fieldType="text" requiredFlag="Y" label="Postal code" displayOrder="5" active="Y"/>
+    <EfFormField formFieldId="EFFORM_LN_010" productId="*" applicationTypeId="LOAN" stepNumber="2" stepKey="applicant" fieldName="prefecture" fieldType="text" requiredFlag="Y" label="Prefecture" displayOrder="6" active="Y"/>
+    <EfFormField formFieldId="EFFORM_LN_011" productId="*" applicationTypeId="LOAN" stepNumber="2" stepKey="applicant" fieldName="city" fieldType="text" requiredFlag="Y" label="City" displayOrder="7" active="Y"/>
+    <EfFormField formFieldId="EFFORM_LN_012" productId="*" applicationTypeId="LOAN" stepNumber="2" stepKey="applicant" fieldName="employerName" fieldType="text" requiredFlag="Y" label="Employer name" displayOrder="8" active="Y"/>
+    <EfFormField formFieldId="EFFORM_LN_013" productId="*" applicationTypeId="LOAN" stepNumber="2" stepKey="applicant" fieldName="annualIncome" fieldType="number" requiredFlag="Y" label="Annual income" displayOrder="9" active="Y"/>
+    <EfFormField formFieldId="EFFORM_LN_014" productId="*" applicationTypeId="LOAN" stepNumber="2" stepKey="applicant" fieldName="residenceType" fieldType="select" requiredFlag="N" label="Residence type (OWN/RENT)" displayOrder="10" optionsJson="[&quot;OWN&quot;,&quot;RENT&quot;]" active="Y"/>
+    <EfFormField formFieldId="EFFORM_LN_015" productId="*" applicationTypeId="LOAN" stepNumber="3" stepKey="agreement" fieldName="confirmTerms" fieldType="checkbox" requiredFlag="Y" label="Agree to terms" displayOrder="1" active="Y"/>
+    <EfFormField formFieldId="EFFORM_LN_016" productId="*" applicationTypeId="LOAN" stepNumber="3" stepKey="agreement" fieldName="confirmPrivacy" fieldType="checkbox" requiredFlag="Y" label="Agree to privacy policy" displayOrder="2" active="Y"/>
+
+    <EfFormField formFieldId="EFFORM_LS_001" productId="*" applicationTypeId="LEASE" stepNumber="1" stepKey="product" fieldName="productId" fieldType="hidden" requiredFlag="N" label="Product" displayOrder="1" active="Y"/>
+    <EfFormField formFieldId="EFFORM_LS_002" productId="*" applicationTypeId="LEASE" stepNumber="1" stepKey="product" fieldName="termMonths" fieldType="number" requiredFlag="Y" label="Term (months)" displayOrder="2" active="Y"/>
+    <EfFormField formFieldId="EFFORM_LS_003" productId="*" applicationTypeId="LEASE" stepNumber="2" stepKey="asset" fieldName="assetName" fieldType="text" requiredFlag="Y" label="Asset name" displayOrder="1" active="Y"/>
+    <EfFormField formFieldId="EFFORM_LS_004" productId="*" applicationTypeId="LEASE" stepNumber="2" stepKey="asset" fieldName="fixedAssetTypeId" fieldType="select" requiredFlag="N" label="Asset type" displayOrder="2" optionsJson="[&quot;EQUIPMENT&quot;,&quot;VEHICLE&quot;,&quot;OTHER&quot;]" active="Y"/>
+    <EfFormField formFieldId="EFFORM_LS_005" productId="*" applicationTypeId="LEASE" stepNumber="2" stepKey="asset" fieldName="estimatedAcquisitionCost" fieldType="number" requiredFlag="Y" label="Estimated acquisition cost" displayOrder="3" active="Y"/>
+    <EfFormField formFieldId="EFFORM_LS_006" productId="*" applicationTypeId="LEASE" stepNumber="2" stepKey="asset" fieldName="supplierName" fieldType="text" requiredFlag="N" label="Supplier name" displayOrder="4" active="Y"/>
+    <EfFormField formFieldId="EFFORM_LS_007" productId="*" applicationTypeId="LEASE" stepNumber="3" stepKey="applicant" fieldName="companyName" fieldType="text" requiredFlag="Y" label="Company name" displayOrder="1" active="Y"/>
+    <EfFormField formFieldId="EFFORM_LS_008" productId="*" applicationTypeId="LEASE" stepNumber="3" stepKey="applicant" fieldName="companyAddress" fieldType="text" requiredFlag="Y" label="Company address" displayOrder="2" active="Y"/>
+    <EfFormField formFieldId="EFFORM_LS_009" productId="*" applicationTypeId="LEASE" stepNumber="3" stepKey="applicant" fieldName="representativeName" fieldType="text" requiredFlag="Y" label="Representative name" displayOrder="3" active="Y"/>
+    <EfFormField formFieldId="EFFORM_LS_010" productId="*" applicationTypeId="LEASE" stepNumber="3" stepKey="applicant" fieldName="representativeBirthDate" fieldType="date" requiredFlag="Y" label="Representative date of birth" displayOrder="4" active="Y"/>
+    <EfFormField formFieldId="EFFORM_LS_011" productId="*" applicationTypeId="LEASE" stepNumber="4" stepKey="agreement" fieldName="confirmTerms" fieldType="checkbox" requiredFlag="Y" label="Agree to terms" displayOrder="1" active="Y"/>
+    <EfFormField formFieldId="EFFORM_LS_012" productId="*" applicationTypeId="LEASE" stepNumber="4" stepKey="agreement" fieldName="confirmPrivacy" fieldType="checkbox" requiredFlag="Y" label="Agree to privacy policy" displayOrder="2" active="Y"/>
+
+    <!-- ========================================================= -->
     <!-- System user for internal dispatcher calls                 -->
     <!-- ========================================================= -->
     <Party partyId="EFINANCE_SYSTEM" partyTypeId="PERSON"/>

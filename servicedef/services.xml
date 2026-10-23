@@ -319,6 +319,7 @@ under the License.
         <attribute name="applicationTypeId" type="String" mode="IN" optional="false"/>
         <attribute name="steps" type="List" mode="OUT" optional="true"/>
         <attribute name="totalSteps" type="Integer" mode="OUT" optional="true"/>
+        <attribute name="formSource" type="String" mode="OUT" optional="true"/>
     </service>
 
     <!-- W2: Draft CRUD -->

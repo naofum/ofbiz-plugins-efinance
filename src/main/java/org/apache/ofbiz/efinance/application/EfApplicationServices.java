@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -86,19 +87,100 @@ public final class EfApplicationServices {
     // =========================================================================
 
     public static Map<String, Object> efGetApplicationForm(DispatchContext dctx, Map<String, Object> context) {
+        Delegator delegator = dctx.getDelegator();
         String applicationTypeId = (String) context.get("applicationTypeId");
+        String productId = (String) context.get("productId");
 
-        List<Map<String, Object>> steps;
-        if ("LEASE".equals(applicationTypeId)) {
-            steps = buildLeaseSteps();
-        } else {
-            steps = buildLoanSteps();
+        List<Map<String, Object>> steps = buildConfiguredSteps(delegator, productId, applicationTypeId);
+        boolean configured = !steps.isEmpty();
+        if (!configured) {
+            if ("LEASE".equals(applicationTypeId)) {
+                steps = buildLeaseSteps();
+            } else {
+                steps = buildLoanSteps();
+            }
         }
 
         Map<String, Object> result = ServiceUtil.returnSuccess();
         result.put("steps", steps);
         result.put("totalSteps", steps.size());
+        result.put("formSource", configured ? "DB" : "JAVA");
         return result;
+    }
+
+    /**
+     * Load the application-type defaults (productId="*") and let product-specific
+     * rows override fields with the same step and name.
+     */
+    private static List<Map<String, Object>> buildConfiguredSteps(Delegator delegator,
+            String productId, String applicationTypeId) {
+        if (delegator == null || UtilValidate.isEmpty(applicationTypeId)) {
+            return new ArrayList<>();
+        }
+        try {
+            Map<String, GenericValue> merged = new LinkedHashMap<>();
+            List<GenericValue> defaults = EntityQuery.use(delegator).from("EfFormField")
+                    .where("productId", "*", "applicationTypeId", applicationTypeId, "active", "Y")
+                    .orderBy("stepNumber", "displayOrder", "fieldName").queryList();
+            for (GenericValue row : defaults) {
+                merged.put(row.getLong("stepNumber") + ":" + row.getString("fieldName"), row);
+            }
+            if (UtilValidate.isNotEmpty(productId) && !"*".equals(productId)) {
+                List<GenericValue> overrides = EntityQuery.use(delegator).from("EfFormField")
+                        .where("productId", productId, "applicationTypeId", applicationTypeId, "active", "Y")
+                        .orderBy("stepNumber", "displayOrder", "fieldName").queryList();
+                for (GenericValue row : overrides) {
+                    merged.put(row.getLong("stepNumber") + ":" + row.getString("fieldName"), row);
+                }
+            }
+            if (merged.isEmpty()) {
+                return new ArrayList<>();
+            }
+
+            List<GenericValue> rows = new ArrayList<>(merged.values());
+            rows.sort(Comparator
+                    .comparing((GenericValue row) -> row.getLong("stepNumber"))
+                    .thenComparing(row -> row.getLong("displayOrder"))
+                    .thenComparing(row -> row.getString("fieldName")));
+
+            List<Map<String, Object>> steps = new ArrayList<>();
+            Long currentStep = null;
+            String currentKey = null;
+            List<Map<String, Object>> currentFields = null;
+            for (GenericValue row : rows) {
+                Long stepNumber = row.getLong("stepNumber");
+                if (currentStep == null || !currentStep.equals(stepNumber)) {
+                    currentStep = stepNumber;
+                    currentKey = row.getString("stepKey");
+                    currentFields = new ArrayList<>();
+                    steps.add(step(stepNumber.intValue(), currentKey, currentFields));
+                }
+                currentFields.add(configuredField(row));
+            }
+            return steps;
+        } catch (GenericEntityException e) {
+            Debug.logWarning("Unable to load EfFormField; using Java form definition: "
+                    + e.getMessage(), MODULE);
+            return new ArrayList<>();
+        }
+    }
+
+    private static Map<String, Object> configuredField(GenericValue row) {
+        Map<String, Object> f = new LinkedHashMap<>();
+        f.put("fieldName", row.getString("fieldName"));
+        f.put("fieldType", row.getString("fieldType"));
+        f.put("required", "Y".equals(row.getString("requiredFlag")));
+        f.put("label", row.getString("label"));
+        String optionsJson = row.getString("optionsJson");
+        if (UtilValidate.isNotEmpty(optionsJson)) {
+            try {
+                f.put("options", MAPPER.readValue(optionsJson, List.class));
+            } catch (Exception e) {
+                Debug.logWarning("Invalid EfFormField optionsJson for "
+                        + row.getString("formFieldId") + ": " + e.getMessage(), MODULE);
+            }
+        }
+        return f;
     }
 
     private static List<Map<String, Object>> buildLoanSteps() {

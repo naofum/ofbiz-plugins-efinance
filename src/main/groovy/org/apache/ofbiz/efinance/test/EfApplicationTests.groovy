@@ -74,6 +74,7 @@ class EfApplicationTests extends OFBizTestCase {
         assert r.steps != null
         assert r.steps.size() == 3
         assert r.totalSteps == 3
+        assert r.formSource == 'DB'
     }
 
     void testGetApplicationFormLease() {
@@ -85,6 +86,35 @@ class EfApplicationTests extends OFBizTestCase {
         assert r.steps != null
         assert r.steps.size() == 4
         assert r.totalSteps == 4
+        assert r.formSource == 'DB'
+    }
+
+    void testProductSpecificFormField() {
+        String fieldId = 'TSTFORM_' + (System.currentTimeMillis() % 100000)
+        GenericValue row = delegator.makeValue('EfFormField')
+        row.set('formFieldId', fieldId)
+        row.set('productId', 'DEMO_LOANPROD1')
+        row.set('applicationTypeId', 'LOAN')
+        row.set('stepNumber', 1L)
+        row.set('stepKey', 'product')
+        row.set('fieldName', 'promotionCode')
+        row.set('fieldType', 'text')
+        row.set('requiredFlag', 'N')
+        row.set('label', 'Promotion code')
+        row.set('displayOrder', 99L)
+        row.set('active', 'Y')
+        try {
+            delegator.create(row)
+            Map r = dispatcher.runSync('efGetApplicationForm', [
+                    productId: 'DEMO_LOANPROD1',
+                    applicationTypeId: 'LOAN'
+            ])
+            ok(r)
+            assert r.formSource == 'DB'
+            assert r.steps[0].fields.any { it.fieldName == 'promotionCode' }
+        } finally {
+            delegator.removeByAnd('EfFormField', [formFieldId: fieldId])
+        }
     }
 
     void testCreateAndSaveDraft() {
