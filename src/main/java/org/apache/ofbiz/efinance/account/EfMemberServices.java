@@ -43,6 +43,7 @@ import org.apache.ofbiz.entity.GenericValue;
 import org.apache.ofbiz.entity.condition.EntityCondition;
 import org.apache.ofbiz.entity.condition.EntityOperator;
 import org.apache.ofbiz.entity.util.EntityQuery;
+import org.apache.ofbiz.efinance.security.EfRequestGuard;
 import org.apache.ofbiz.service.DispatchContext;
 import org.apache.ofbiz.service.ServiceUtil;
 import org.apache.ofbiz.webapp.control.JWTManager;
@@ -116,6 +117,12 @@ public final class EfMemberServices {
         }
 
         try {
+            if (!rateLimit(delegator, "REGISTER", email,
+                    "efinance.rate.limit.register", 5,
+                    "efinance.rate.limit.register.window.seconds", 3600)) {
+                return ServiceUtil.returnError(UtilProperties.getMessage(
+                        RESOURCE, "EfinanceRateLimited", locale));
+            }
             // Check duplicate userLoginId (we use email as userLoginId)
             GenericValue existing = EntityQuery.use(delegator).from("UserLogin")
                     .where("userLoginId", email).queryOne();
@@ -261,6 +268,14 @@ public final class EfMemberServices {
                 UtilProperties.getPropertyValue("efinance", "efinance.max.login.attempts", String.valueOf(DEFAULT_MAX_LOGIN_ATTEMPTS)));
 
         try {
+            if (!rateLimit(delegator, "LOGIN", userLoginId,
+                    "efinance.rate.limit.login", 20,
+                    "efinance.rate.limit.login.window.seconds", 300)) {
+                logAudit(delegator, null, ACTION_LOGIN_FAIL, "UserLogin", userLoginId,
+                        RESULT_BLOCKED, ipAddress, deviceId, "Rate limited");
+                return ServiceUtil.returnError(UtilProperties.getMessage(
+                        RESOURCE, "EfinanceRateLimited", locale));
+            }
             GenericValue userLogin = EntityQuery.use(delegator).from("UserLogin")
                     .where("userLoginId", userLoginId).queryOne();
             if (userLogin == null) {
@@ -388,6 +403,12 @@ public final class EfMemberServices {
         String ipAddress = (String) context.get("ipAddress");
 
         try {
+            if (!rateLimit(delegator, "MFA", tempTokenRaw == null ? ipAddress : tempTokenRaw,
+                    "efinance.rate.limit.mfa", 10,
+                    "efinance.rate.limit.mfa.window.seconds", 300)) {
+                return ServiceUtil.returnError(UtilProperties.getMessage(
+                        RESOURCE, "EfinanceRateLimited", locale));
+            }
             Timestamp now = UtilDateTime.nowTimestamp();
             String tempTokenHash = sha256(tempTokenRaw);
 
@@ -635,6 +656,12 @@ public final class EfMemberServices {
         String email = (String) context.get("email");
 
         try {
+            if (!rateLimit(delegator, "PASSWORD_RESET", email,
+                    "efinance.rate.limit.password.reset", 5,
+                    "efinance.rate.limit.password.reset.window.seconds", 3600)) {
+                return ServiceUtil.returnError(UtilProperties.getMessage(
+                        RESOURCE, "EfinanceRateLimited", locale));
+            }
             GenericValue userLogin = EntityQuery.use(delegator).from("UserLogin")
                     .where("userLoginId", email).queryOne();
             if (userLogin == null) {
@@ -980,6 +1007,14 @@ public final class EfMemberServices {
             t.set("revokedDate", now);
             delegator.store(t);
         }
+    }
+
+    private static boolean rateLimit(Delegator delegator, String scope, String subject,
+            String limitKey, int defaultLimit, String windowKey, int defaultWindow)
+            throws GenericEntityException {
+        int limit = UtilProperties.getPropertyAsInteger("efinance", limitKey, defaultLimit);
+        int window = UtilProperties.getPropertyAsInteger("efinance", windowKey, defaultWindow);
+        return EfRequestGuard.checkRateLimit(delegator, scope, subject, limit, window);
     }
 
     /** Generate a 6-digit numeric OTP. Returns [plainCode, sha256Hash]. */

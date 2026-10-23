@@ -70,6 +70,10 @@ under the License.
         <junit-test-suite class-name="org.apache.ofbiz.efinance.test.EfAdminTests"/>
     </test-case>
 
+    <test-case case-name="ef-request-guard-tests">
+        <junit-test-suite class-name="org.apache.ofbiz.efinance.test.EfRequestGuardTests"/>
+    </test-case>
+
     <test-case case-name="ef-payment-tests">
         <junit-test-suite class-name="org.apache.ofbiz.efinance.test.EfPaymentTests"/>
     </test-case>

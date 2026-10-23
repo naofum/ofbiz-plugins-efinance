@@ -329,8 +329,11 @@ under the License.
         <attribute name="productId" type="String" mode="IN" optional="false"/>
         <attribute name="applicationTypeId" type="String" mode="IN" optional="false"/>
         <attribute name="sourceEnumId" type="String" mode="IN" optional="true"/>
+        <attribute name="idempotencyKey" type="String" mode="IN" optional="true"/>
         <attribute name="draftId" type="String" mode="OUT" optional="true"/>
         <attribute name="expiresAt" type="Timestamp" mode="OUT" optional="true"/>
+        <attribute name="existingDraft" type="Boolean" mode="OUT" optional="true"/>
+        <attribute name="replayed" type="Boolean" mode="OUT" optional="true"/>
     </service>
 
     <service name="efSaveDraft" engine="java" auth="true" export="true"
@@ -394,9 +397,11 @@ under the License.
         <attribute name="draftId" type="String" mode="IN" optional="false"/>
         <attribute name="ipAddress" type="String" mode="IN" optional="true"/>
         <attribute name="deviceId" type="String" mode="IN" optional="true"/>
+        <attribute name="idempotencyKey" type="String" mode="IN" optional="true"/>
         <attribute name="financeApplicationId" type="String" mode="OUT" optional="true"/>
         <attribute name="financeApplicationTypeId" type="String" mode="OUT" optional="true"/>
         <attribute name="fraudResult" type="String" mode="OUT" optional="true"/>
+        <attribute name="replayed" type="Boolean" mode="OUT" optional="true"/>
     </service>
 
     <!-- ========================================================= -->

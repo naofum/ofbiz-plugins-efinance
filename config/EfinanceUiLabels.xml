@@ -410,6 +410,22 @@ under the License.
         <value xml:lang="en">Direct debit mandate not found.</value>
         <value xml:lang="ja">口座振替の依頼が見つかりません。</value>
     </property>
+    <property key="EfinanceRateLimited">
+        <value xml:lang="en">Too many requests. Please try again later.</value>
+        <value xml:lang="ja">リクエストが多すぎます。時間をおいて再度お試しください。</value>
+    </property>
+    <property key="EfinanceRequestConflict">
+        <value xml:lang="en">The request key was already used for different content.</value>
+        <value xml:lang="ja">同じリクエストキーが異なる内容で使用されています。</value>
+    </property>
+    <property key="EfinanceRequestInProgress">
+        <value xml:lang="en">The same request is already being processed.</value>
+        <value xml:lang="ja">同じリクエストを処理中です。</value>
+    </property>
+    <property key="EfinanceDraftReused">
+        <value xml:lang="en">An existing draft was reused to prevent a duplicate.</value>
+        <value xml:lang="ja">重複を防ぐため、既存の下書きを再利用しました。</value>
+    </property>
 
     <!-- W6: MyPage labels -->
     <property key="EfinanceContractNotFound">

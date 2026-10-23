@@ -310,6 +310,15 @@ under the License.
     <Enumeration enumId="EFDD_ACC_ORDINARY" enumTypeId="EFDD_ACCOUNT_TYPE" enumCode="ORDINARY" sequenceId="01" description="Ordinary account"/>
     <Enumeration enumId="EFDD_ACC_CHECKING" enumTypeId="EFDD_ACCOUNT_TYPE" enumCode="CHECKING" sequenceId="02" description="Checking account"/>
 
+    <!-- Idempotency record status -->
+    <StatusType statusTypeId="EFREQ_STATUS" description="eFinance idempotent request status" hasTable="N"/>
+    <StatusItem statusId="EFREQ_IN_PROGRESS" statusTypeId="EFREQ_STATUS" statusCode="IN_PROGRESS" sequenceId="01" description="In progress"/>
+    <StatusItem statusId="EFREQ_COMPLETED" statusTypeId="EFREQ_STATUS" statusCode="COMPLETED" sequenceId="02" description="Completed"/>
+    <StatusItem statusId="EFREQ_FAILED" statusTypeId="EFREQ_STATUS" statusCode="FAILED" sequenceId="03" description="Failed"/>
+    <StatusValidChange statusId="EFREQ_IN_PROGRESS" statusIdTo="EFREQ_COMPLETED" transitionName="Complete"/>
+    <StatusValidChange statusId="EFREQ_IN_PROGRESS" statusIdTo="EFREQ_FAILED" transitionName="Fail"/>
+    <StatusValidChange statusId="EFREQ_FAILED" statusIdTo="EFREQ_IN_PROGRESS" transitionName="Retry"/>
+
     <!-- ========================================================= -->
     <!-- System user for internal dispatcher calls                 -->
     <!-- ========================================================= -->

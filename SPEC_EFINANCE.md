@@ -2,7 +2,7 @@
 
 `REQUIREMENTS_EFINANCE.md` の要件に対する設計。各 STEP の実装後に「実装」「テスト」「検証」を追記する。
 
-> **状態：W0〜W7 の API・DB は実装済み（2026-10-23 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト（CORS・エラーチェーンを含む）、JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）、口座振替・振込案内を追加した。最新のテストは **72 件成功（errors="0" / failures="0"）**。残る主要ギャップは W8 販売店ポータル、W9 提携先組込み・チャット。
+> **状態：W0〜W7 の API・DB は実装済み（2026-10-23 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト（CORS・エラーチェーンを含む）、JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）、口座振替・振込案内、冪等性・重複下書き防止・レート制限を追加した。最新のテストは **75 件成功（errors="0" / failures="0"）**。残る主要ギャップは W8 販売店ポータル、W9 提携先組込み・チャット。
 
 ## 進捗
 
@@ -23,7 +23,7 @@
 
 | STEP | 実装した主なもの | テスト |
 |------|------------------|--------|
-| W0 | 24 entity のうち会員・法人・OTP・トークン・同意・監査 9 entity、20 サービス（同意文書一覧を含む）、REST 認証、法人サービス、管理画面の会員一覧・詳細・ロック解除 | `EfMemberTests` / `EfCorporateTests` / `EfAuthTests` |
+| W0 | 26 entity のうち会員・法人・OTP・トークン・同意・監査 9 entity、20 サービス（同意文書一覧を含む）、REST 認証、法人サービス、管理画面の会員一覧・詳細・ロック解除 | `EfMemberTests` / `EfCorporateTests` / `EfAuthTests` |
 | W1 | `EfProductPublication`、商品一覧・詳細、ローン・リースシミュレーション、REST 4 本 | `EfCatalogTests` |
 | W2 | `EfApplicationDraft` / `EfDraftDocument` / `EfApplicationLink` / `EfFraudCheck`、下書き CRUD、書類、申込送信、REST 6 本 | `EfApplicationTests` |
 | W3 | `EfKycCheck` / `EfKycImage`、KYC 開始・画像・提出・審査・確認判定、REST 4 本 | `EfKycTests` |
@@ -32,8 +32,8 @@
 | W6 | `EfServiceRequest` / `EfNotificationSetting`、申込・契約照会、繰上返済、手続き、メッセージ、通知設定、REST 10 本、support 顧客 API ブリッジ 8 サービス | `EfMyPageTests` / `EfSupportTests` |
 | W7 | `EfDirectDebitMandate`、口座振替依頼・照会、振込案内、担当者登録、REST 2 本、管理画面 | `EfPaymentTests` |
 
-- 全体：**80 サービス**（`auth=true` 68、`auth=false` 12）、**24 entity**、**13 テストクラス / 72 テスト**。
-- 実行：`.\gradlew.bat compileJava compileGroovy` 成功。`.\gradlew.bat "ofbiz --test component=efinance"` で **72 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
+- 全体：**80 サービス**（`auth=true` 68、`auth=false` 12）、**26 entity**、**14 テストクラス / 75 テスト**。
+- 実行：`.\gradlew.bat compileJava compileGroovy` 成功。`.\gradlew.bat "ofbiz --test component=efinance"` で **75 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
 - seed/demo：`data/EfinanceTypeData.xml`（状態・列挙・権限・`efinance-system`・同意文書）、`data/EfinanceDemoData.xml`（公開商品・デモ会員・サンプル申込・契約）、`testdef/data/EfinanceTestData.xml`（テスト会員・KYC/同意フィクスチャ）。
 - **残作業**：W8 販売店ポータル、W9 提携先組込み・チャット。finance 全体回帰は 217 テスト成功、support はユーザー実行で OK。CORS・エラーチェーン・外部署名 HTTP アダプタ・W7 は自動テスト済み。
 
@@ -50,7 +50,7 @@
 | 7 | P1 | JasperReports 契約 PDF・交付書類の `contentId`、`ESignatureAdapter`（クリック同意）は実装済み。外部署名サービス連携は未実装 | 法的な本番運用には署名方式の確定が必要 | W5 追加 → 2026-10-22 PDF・contentId・Adapter を実装済み |
 | 8 | P2 | `EfFormField` が未実装でフォーム定義が Java 固定 | 商品別の項目定義ができない | W2 追加 |
 | 9 | P2 | ファイルスキャン Adapter がない | アップロードの安全性が保証できない | W2 追加 |
-| 10 | P2 | 重複下書き・冪等性・レート制限が不十分 | 二重申込・乱用のリスク | W2/W3 |
+| 10 | P2 | 重複下書き・冪等性・レート制限が不十分 | 二重申込・乱用のリスク | 2026-10-23 `EfRequestGuard` と `idempotencyKey` で下書き・送信・認証操作に対応済み |
 | 11 | P2 | ローン残高が返済表の最終行の簡易計算 | finance の入金消込と一致しない場合がある | 2026-10-23 `getLoanAgreementBalance` 連携で解消済み |
 | 12 | P2 | REST 結合テストは基本フロー・CORS・エラーチェーンを実装済み。外部署名・負荷試験は未実施 | API 契約の回帰は自動化済み | W6 テスト → 2026-10-22 実装済み |
 
@@ -67,6 +67,7 @@
 **2026-10-23 に解消した項目**
 
 - ローンの `efGetContract` / `efSimulatePrepayment` が、返済表の最終行ではなく finance の `getLoanAgreementBalance` を参照するようにした。有効な `PaymentApplication` と取消されていない `LoanPrepayment` を正本とする。
+- `EfRequestGuard` を追加し、下書き作成・申込送信の `idempotencyKey`、空の下書きの再利用、認証操作の DB レート制限を実装した。
 
 ---
 
@@ -210,7 +211,7 @@ rest-api の応答形式（`statusCode`・`statusDescription`・`errorMessage`�
 
 ## 2. データモデル
 
-### 2.1 エンティティ一覧（23）
+### 2.1 エンティティ一覧（26）
 
 | エンティティ | パッケージ | 主キー | 主な項目 |
 |--------------|-----------|--------|----------|
@@ -235,6 +236,8 @@ rest-api の応答形式（`statusCode`・`statusDescription`・`errorMessage`�
 | `EfSigningSession` | contract | `signingSessionId` | `draftId`、`memberPartyId`、`quoteId`、`quoteTypeId`、`statusId`、`consentIpAddress`、`consentDeviceId`、`consentDate`、`signatureMethodEnumId`、`signatureEvidenceHash`、`signedContentId`、`agreementId`、`agreementTypeId`、`expiresAt` |
 | `EfDeliveredDocument` | contract | `deliveredDocId` | `draftId`、`memberPartyId`、`documentTypeEnumId`、`contentId`、`deliveredDate`、`consentId`、`viewedDate` |
 | `EfDirectDebitMandate` | payment | `mandateId` | `memberPartyId`、`agreementId`、`agreementTypeId`、`financeContractId`、`bankName`、`branchName`、`accountTypeEnumId`、`accountNumber`（暗号化）、`accountNumberLast4`、`accountHolderName`、`statusId`、`adapterResult`、`startDate` |
+| `EfIdempotencyRecord` | security | `recordId` | `subjectKey`、`operation`、`idempotencyKey`、`requestHash`、`statusId`、`resultEntityId`、`expiresDate` |
+| `EfRateLimitBucket` | security | `bucketId` | `scope`、`subjectKey`、`windowStart`、`requestCount`、`lastUpdatedDate` |
 | `EfServiceRequest` | mypage | `serviceRequestId` | `memberPartyId`、`draftId`、`agreementId`、`agreementTypeId`、`requestTypeEnumId`、`statusId`、`subject`、`content`、`requestData`、`requestedByPartyId`、`assignedToPartyId`、`requestedDate`、`completedDate`、`staffNotes` |
 | `EfNotificationSetting` | mypage | `memberPartyId` + `notificationTypeEnumId` | `emailEnabled`、`smsEnabled`、`pushEnabled`、`lastModifiedDate` |
 | `EfAuditLog` | audit | `auditLogId` | `partyId`、`actionEnumId`、`targetEntityName`、`targetEntityId`、`resultEnumId`、`ipAddress`、`deviceId`、`actionDate`、`detail` |
@@ -436,7 +439,9 @@ sequenceDiagram
 
 - ログイン失敗が `efinance.max.login.attempts`（5）を超えると `EFMBR_LOCKED`。管理者が解除する。
 - 仮審査は同一下書き 1 時間 5 回まで。超過時は `EFPRE_CONSULT`。
-- 登録・ログイン・パスワード再設定・仮審査に IP レート制限を追加する（未実装）。
+- 登録・ログイン・パスワード再設定・MFA は、DB の `EfRateLimitBucket` による固定ウィンドウ制限を行う（`EfRequestGuard.checkRateLimit`、既定値は `efinance.properties`）。
+- 下書き作成・申込送信も利用者単位で制限する。
+- 公開シミュレーションの IP レート制限は未実装。
 
 ### 3.7 法人の権限
 
@@ -557,7 +562,7 @@ sequenceDiagram
 - ローン：`FinancialProduct.defaultAnnualInterestRate` を既定に、入力レートを優先。`principalAmount` と `termMonths` の範囲を検証。通貨の端数処理は `FinanceInterestCalculator.resolveScale` / `resolveRoundingMode` を使う。
 - リース：`FinancialProductLease.defaultMonthlyRateFactor` または `defaultCalcInterestRate` を使う。`residualValueRate`、`paymentTimingEnumId`、`taxRate` を反映。
 - 結果には `EfinanceSimulationDisclaimer` を付ける。
-- レート制限は未実装。
+- 公開シミュレーションのレート制限は未実装。
 
 ### 5.4 REST
 
@@ -574,7 +579,7 @@ sequenceDiagram
 
 ### 5.6 既知のギャップ
 
-- IP レート制限なし。
+- 公開シミュレーションの IP レート制限なし。
 - 公開商品の管理画面なし。
 - 実質年率は簡易表示で、手数料を含む APR 計算は未実装。
 - 商品の広告表示項目（金利幅・返済例）は未実装。
@@ -639,8 +644,9 @@ sequenceDiagram
 
 - finance の申込は `LOANAPP_RECEIVED` / `LEASEAPP_RECEIVED` で作成する。
 - 提出（SUBMITTED）への変更は担当者が finance 画面で行う（既定は手動）。
-- 重複下書きチェックは未実装。
-- 申込送信の冪等性は未実装。
+- 下書き作成は、同じ会員・商品・申込種別の未入力（`draftJson={}`）の編集中下書きを再利用し、連打による重複作成を防ぐ。
+- `efCreateDraft` / `efSubmitApplication` は任意の `idempotencyKey` を受け付ける。完了済みの同じキーと同じ内容の再実行は、作成済みの `draftId` / `financeApplicationId` を返す。
+- 異なる内容で同じキーを再利用した場合は `EfIdempotencyRecord` により競合として拒否する。処理中・失敗の状態も記録する。
 
 ### 6.5 不正検知
 
@@ -659,9 +665,11 @@ sequenceDiagram
 | DELETE | `/ef/applications/drafts/{draftId}/documents/{draftDocumentId}` | `efDeleteDraftDocument` |
 | POST | `/ef/applications/drafts/{draftId}/submit` | `efSubmitApplication` |
 
+- `POST /ef/applications/drafts` と `/submit` は本文に任意の `idempotencyKey` を受け付ける。同じキーで同じ内容を再送した場合は元の結果を返し、別内容は競合として拒否する。
+
 ### 6.7 テスト
 
-- `EfApplicationTests`：フォーム、下書き作成・保存、撤回、送信（ローン）、一覧。
+- `EfApplicationTests`：フォーム、下書き作成・保存、重複下書き再利用、`idempotencyKey` による作成・送信の再実行、撤回、送信（ローン）、一覧。
 
 ### 6.8 既知のギャップ
 
@@ -669,7 +677,7 @@ sequenceDiagram
 - ファイルスキャン Adapter 未実装（`scanStatus` は常に PENDING）。
 - 住所・法人番号の照会 Adapter 未実装。
 - AI 書類読取（U8）未実装。
-- 重複下書き・冪等性・レート制限未実装。
+- 公開シミュレーションの IP レート制限は未実装。
 - 法人契約の照会所有確認は実装済み（`EfAccessGuard.isContractAccessible`）。
 
 ---
@@ -1094,7 +1102,8 @@ sequenceDiagram
 |----------|------|
 | `EfMemberTests` | 登録・メール確認・ログイン・誤パスワード・画面 |
 | `EfCatalogTests` | 商品一覧・商品詳細・ローン/リースシミュレーション |
-| `EfApplicationTests` | フォーム・下書き・保存・撤回・送信・一覧 |
+| `EfApplicationTests` | フォーム・下書き・重複下書き再利用・冪等性・撤回・送信・一覧 |
+| `EfRequestGuardTests` | レート制限バケット・冪等性の再実行・競合検知 |
 | `EfKycTests` | KYC 開始・提出・審査・再提出・確認判定 |
 | `EfPreScreenTests` | 仮審査・進捗・書類要請 |
 | `EfContractTests` | 見積・受理・署名・交付書類 |
@@ -1111,11 +1120,12 @@ sequenceDiagram
 .\gradlew.bat "ofbiz --test component=efinance"
 ```
 
-- 2026-10-23：**72 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
+- 2026-10-23：**75 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
 - REST 経由の JWT 取得・Authorization・公開 API・無効トークン・認証なし 401・不正 JSON・必須項目不足・404・CORS 応答ヘッダーを `EfRestIntegrationTests` で確認済み。
 - finance 全体回帰は **217 テスト成功**、support はユーザー実行で OK。
 - JasperReports テンプレート、PDF の `Content` 保存、`EfDeliveredDocument.contentId`、Base64 ダウンロード、クリック同意・外部署名 HTTP アダプタを `EfContractTests` で確認済み。
 - 口座振替依頼、暗号化保存、下4桁表示、振込案内、担当者登録を `EfPaymentTests` で確認済み。
+- レート制限、下書きの冪等作成、重複下書き再利用、申込送信の再実行を `EfRequestGuardTests` / `EfApplicationTests` で確認済み。
 - 未実装のテストは W8/W9 の設計機能のみ。
 
 
@@ -1183,6 +1193,7 @@ sequenceDiagram
 | 2026-10-22（External signature） | `ExternalSignatureAdapter` を追加。設定された HTTP 署名 API と連携し、成功・HTTP 失敗をモックサーバーで検証。**71 テスト成功** |
 | 2026-10-23（W7） | `EfDirectDebitMandate`、口座振替依頼・照会、振込案内、担当者登録、管理画面、REST を追加。口座番号は暗号化し、表示は下4桁のみ。**72 テスト成功** |
 | 2026-10-23（P2 ローン残高） | `getLoanAgreementBalance` を finance に追加し、efinance の契約照会・繰上返済シミュレーションを入金消込・繰上返済ベースの残高に切り替えた。**72 テスト成功** |
+| 2026-10-23（P2 冪等性） | `EfIdempotencyRecord` / `EfRateLimitBucket` と `EfRequestGuard` を追加。下書き作成・申込送信の `idempotencyKey`、重複下書き再利用、認証操作のレート制限を実装。**75 テスト成功** |
 
 ---
 
@@ -1209,6 +1220,6 @@ sequenceDiagram
 - 配布：efinance プラグイン単体には含まれないため、rest-api の差分も同時にデプロイする。
 - 検証：
   - `EfAuthTests` で `EfRequestValidator` の有効トークン・失効トークン・ロック会員判定と再認証トークンのワンタイム性を確認。
-  - `compileJava compileGroovy` 成功、efinance 72 テスト成功。
+  - `compileJava compileGroovy` 成功、efinance 75 テスト成功。
   - REST 手動結合確認：`demo-ef-customer` でログイン 200、商品 2 件、申込 1 件、契約 1 件、契約詳細の返済表 2 行、メッセージ、通知設定、`/portal/control/main` 200 を確認。
   - `EfRestIntegrationTests` で公開商品、ログイン、Bearer 認証、無効トークン 401 を自動確認する。CORS とエラーチェーンの網羅は未整備。

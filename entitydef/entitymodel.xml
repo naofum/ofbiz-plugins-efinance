@@ -608,6 +608,49 @@ under the License.
     </entity>
 
     <!-- ========================================================= -->
+    <!-- Request idempotency / rate limiting                       -->
+    <!-- ========================================================= -->
+    <entity entity-name="EfIdempotencyRecord" package-name="org.apache.ofbiz.efinance.security"
+            title="eFinance idempotent request record">
+        <field name="recordId" type="id"><description>sequenced</description></field>
+        <field name="subjectKey" type="long-varchar"><description>partyId, email or other request subject</description></field>
+        <field name="operation" type="short-varchar"><description>CREATE_DRAFT / SUBMIT_APPLICATION etc.</description></field>
+        <field name="idempotencyKey" type="long-varchar"/>
+        <field name="requestHash" type="long-varchar"><description>SHA-256 of the request identity</description></field>
+        <field name="statusId" type="id"><description>EFREQ_STATUS</description></field>
+        <field name="resultEntityId" type="id"><description>created draftId or finance application id</description></field>
+        <field name="createdDate" type="date-time"/>
+        <field name="lastModifiedDate" type="date-time"/>
+        <field name="expiresDate" type="date-time"/>
+        <prim-key field="recordId"/>
+        <relation type="one" fk-name="EFIDEM_STS" rel-entity-name="StatusItem">
+            <key-map field-name="statusId"/>
+        </relation>
+        <index name="EFIDEM_KEY_UQ" unique="true">
+            <index-field name="subjectKey"/>
+            <index-field name="operation"/>
+            <index-field name="idempotencyKey"/>
+        </index>
+        <index name="EFIDEM_EXP_IDX"><index-field name="expiresDate"/></index>
+    </entity>
+
+    <entity entity-name="EfRateLimitBucket" package-name="org.apache.ofbiz.efinance.security"
+            title="eFinance rate limit bucket">
+        <field name="bucketId" type="id"><description>sequenced</description></field>
+        <field name="scope" type="short-varchar"><description>LOGIN / REGISTER / PASSWORD_RESET / MFA</description></field>
+        <field name="subjectKey" type="long-varchar"><description>userLoginId, email, token or partyId</description></field>
+        <field name="windowStart" type="date-time"/>
+        <field name="requestCount" type="numeric"/>
+        <field name="lastUpdatedDate" type="date-time"/>
+        <prim-key field="bucketId"/>
+        <index name="EFRATE_KEY_UQ" unique="true">
+            <index-field name="scope"/>
+            <index-field name="subjectKey"/>
+            <index-field name="windowStart"/>
+        </index>
+    </entity>
+
+    <!-- ========================================================= -->
     <!-- Audit log                                                 -->
     <!-- ========================================================= -->
     <entity entity-name="EfAuditLog" package-name="org.apache.ofbiz.efinance.audit"

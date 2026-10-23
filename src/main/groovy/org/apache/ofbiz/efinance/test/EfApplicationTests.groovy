@@ -117,6 +117,43 @@ class EfApplicationTests extends OFBizTestCase {
         assert get.draft.stepData != null
     }
 
+    void testCreateDraftIsIdempotent() {
+        String key = 'TEST_CREATE_' + System.currentTimeMillis()
+        Map first = dispatcher.runSync('efCreateDraft', [
+                userLogin: apiUser(),
+                productId: 'DEMO_LOANPROD1',
+                applicationTypeId: 'LOAN',
+                idempotencyKey: key
+        ])
+        ok(first)
+        Map second = dispatcher.runSync('efCreateDraft', [
+                userLogin: apiUser(),
+                productId: 'DEMO_LOANPROD1',
+                applicationTypeId: 'LOAN',
+                idempotencyKey: key
+        ])
+        ok(second)
+        assert second.draftId == first.draftId
+        assert second.replayed == true
+    }
+
+    void testCreateDraftReusesActiveDraft() {
+        Map first = dispatcher.runSync('efCreateDraft', [
+                userLogin: apiUser(),
+                productId: 'DEMO_LOANPROD1',
+                applicationTypeId: 'LOAN'
+        ])
+        ok(first)
+        Map second = dispatcher.runSync('efCreateDraft', [
+                userLogin: apiUser(),
+                productId: 'DEMO_LOANPROD1',
+                applicationTypeId: 'LOAN'
+        ])
+        ok(second)
+        assert second.draftId == first.draftId
+        assert second.existingDraft == true
+    }
+
     void testSaveDraftValidationError() {
         Map create = dispatcher.runSync('efCreateDraft', [
             userLogin: apiUser(),
@@ -200,14 +237,26 @@ class EfApplicationTests extends OFBizTestCase {
         ])
 
         // Submit
+        String idempotencyKey = 'TEST_SUBMIT_' + System.currentTimeMillis()
         Map submit = dispatcher.runSync('efSubmitApplication', [
             userLogin: apiUser(), draftId: draftId,
-            ipAddress: '127.0.0.1', deviceId: 'test-device'
+            ipAddress: '127.0.0.1', deviceId: 'test-device',
+            idempotencyKey: idempotencyKey
         ])
         ok(submit)
         assert submit.financeApplicationId
         assert submit.financeApplicationTypeId == 'LOAN'
         assert submit.fraudResult == 'EFFRAUD_OK'
+
+        // Retrying the same request must return the original finance application.
+        Map replay = dispatcher.runSync('efSubmitApplication', [
+            userLogin: apiUser(), draftId: draftId,
+            ipAddress: '127.0.0.1', deviceId: 'test-device',
+            idempotencyKey: idempotencyKey
+        ])
+        ok(replay)
+        assert replay.financeApplicationId == submit.financeApplicationId
+        assert replay.replayed == true
 
         // Check LoanApplication was created
         GenericValue loanApp = from('LoanApplication').where('loanApplicationId', submit.financeApplicationId).queryOne()

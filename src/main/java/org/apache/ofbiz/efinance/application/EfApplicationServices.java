@@ -44,6 +44,7 @@ import org.apache.ofbiz.entity.condition.EntityCondition;
 import org.apache.ofbiz.entity.condition.EntityOperator;
 import org.apache.ofbiz.entity.util.EntityQuery;
 import org.apache.ofbiz.efinance.security.EfAccessGuard;
+import org.apache.ofbiz.efinance.security.EfRequestGuard;
 import org.apache.ofbiz.service.DispatchContext;
 import org.apache.ofbiz.service.LocalDispatcher;
 import org.apache.ofbiz.service.ServiceUtil;
@@ -195,12 +196,67 @@ public final class EfApplicationServices {
         String productId = (String) context.get("productId");
         String applicationTypeId = (String) context.get("applicationTypeId");
         String sourceEnumId = (String) context.get("sourceEnumId");
+        String idempotencyKey = (String) context.get("idempotencyKey");
 
         int expireDays = UtilProperties.getPropertyAsInteger(PROPS, "efinance.draft.expire.days", 30);
         int totalSteps = "LEASE".equals(applicationTypeId) ? 4 : 3;
+        int rateLimit = UtilProperties.getPropertyAsInteger(PROPS,
+                "efinance.rate.limit.draft.create", 30);
+        int rateWindow = UtilProperties.getPropertyAsInteger(PROPS,
+                "efinance.rate.limit.draft.create.window.seconds", 3600);
+        EfRequestGuard.IdempotencyResult idempotency = null;
 
         try {
             Timestamp now = UtilDateTime.nowTimestamp();
+            String requestHash = EfRequestGuard.hash(partyId, productId, applicationTypeId);
+            idempotency = EfRequestGuard.begin(delegator, partyId,
+                    EfRequestGuard.OP_CREATE_DRAFT, idempotencyKey, requestHash);
+            if (idempotency.getState() == EfRequestGuard.IdempotencyState.REPLAY) {
+                GenericValue existing = EntityQuery.use(delegator).from("EfApplicationDraft")
+                        .where("draftId", idempotency.getRecord().getString("resultEntityId")).queryOne();
+                Map<String, Object> replay = ServiceUtil.returnSuccess(
+                        UtilProperties.getMessage(RESOURCE, "EfinanceDraftReused", locale));
+                replay.put("draftId", idempotency.getRecord().getString("resultEntityId"));
+                replay.put("expiresAt", existing == null ? null : existing.getTimestamp("expiresAt"));
+                replay.put("existingDraft", false);
+                replay.put("replayed", true);
+                return replay;
+            }
+            if (idempotency.getState() == EfRequestGuard.IdempotencyState.IN_PROGRESS
+                    || idempotency.getState() == EfRequestGuard.IdempotencyState.CONFLICT) {
+                String key = idempotency.getState() == EfRequestGuard.IdempotencyState.IN_PROGRESS
+                        ? "EfinanceRequestInProgress" : "EfinanceRequestConflict";
+                return ServiceUtil.returnError(UtilProperties.getMessage(RESOURCE, key, locale));
+            }
+            if (!EfRequestGuard.checkRateLimit(delegator, "DRAFT_CREATE", partyId,
+                    rateLimit, rateWindow)) {
+                EfRequestGuard.fail(delegator, idempotency);
+                return ServiceUtil.returnError(
+                        UtilProperties.getMessage(RESOURCE, "EfinanceRateLimited", locale));
+            }
+
+            // A repeated "new draft" click for the same product must not create
+            // another editable draft.
+            GenericValue existingDraft = EntityQuery.use(delegator).from("EfApplicationDraft")
+                    .where(EntityCondition.makeCondition(EntityOperator.AND,
+                            EntityCondition.makeCondition("memberPartyId", partyId),
+                            EntityCondition.makeCondition("productId", productId),
+                            EntityCondition.makeCondition("applicationTypeId", applicationTypeId),
+                            EntityCondition.makeCondition("statusId", STATUS_EDITING),
+                            EntityCondition.makeCondition("draftJson", "{}"),
+                            EntityCondition.makeCondition("expiresAt", EntityOperator.GREATER_THAN, now)))
+                    .orderBy("-createdDate").queryFirst();
+            if (existingDraft != null) {
+                EfRequestGuard.complete(delegator, idempotency, existingDraft.getString("draftId"));
+                Map<String, Object> reused = ServiceUtil.returnSuccess(
+                        UtilProperties.getMessage(RESOURCE, "EfinanceDraftReused", locale));
+                reused.put("draftId", existingDraft.getString("draftId"));
+                reused.put("expiresAt", existingDraft.getTimestamp("expiresAt"));
+                reused.put("existingDraft", true);
+                reused.put("replayed", false);
+                return reused;
+            }
+
             Calendar cal = Calendar.getInstance();
             cal.setTimeInMillis(now.getTime());
             cal.add(Calendar.DAY_OF_YEAR, expireDays);
@@ -221,14 +277,18 @@ public final class EfApplicationServices {
             draft.set("createdDate", now);
             draft.set("lastModifiedDate", now);
             delegator.create(draft);
+            EfRequestGuard.complete(delegator, idempotency, draftId);
 
             writeAuditLog(delegator, partyId, ACTION_DRAFT_CREATE, "EfApplicationDraft", draftId);
 
             Map<String, Object> result = ServiceUtil.returnSuccess();
             result.put("draftId", draftId);
             result.put("expiresAt", expiresAt);
+            result.put("existingDraft", false);
+            result.put("replayed", false);
             return result;
         } catch (GenericEntityException e) {
+            EfRequestGuard.fail(delegator, idempotency);
             Debug.logError(e, MODULE);
             return ServiceUtil.returnError(e.getMessage());
         }
@@ -560,6 +620,12 @@ public final class EfApplicationServices {
         String draftId = (String) context.get("draftId");
         String ipAddress = (String) context.get("ipAddress");
         String deviceId = (String) context.get("deviceId");
+        String idempotencyKey = (String) context.get("idempotencyKey");
+        int rateLimit = UtilProperties.getPropertyAsInteger(PROPS,
+                "efinance.rate.limit.application.submit", 10);
+        int rateWindow = UtilProperties.getPropertyAsInteger(PROPS,
+                "efinance.rate.limit.application.submit.window.seconds", 3600);
+        EfRequestGuard.IdempotencyResult idempotency = null;
 
         try {
             GenericValue draft = EntityQuery.use(delegator).from("EfApplicationDraft")
@@ -570,11 +636,39 @@ public final class EfApplicationServices {
             if (!ownsDraft(draft, partyId)) {
                 return ServiceUtil.returnError(UtilProperties.getMessage(RESOURCE, "EfinanceDraftNotOwned", locale));
             }
+
+            String requestHash = EfRequestGuard.hash(partyId, draftId);
+            idempotency = EfRequestGuard.begin(delegator, partyId,
+                    EfRequestGuard.OP_SUBMIT_APPLICATION, idempotencyKey, requestHash);
+            if (idempotency.getState() == EfRequestGuard.IdempotencyState.REPLAY) {
+                Map<String, Object> replay = ServiceUtil.returnSuccess(
+                        UtilProperties.getMessage(RESOURCE, "EfinanceApplicationSubmitted", locale));
+                replay.put("financeApplicationId",
+                        idempotency.getRecord().getString("resultEntityId"));
+                replay.put("financeApplicationTypeId", draft.getString("applicationTypeId"));
+                replay.put("replayed", true);
+                return replay;
+            }
+            if (idempotency.getState() == EfRequestGuard.IdempotencyState.IN_PROGRESS
+                    || idempotency.getState() == EfRequestGuard.IdempotencyState.CONFLICT) {
+                String key = idempotency.getState() == EfRequestGuard.IdempotencyState.IN_PROGRESS
+                        ? "EfinanceRequestInProgress" : "EfinanceRequestConflict";
+                return ServiceUtil.returnError(UtilProperties.getMessage(RESOURCE, key, locale));
+            }
+            if (!EfRequestGuard.checkRateLimit(delegator, "APPLICATION_SUBMIT", partyId,
+                    rateLimit, rateWindow)) {
+                EfRequestGuard.fail(delegator, idempotency);
+                return ServiceUtil.returnError(
+                        UtilProperties.getMessage(RESOURCE, "EfinanceRateLimited", locale));
+            }
+
             if (!STATUS_EDITING.equals(draft.getString("statusId"))) {
+                EfRequestGuard.fail(delegator, idempotency);
                 return ServiceUtil.returnError(UtilProperties.getMessage(RESOURCE, "EfinanceDraftNotEditable", locale));
             }
             Timestamp expiresAt = draft.getTimestamp("expiresAt");
             if (expiresAt != null && expiresAt.before(UtilDateTime.nowTimestamp())) {
+                EfRequestGuard.fail(delegator, idempotency);
                 return ServiceUtil.returnError(UtilProperties.getMessage(RESOURCE, "EfinanceDraftExpired", locale));
             }
 
@@ -593,6 +687,7 @@ public final class EfApplicationServices {
                 allErrors.addAll(validateStep(applicationTypeId, s, sd));
             }
             if (!allErrors.isEmpty()) {
+                EfRequestGuard.fail(delegator, idempotency);
                 Map<String, Object> err = ServiceUtil.returnError(
                         UtilProperties.getMessage(RESOURCE, "EfinanceValidationFailed", locale));
                 err.put("validationErrors", allErrors);
@@ -601,12 +696,14 @@ public final class EfApplicationServices {
 
             String consentError = validateRequiredConsents(delegator, partyId, locale);
             if (consentError != null) {
+                EfRequestGuard.fail(delegator, idempotency);
                 return ServiceUtil.returnError(consentError);
             }
 
             // Fraud check
             String fraudResult = performFraudCheck(delegator, draftId, partyId, ipAddress, deviceId);
             if (FRAUD_BLOCK.equals(fraudResult)) {
+                EfRequestGuard.fail(delegator, idempotency);
                 return ServiceUtil.returnError(
                         UtilProperties.getMessage(RESOURCE, "EfinanceSubmissionBlocked", locale));
             }
@@ -614,6 +711,7 @@ public final class EfApplicationServices {
             // Get system user for finance service calls
             GenericValue systemUser = getSystemUser(delegator);
             if (systemUser == null) {
+                EfRequestGuard.fail(delegator, idempotency);
                 return ServiceUtil.returnError("System user not found");
             }
 
@@ -632,6 +730,7 @@ public final class EfApplicationServices {
             }
 
             if (financeApplicationId == null) {
+                EfRequestGuard.fail(delegator, idempotency);
                 return ServiceUtil.returnError("Failed to create finance application");
             }
 
@@ -654,14 +753,17 @@ public final class EfApplicationServices {
             delegator.create(link);
 
             writeAuditLog(delegator, partyId, ACTION_DRAFT_SUBMIT, "EfApplicationDraft", draftId);
+            EfRequestGuard.complete(delegator, idempotency, financeApplicationId);
 
             Map<String, Object> result = ServiceUtil.returnSuccess(
                     UtilProperties.getMessage(RESOURCE, "EfinanceApplicationSubmitted", locale));
             result.put("financeApplicationId", financeApplicationId);
             result.put("financeApplicationTypeId", applicationTypeId);
             result.put("fraudResult", fraudResult);
+            result.put("replayed", false);
             return result;
         } catch (Exception e) {
+            EfRequestGuard.fail(delegator, idempotency);
             Debug.logError(e, MODULE);
             return ServiceUtil.returnError(e.getMessage());
         }
