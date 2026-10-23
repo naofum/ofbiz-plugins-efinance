@@ -256,7 +256,7 @@ function populateProductSelects() {
 }
 
 async function loadProducts() {
-    const data = await get('/ef/products');
+    const data = await api('/ef/products', {method: 'GET', auth: false});
     state.products = data.products || [];
     renderProducts();
 }
