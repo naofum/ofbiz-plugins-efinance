@@ -257,6 +257,7 @@ under the License.
         <field name="memberPartyId" type="id"><description>EfMember.partyId (applicant)</description></field>
         <field name="corporatePartyId" type="id"><description>for corporate applications</description></field>
         <field name="dealerPartyId" type="id"><description>dealer proxy application owner, if any</description></field>
+        <field name="partnerId" type="id"><description>W9 partner handoff attribution, if any</description></field>
         <field name="productId" type="id"/>
         <field name="applicationTypeId" type="id"><description>LOAN or LEASE</description></field>
         <field name="currentStep" type="numeric"><description>1-based step number</description></field>
@@ -280,6 +281,7 @@ under the License.
         <index name="EFDRF_PROD_IDX"><index-field name="productId"/></index>
         <index name="EFDRF_STS_IDX"><index-field name="statusId"/></index>
         <index name="EFDRF_DLR_IDX"><index-field name="dealerPartyId"/></index>
+        <index name="EFDRF_PTR_IDX"><index-field name="partnerId"/></index>
     </entity>
 
     <!-- ========================================================= -->
@@ -405,6 +407,7 @@ under the License.
         <field name="memberPartyId" type="id"/>
         <field name="corporatePartyId" type="id"/>
         <field name="dealerPartyId" type="id"><description>dealer that submitted on behalf, if any</description></field>
+        <field name="partnerId" type="id"><description>W9 partner handoff attribution, if any</description></field>
         <field name="financeApplicationId" type="id"><description>loanApplicationId or leaseApplicationId</description></field>
         <field name="financeApplicationTypeId" type="id"><description>LOAN or LEASE</description></field>
         <field name="linkedDate" type="date-time"/>
@@ -418,6 +421,7 @@ under the License.
         <index name="EFLINK_MBR_IDX"><index-field name="memberPartyId"/></index>
         <index name="EFLINK_DRF_IDX"><index-field name="draftId"/></index>
         <index name="EFLINK_DLR_IDX"><index-field name="dealerPartyId"/></index>
+        <index name="EFLINK_PTR_IDX"><index-field name="partnerId"/></index>
     </entity>
 
     <entity entity-name="EfFraudCheck" package-name="org.apache.ofbiz.efinance.application"

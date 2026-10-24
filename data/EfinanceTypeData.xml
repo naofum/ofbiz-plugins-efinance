@@ -394,6 +394,7 @@ under the License.
     <Enumeration enumId="EFAUD_CHAT_MESSAGE" enumTypeId="EFAUDIT_ACTION" enumCode="CHAT_MESSAGE" sequenceId="71" description="Chat message sent"/>
     <Enumeration enumId="EFAUD_CHAT_ESCALATE" enumTypeId="EFAUDIT_ACTION" enumCode="CHAT_ESCALATE" sequenceId="72" description="Chat escalated to support"/>
     <Enumeration enumId="EFAUD_CHAT_CLOSE" enumTypeId="EFAUDIT_ACTION" enumCode="CHAT_CLOSE" sequenceId="73" description="Chat closed"/>
+    <Enumeration enumId="EFAUD_PARTNER_ISSUE" enumTypeId="EFAUDIT_ACTION" enumCode="PARTNER_ISSUE" sequenceId="80" description="Partner handoff issued"/>
 
     <!-- ========================================================= -->
     <!-- System user for internal dispatcher calls                 -->

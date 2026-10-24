@@ -128,6 +128,7 @@ under the License.
 
 <main>
     <div id="flash" class="flash" hidden></div>
+    <div id="partnerBanner" class="flash ok" hidden></div>
 
     <section id="view-home" class="view">
         <div class="hero">
@@ -247,6 +248,9 @@ under the License.
                 </div>
             </form>
             <div id="applyResult" class="result" hidden></div>
+            <p id="partnerReturn" class="muted" hidden>
+                <a id="partnerReturnLink" href="#">提携先の画面に戻る</a>
+            </p>
         </div>
     </section>
 

@@ -46,6 +46,7 @@ import org.apache.ofbiz.entity.condition.EntityOperator;
 import org.apache.ofbiz.entity.util.EntityQuery;
 import org.apache.ofbiz.efinance.filescan.FileScanAdapterFactory;
 import org.apache.ofbiz.efinance.filescan.FileScanResult;
+import org.apache.ofbiz.efinance.partner.EfPartnerServices;
 import org.apache.ofbiz.efinance.security.EfAccessGuard;
 import org.apache.ofbiz.efinance.security.EfRequestGuard;
 import org.apache.ofbiz.service.DispatchContext;
@@ -280,6 +281,7 @@ public final class EfApplicationServices {
         String productId = (String) context.get("productId");
         String applicationTypeId = (String) context.get("applicationTypeId");
         String sourceEnumId = (String) context.get("sourceEnumId");
+        String partnerToken = (String) context.get("partnerToken");
         String idempotencyKey = (String) context.get("idempotencyKey");
 
         int expireDays = UtilProperties.getPropertyAsInteger(PROPS, "efinance.draft.expire.days", 30);
@@ -291,8 +293,17 @@ public final class EfApplicationServices {
         EfRequestGuard.IdempotencyResult idempotency = null;
 
         try {
+            String partnerId = null;
+            if (UtilValidate.isNotEmpty(partnerToken)) {
+                Map<String, Object> partnerResult = EfPartnerServices.validateHandoffToken(
+                        delegator, partnerToken, locale);
+                if (ServiceUtil.isError(partnerResult)) {
+                    return partnerResult;
+                }
+                partnerId = (String) partnerResult.get("partnerId");
+            }
             Timestamp now = UtilDateTime.nowTimestamp();
-            String requestHash = EfRequestGuard.hash(partyId, productId, applicationTypeId);
+            String requestHash = EfRequestGuard.hash(partyId, productId, applicationTypeId, partnerId);
             idempotency = EfRequestGuard.begin(delegator, partyId,
                     EfRequestGuard.OP_CREATE_DRAFT, idempotencyKey, requestHash);
             if (idempotency.getState() == EfRequestGuard.IdempotencyState.REPLAY) {
@@ -301,6 +312,7 @@ public final class EfApplicationServices {
                 Map<String, Object> replay = ServiceUtil.returnSuccess(
                         UtilProperties.getMessage(RESOURCE, "EfinanceDraftReused", locale));
                 replay.put("draftId", idempotency.getRecord().getString("resultEntityId"));
+                replay.put("partnerId", existing == null ? null : existing.getString("partnerId"));
                 replay.put("expiresAt", existing == null ? null : existing.getTimestamp("expiresAt"));
                 replay.put("existingDraft", false);
                 replay.put("replayed", true);
@@ -321,6 +333,9 @@ public final class EfApplicationServices {
 
             // A repeated "new draft" click for the same product must not create
             // another editable draft.
+            EntityCondition partnerCondition = partnerId == null
+                    ? EntityCondition.makeCondition("partnerId", EntityOperator.EQUALS, null)
+                    : EntityCondition.makeCondition("partnerId", partnerId);
             GenericValue existingDraft = EntityQuery.use(delegator).from("EfApplicationDraft")
                     .where(EntityCondition.makeCondition(EntityOperator.AND,
                             EntityCondition.makeCondition("memberPartyId", partyId),
@@ -328,6 +343,7 @@ public final class EfApplicationServices {
                             EntityCondition.makeCondition("applicationTypeId", applicationTypeId),
                             EntityCondition.makeCondition("statusId", STATUS_EDITING),
                             EntityCondition.makeCondition("draftJson", "{}"),
+                            partnerCondition,
                             EntityCondition.makeCondition("expiresAt", EntityOperator.GREATER_THAN, now)))
                     .orderBy("-createdDate").queryFirst();
             if (existingDraft != null) {
@@ -335,6 +351,7 @@ public final class EfApplicationServices {
                 Map<String, Object> reused = ServiceUtil.returnSuccess(
                         UtilProperties.getMessage(RESOURCE, "EfinanceDraftReused", locale));
                 reused.put("draftId", existingDraft.getString("draftId"));
+                reused.put("partnerId", existingDraft.getString("partnerId"));
                 reused.put("expiresAt", existingDraft.getTimestamp("expiresAt"));
                 reused.put("existingDraft", true);
                 reused.put("replayed", false);
@@ -356,7 +373,9 @@ public final class EfApplicationServices {
             draft.set("totalSteps", (long) totalSteps);
             draft.set("draftJson", "{}");
             draft.set("statusId", STATUS_EDITING);
-            draft.set("sourceEnumId", UtilValidate.isNotEmpty(sourceEnumId) ? sourceEnumId : "EFSRC_DIRECT");
+            draft.set("partnerId", partnerId);
+            draft.set("sourceEnumId", partnerId != null ? "EFSRC_PARTNER"
+                    : (UtilValidate.isNotEmpty(sourceEnumId) ? sourceEnumId : "EFSRC_DIRECT"));
             draft.set("expiresAt", expiresAt);
             draft.set("createdDate", now);
             draft.set("lastModifiedDate", now);
@@ -367,6 +386,7 @@ public final class EfApplicationServices {
 
             Map<String, Object> result = ServiceUtil.returnSuccess();
             result.put("draftId", draftId);
+            result.put("partnerId", partnerId);
             result.put("expiresAt", expiresAt);
             result.put("existingDraft", false);
             result.put("replayed", false);
@@ -478,6 +498,7 @@ public final class EfApplicationServices {
 
             Map<String, Object> draftMap = new LinkedHashMap<>();
             draftMap.put("draftId", draft.getString("draftId"));
+            draftMap.put("partnerId", draft.getString("partnerId"));
             draftMap.put("productId", draft.getString("productId"));
             draftMap.put("applicationTypeId", draft.getString("applicationTypeId"));
             draftMap.put("statusId", draft.getString("statusId"));
@@ -518,6 +539,7 @@ public final class EfApplicationServices {
             for (GenericValue d : draftList) {
                 Map<String, Object> m = new LinkedHashMap<>();
                 m.put("draftId", d.getString("draftId"));
+                m.put("partnerId", d.getString("partnerId"));
                 m.put("productId", d.getString("productId"));
                 m.put("applicationTypeId", d.getString("applicationTypeId"));
                 m.put("statusId", d.getString("statusId"));
@@ -728,6 +750,7 @@ public final class EfApplicationServices {
             }
             String applicantPartyId = draft.getString("memberPartyId");
             String dealerPartyId = draft.getString("dealerPartyId");
+            String partnerId = draft.getString("partnerId");
 
             String requestHash = EfRequestGuard.hash(partyId, draftId);
             idempotency = EfRequestGuard.begin(delegator, partyId,
@@ -840,6 +863,7 @@ public final class EfApplicationServices {
             link.set("draftId", draftId);
             link.set("memberPartyId", applicantPartyId);
             link.set("dealerPartyId", dealerPartyId);
+            link.set("partnerId", partnerId);
             link.set("financeApplicationId", financeApplicationId);
             link.set("financeApplicationTypeId", applicationTypeId);
             link.set("linkedDate", UtilDateTime.nowTimestamp());
@@ -852,6 +876,7 @@ public final class EfApplicationServices {
                     UtilProperties.getMessage(RESOURCE, "EfinanceApplicationSubmitted", locale));
             result.put("financeApplicationId", financeApplicationId);
             result.put("financeApplicationTypeId", applicationTypeId);
+            result.put("partnerId", partnerId);
             result.put("fraudResult", fraudResult);
             result.put("replayed", false);
             return result;

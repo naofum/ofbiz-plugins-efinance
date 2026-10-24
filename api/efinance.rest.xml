@@ -443,6 +443,18 @@ under the License.
         </operation>
     </resource>
 
+    <!-- W9: partner handoff -->
+    <resource name="partnerHandoffs" path="/ef/partner/handoffs" auth="false">
+        <operation verb="post" consumes="application/json" produces="application/json" auth="false">
+            <service name="efIssuePartnerHandoff"/>
+        </operation>
+    </resource>
+    <resource name="partnerHandoffValidate" path="/ef/partner/handoffs/validate" auth="false">
+        <operation verb="post" consumes="application/json" produces="application/json" auth="false">
+            <service name="efValidatePartnerHandoff"/>
+        </operation>
+    </resource>
+
     <!-- W9: chat support -->
     <resource name="chatConversations" path="/ef/chat/conversations" auth="true">
         <operation verb="get" produces="application/json">

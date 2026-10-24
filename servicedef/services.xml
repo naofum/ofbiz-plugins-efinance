@@ -353,8 +353,10 @@ under the License.
         <attribute name="productId" type="String" mode="IN" optional="false"/>
         <attribute name="applicationTypeId" type="String" mode="IN" optional="false"/>
         <attribute name="sourceEnumId" type="String" mode="IN" optional="true"/>
+        <attribute name="partnerToken" type="String" mode="IN" optional="true"/>
         <attribute name="idempotencyKey" type="String" mode="IN" optional="true"/>
         <attribute name="draftId" type="String" mode="OUT" optional="true"/>
+        <attribute name="partnerId" type="String" mode="OUT" optional="true"/>
         <attribute name="expiresAt" type="Timestamp" mode="OUT" optional="true"/>
         <attribute name="existingDraft" type="Boolean" mode="OUT" optional="true"/>
         <attribute name="replayed" type="Boolean" mode="OUT" optional="true"/>
@@ -425,6 +427,7 @@ under the License.
         <attribute name="idempotencyKey" type="String" mode="IN" optional="true"/>
         <attribute name="financeApplicationId" type="String" mode="OUT" optional="true"/>
         <attribute name="financeApplicationTypeId" type="String" mode="OUT" optional="true"/>
+        <attribute name="partnerId" type="String" mode="OUT" optional="true"/>
         <attribute name="fraudResult" type="String" mode="OUT" optional="true"/>
         <attribute name="replayed" type="Boolean" mode="OUT" optional="true"/>
     </service>
@@ -1004,6 +1007,32 @@ under the License.
         <permission-service service-name="efinanceDealerPermission"/>
         <attribute name="dealerPartyId" type="String" mode="IN" optional="false"/>
         <attribute name="contracts" type="List" mode="OUT" optional="true"/>
+    </service>
+
+    <!-- ========================================================= -->
+    <!-- W9: partner handoff                                       -->
+    <!-- ========================================================= -->
+    <service name="efIssuePartnerHandoff" engine="java" auth="false" export="true"
+             location="org.apache.ofbiz.efinance.partner.EfPartnerServices" invoke="efIssuePartnerHandoff">
+        <description>Issue a signed partner handoff token for the customer portal.</description>
+        <attribute name="partnerId" type="String" mode="IN" optional="false"/>
+        <attribute name="partnerSecret" type="String" mode="IN" optional="false"/>
+        <attribute name="returnUrl" type="String" mode="IN" optional="true"/>
+        <attribute name="ipAddress" type="String" mode="IN" optional="true"/>
+        <attribute name="handoffToken" type="String" mode="OUT" optional="true"/>
+        <attribute name="handoffUrl" type="String" mode="OUT" optional="true"/>
+        <attribute name="partnerName" type="String" mode="OUT" optional="true"/>
+        <attribute name="expiresAt" type="Timestamp" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="efValidatePartnerHandoff" engine="java" auth="false" export="true"
+             location="org.apache.ofbiz.efinance.partner.EfPartnerServices" invoke="efValidatePartnerHandoff">
+        <description>Validate a partner handoff token and return its attribution.</description>
+        <attribute name="handoffToken" type="String" mode="IN" optional="false"/>
+        <attribute name="partnerId" type="String" mode="OUT" optional="true"/>
+        <attribute name="partnerName" type="String" mode="OUT" optional="true"/>
+        <attribute name="returnUrl" type="String" mode="OUT" optional="true"/>
+        <attribute name="expiresAt" type="Timestamp" mode="OUT" optional="true"/>
     </service>
 
     <!-- ========================================================= -->

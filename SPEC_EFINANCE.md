@@ -2,7 +2,7 @@
 
 `REQUIREMENTS_EFINANCE.md` の要件に対する設計。各 STEP の実装後に「実装」「テスト」「検証」を追記する。
 
-> **状態：W0〜W8 の API・DB と W9 チャットは実装済み（2026-10-23 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト（CORS・エラーチェーンを含む）、JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）、口座振替・振込案内、冪等性・重複下書き防止・レート制限、ファイルスキャン Adapter、`EfFormField` による商品別フォーム定義、公開シミュレーションの IP レート制限、`/dealer` 販売店ポータル、AI FAQ チャットと support エスカレーションを追加した。最新のテストは **88 件成功（errors="0" / failures="0"）**。残る主要ギャップは W9 提携先組込み。
+> **状態：W0〜W9 の API・DB は実装済み（2026-10-24 更新）**。法人アカウント、`EfAuthFilter`、`EfStageEvent` / `NotificationAdapter`、管理画面、同意文書の版検証、再認証、`/portal` サンプル SPA、法人契約の照会所有確認、監査ログ閲覧、REST 自動結合テスト（CORS・エラーチェーンを含む）、JasperReports 契約 PDF・電子交付、`ESignatureAdapter`（クリック同意・外部 HTTP）、口座振替・振込案内、冪等性・重複下書き防止・レート制限、ファイルスキャン Adapter、`EfFormField` による商品別フォーム定義、公開シミュレーションの IP レート制限、`/dealer` 販売店ポータル、AI FAQ チャットと support エスカレーション、提携先ハンドオフトークンと申込属性記録を追加した。最新のテストは **94 件成功（errors="0" / failures="0"）**。
 
 ## 進捗
 
@@ -17,7 +17,7 @@
 | W6 | マイページ（8 章） | API 実装済み（2026-10-22）。support ブリッジ、管理画面（KYC 審査・書類要請一覧・手続き依頼・ロック解除）を追加。タスク自動化は未実装 |
 | W7 | 支払（9 章） | API/DB 実装済み（2026-10-23） |
 | W8 | 販売店のポータル（12 章） | API/DB・サンプル画面 実装済み（2026-10-23） |
-| W9 | 組込み・チャット（13 章） | チャット API/DB・ポータル UI 実装済み（2026-10-23）。提携先組込みは設計（未着手） |
+| W9 | 組込み・チャット（13 章） | チャット API/DB・ポータル UI、提携先ハンドオフトークン・申込属性記録 実装済み（2026-10-24） |
 
 ### 実装・テスト・検証（2026-10-21）
 
@@ -33,11 +33,12 @@
 | W7 | `EfDirectDebitMandate`、口座振替依頼・照会、振込案内、担当者登録、REST 2 本、管理画面 | `EfPaymentTests` |
 | W8 | `EfDealer` / `EfDealerUser` / `EfDealerCustomer`、販売店プロフィール、顧客同意、代理下書き、申込・契約照会、`/dealer` サンプル画面 | `EfDealerTests` |
 | W9 | `EfChatConversation` / `EfChatMessage`、FAQ チャット、support ケースへのエスカレーション、担当者返信の取り込み、REST 5 本、`/portal#chat` | `EfChatTests` |
+| W9 | 提携先ハンドオフトークン（HMAC）、提携先別設定、申込下書き・申込リンクの `partnerId`、REST 2 本、`/portal` の提携先バナー | `EfPartnerTests` |
 
-- 全体：**98 サービス**（`auth=true` 86、`auth=false` 12）、**32 entity**、**17 テストクラス / 88 テスト**。
-- 実行：`.\gradlew.bat compileJava compileGroovy` 成功。`.\gradlew.bat "ofbiz --test component=efinance"` で **88 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
+- 全体：**101 サービス**（`auth=true` 87、`auth=false` 14）、**32 entity**、**18 テストクラス / 94 テスト**。
+- 実行：`.\gradlew.bat compileJava compileGroovy` 成功。`.\gradlew.bat "ofbiz --test component=efinance"` で **94 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
 - seed/demo：`data/EfinanceTypeData.xml`（状態・列挙・権限・`efinance-system`・同意文書）、`data/EfinanceDemoData.xml`（公開商品・デモ会員・サンプル申込・契約）、`testdef/data/EfinanceTestData.xml`（テスト会員・KYC/同意フィクスチャ）。
-- **残作業**：W9 提携先組込み。finance 全体回帰は 217 テスト成功、support はユーザー実行で OK。CORS・エラーチェーン・外部署名 HTTP アダプタ・W7・W8・W9 チャットは自動テスト済み。
+- **残作業**：外部ウイルススキャン・外部署名プロバイダ接続など、任意の外部サービス連携。finance 全体回帰は 217 テスト成功、support はユーザー実行で OK。CORS・エラーチェーン・外部署名 HTTP アダプタ・W7・W8・W9 は自動テスト済み。
 
 ### 既知のギャップ（重要度順）
 
@@ -231,13 +232,13 @@ rest-api の応答形式（`statusCode`・`statusDescription`・`errorMessage`�
 | `EfConsentDocument` | consent | `documentId` | `documentTypeEnumId`、`version`、`language`、`contentId`、`effectiveDate`、`expiresDate` |
 | `EfConsent` | consent | `consentId` | `partyId`、`documentId`、`consentDate`、`ipAddress`、`deviceId`、`revokedDate` |
 | `EfProductPublication` | catalog | `publicationId` | `productId`、`fromDate`、`thruDate`、`displayOrder`、`targetEnumId`、`active` |
-| `EfApplicationDraft` | application | `draftId` | `memberPartyId`、`corporatePartyId`、`dealerPartyId`、`productId`、`applicationTypeId`、`currentStep`、`totalSteps`、`draftJson`、`statusId`、`sourceEnumId`、`submittedApplicationId`、`submittedApplicationTypeId`、`expiresAt` |
+| `EfApplicationDraft` | application | `draftId` | `memberPartyId`、`corporatePartyId`、`dealerPartyId`、`partnerId`、`productId`、`applicationTypeId`、`currentStep`、`totalSteps`、`draftJson`、`statusId`、`sourceEnumId`、`submittedApplicationId`、`submittedApplicationTypeId`、`expiresAt` |
 | `EfFormField` | application | `formFieldId` | `productId`（`*` は既定）、`applicationTypeId`、`stepNumber`、`stepKey`、`fieldName`、`fieldType`、`requiredFlag`、`label`、`displayOrder`、`optionsJson`、`active` |
 | `EfDealer` | dealer | `dealerPartyId` | `dealerCode`、`dealerName`、`statusId`、`createdDate` |
 | `EfDealerUser` | dealer | `dealerPartyId` + `memberPartyId` + `fromDate` | `roleApply`、`roleView`、`rolePayment`、`roleAdmin`、`thruDate` |
 | `EfDealerCustomer` | dealer | `dealerPartyId` + `customerPartyId` | `statusId`、`consentReference`、`consentDate`、`fromDate`、`thruDate`、`createdByPartyId`、`createdDate` |
 | `EfDraftDocument` | application | `draftDocumentId` | `draftId`、`contentId`、`documentTypeEnumId`、`fileName`、`mimeTypeId`、`fileSizeBytes`、`scanStatus`、`uploadedDate` |
-| `EfApplicationLink` | application | `linkId` | `draftId`、`memberPartyId`、`corporatePartyId`、`dealerPartyId`、`financeApplicationId`、`financeApplicationTypeId`、`linkedDate` |
+| `EfApplicationLink` | application | `linkId` | `draftId`、`memberPartyId`、`corporatePartyId`、`dealerPartyId`、`partnerId`、`financeApplicationId`、`financeApplicationTypeId`、`linkedDate` |
 | `EfFraudCheck` | application | `fraudCheckId` | `draftId`、`memberPartyId`、`checkDate`、`resultEnumId`、`triggeredRules`、`ipAddress`、`deviceId` |
 | `EfKycCheck` | kyc | `kycCheckId` | `memberPartyId`、`kycSubjectPartyId`、`draftId`、`kycMethodEnumId`、`statusId`、`confirmerPartyId`、`confirmedDate`、`confirmerNote`、`adapterResultCode`、`adapterExternalId`、`expiresDate` |
 | `EfKycImage` | kyc | `kycImageId` | `kycCheckId`、`contentId`、`imageTypeEnumId`、`scanStatus`、`uploadedDate` |
@@ -1031,7 +1032,7 @@ sequenceDiagram
 
 ---
 
-## 13. STEP W9 — チャットサポート（チャット実装済み、提携先組込みは設計）
+## 13. STEP W9 — チャットサポート・提携先組込み（実装済み）
 
 ### 13.1 エンティティ
 
@@ -1059,10 +1060,23 @@ sequenceDiagram
 - 応答は `ChatAdapter` で差し替え可能。既定は `RuleBasedChatAdapter`（`chat.adapter`）で、商品・申込・KYC・契約・返済・個人情報・販売店の FAQ と担当者エスカレーションを扱う。個別の与信判断や条件確定は行わない。
 - `/portal#chat` に会話開始・送信・担当者への引継ぎ・終了のサンプル UI を追加した。
 
-### 13.3 提携先組込み（未着手）
+### 13.3 提携先組込み
 
-- 提携先サイトから efinance の申込フローへ遷移するための署名付きハンドオフトークン、提携先別の流入属性、提携先向け設定を次段階で設計する。
-- 提携先からの申込は `EFSRC_PARTNER` を source とし、既存の `EfApplicationLink` / `EfChatConversation` と同様に本人所有確認を維持する。
+| サービス・設定 | 内容 |
+|----------------|------|
+| `efIssuePartnerHandoff` | 提携先IDと共有シークレットを検証し、署名付きハンドオフトークンとポータルURLを発行する（公開API） |
+| `efValidatePartnerHandoff` | トークンの署名・期限・提携先の有効性・戻り先URLを検証する（公開API） |
+| `EfApplicationDraft.partnerId` | 検証済みトークンの提携先IDを下書きに記録する |
+| `EfApplicationLink.partnerId` | 申込送信時に提携先IDを申込リンクへ引き継ぐ |
+| `efinance.partner.<ID>.*` | 提携先名、共有シークレット、状態、既定戻り先URL、許可する戻り先URLの接頭辞 |
+| `efIssuePartnerHandoff` のレート制限 | 発行元IPまたは提携先ID単位で制限する |
+
+- トークンは `base64url(payload).base64url(HMAC-SHA256(payload))`。payload は版、提携先ID、`iat`、`exp`、nonce、戻り先URLを含む。秘密はHMAC鍵で、API応答・ログには出さない。
+- 提携先は `POST /ef/partner/handoffs` に `partnerId`、`partnerSecret`、任意の `returnUrl` を送り、`handoffUrl` を得る。`handoffUrl` は `#apply` 付きでポータルの申込画面を開く。
+- ポータルは `partnerToken` クエリを検証し、セッション中保持する。`efCreateDraft` はトークンを再検証し、クライアントが別途指定した提携先IDを信用しない。検証済みの提携先IDだけを `EfApplicationDraft.partnerId` に設定し、`sourceEnumId` を `EFSRC_PARTNER` にする。
+- 戻り先URLは絶対 `http(s)` URLに限定し、提携先設定の既定URLまたは許可接頭辞に一致するものだけを受け付ける（オープンリダイレクト防止）。
+- トークンはステートレスで、既定の有効期限は24時間。ワンタイム化・利用回数の制限・提携先別の詳細分析は今後の拡張とする。
+- デモ提携先は `DEMO_PARTNER`。`efinance.partner.DEMO_PARTNER.secret` はデモ用の固定値なので、本番では必ず変更する。
 
 ---
 
@@ -1170,6 +1184,7 @@ sequenceDiagram
 | 本人確認 | 画像アップロード、進捗（実装済み） |
 | 見積・契約 | 見積確認、同意、署名（実装済み） |
 | マイページ | 申込・契約・メッセージ・サポート・通知設定（実装済み） |
+| 提携先連携 | `partnerToken` の検証、提携先バナー、申込への提携先属性引継ぎ（実装済み） |
 | チャット | AI FAQ、担当者への引継ぎ、会話終了（実装済み） |
 | support | ケース一覧・作成・返信・クローズ・評価（API は efinance のブリッジを利用） |
 
@@ -1196,6 +1211,7 @@ sequenceDiagram
 | `EfMyPageTests` | 申込・契約・繰上返済・手続き・メッセージ・通知設定 |
 | `EfSupportTests` | support ケースの作成・一覧・詳細・返信・クローズ・選択肢 |
 | `EfChatTests` | チャット開始・FAQ・support エスカレーション・担当者転送・終了・入力検証 |
+| `EfPartnerTests` | ハンドオフトークン発行・検証・改ざん拒否・戻り先制限・提携先付き下書き |
 | `EfCorporateTests` | 法人作成・担当者権限・一覧 |
 | `EfAuthTests` | 有効トークン・失効トークン・ロック会員・再認証トークン |
 | `EfAdminTests` | 会員ロック解除・手続き依頼の状態更新・管理ダッシュボード集計 |
@@ -1208,7 +1224,7 @@ sequenceDiagram
 .\gradlew.bat "ofbiz --test component=efinance"
 ```
 
-- 2026-10-23：**88 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
+- 2026-10-24：**94 テスト、`errors="0"` / `failures="0"`**（`runtime/logs/test-results/efinancetests.xml`）。
 - REST 経由の JWT 取得・Authorization・公開 API・無効トークン・認証なし 401・不正 JSON・必須項目不足・404・CORS 応答ヘッダーを `EfRestIntegrationTests` で確認済み。
 - finance 全体回帰は **217 テスト成功**、support はユーザー実行で OK。
 - JasperReports テンプレート、PDF の `Content` 保存、`EfDeliveredDocument.contentId`、Base64 ダウンロード、クリック同意・外部署名 HTTP アダプタを `EfContractTests` で確認済み。
@@ -1219,7 +1235,7 @@ sequenceDiagram
 - 公開シミュレーションの IP レート制限を `EfCatalogTests` で確認済み。
 - 販売店作成、顧客同意、代理下書き、申込・契約照会を `EfDealerTests` で確認済み。
 - チャット開始、FAQ、support エスカレーション、担当者モードでのメッセージ転送、終了、入力検証を `EfChatTests` で確認済み。
-- 未実装のテストは W9 提携先組込みのみ。
+- 提携先トークンの発行・検証・改ざん拒否・戻り先制限・提携先付き下書きを `EfPartnerTests` で確認済み。
 
 
 ### 17.3 受入シナリオ
@@ -1261,7 +1277,7 @@ sequenceDiagram
 | 8 | support 連携 | 顧客 API の 8 サービスを実装済み。`efSendMessage` のケース紐付けは未実装。チャットは support ケースを作成し、内部メモに会話を引き継ぐ |
 | 9 | 口座番号の暗号化 | 決定・実装済み。`EntityCrypto`（`encrypt="true"`）で保存し、API は下 4 桁のみ返す |
 | 10 | 監査ログの統合 | 各プラグイン独立（決定済み） |
-| 11 | W9 提携先組込み | 署名付きハンドオフトークン、流入属性、提携先設定を設計中 |
+| 11 | W9 提携先組込み | 実装済み。署名付きハンドオフトークン、提携先別設定、申込属性記録。トークンのワンタイム化・利用分析は将来拡張 |
 
 ---
 
@@ -1295,7 +1311,8 @@ sequenceDiagram
 | 2026-10-23（W5 見積未提示） | `efGetOffer` に `offerAvailable` / `quoteStatusId` を追加し、受理済み見積の再取得に対応。`/portal` は見積未提示時に申込ステータスを表示して受理・署名を無効化し、`DEMO_EF_DRAFT2` の提示済み見積デモを追加。**81 テスト成功** |
 | 2026-10-23（efinanceadmin 修正） | 管理画面の `main-decorator` とアプリバーを追加し、`/efinanceadmin/control/main` の 500 エラーを修正。ログインに必要な `OFBTOOLS_VIEW` / `EFINANCE_ADMIN_VIEW` とデモ管理者 `demo-ef-admin` を追加。未対応のフォーム要素 `text-line` を `text` に修正。 |
 | 2026-10-23（管理画面改善） | Main タブを管理ダッシュボードに変更し、件数・クイックリンク・最近の監査ログを表示。管理画面の画面・メニュー・フォームを日本語ラベル化し、会員一覧の PARTY ID 表示を修正。`demo-ef-admin` のロケールを `ja` に設定。**82 テスト成功** |
-| 2026-10-23（W9 チャット） | `EfChatConversation` / `EfChatMessage`、`ChatAdapter` と `RuleBasedChatAdapter`、`efStartChat` / `efListChats` / `efGetChat` / `efSendChatMessage` / `efEscalateChat` / `efCloseChat`、support ケースへのエスカレーションと担当者返信の取り込み、REST 5 本、`/portal#chat` を追加。提携先組込みは未着手。**88 テスト成功** |
+| 2026-10-23（W9 チャット） | `EfChatConversation` / `EfChatMessage`、`ChatAdapter` と `RuleBasedChatAdapter`、`efStartChat` / `efListChats` / `efGetChat` / `efSendChatMessage` / `efEscalateChat` / `efCloseChat`、support ケースへのエスカレーションと担当者返信の取り込み、REST 5 本、`/portal#chat` を追加。**88 テスト成功** |
+| 2026-10-24（W9 提携先） | `EfPartnerServices`、HMAC署名付きハンドオフトークン、`efIssuePartnerHandoff` / `efValidatePartnerHandoff`、`EfApplicationDraft.partnerId` / `EfApplicationLink.partnerId`、提携先別設定、戻り先URL許可リスト、REST 2 本、`/portal` の提携先検証・バナー・申込属性引継ぎを追加。**94 テスト成功** |
 
 ---
 
@@ -1324,6 +1341,6 @@ sequenceDiagram
 - 配布：efinance プラグイン単体には含まれないため、rest-api の差分も同時にデプロイする。
 - 検証：
   - `EfAuthTests` で `EfRequestValidator` の有効トークン・失効トークン・ロック会員判定と再認証トークンのワンタイム性を確認。
-  - `compileJava compileGroovy` 成功、efinance 88 テスト成功。
+  - `compileJava compileGroovy` 成功、efinance 94 テスト成功。
   - REST 手動結合確認：`demo-ef-customer` でログイン 200、商品 2 件、申込 1 件、契約 1 件、契約詳細の返済表 2 行、メッセージ、通知設定、`/portal/control/main` 200 を確認。
   - `EfRestIntegrationTests` で公開商品、ログイン、Bearer 認証、無効トークン 401 を自動確認する。CORS とエラーチェーンの網羅は未整備。

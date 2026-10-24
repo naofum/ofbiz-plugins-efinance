@@ -31,6 +31,8 @@ const state = {
     kycCheckId: sessionStorage.getItem('ef_kyc_check_id'),
     signingSessionId: sessionStorage.getItem('ef_signing_session_id'),
     chatConversationId: sessionStorage.getItem('ef_chat_conversation_id'),
+    partner: null,
+    partnerToken: sessionStorage.getItem('ef_partner_token'),
     offer: null,
     offerDraftId: null,
     offerAccepted: false,
@@ -140,6 +142,60 @@ function appendQueryParams(path, params) {
         return path;
     }
     return path + (path.indexOf('?') === -1 ? '?' : '&') + parts.join('&');
+}
+
+function clearPartner() {
+    state.partner = null;
+    state.partnerToken = null;
+    sessionStorage.removeItem('ef_partner_token');
+    const banner = el('partnerBanner');
+    if (banner) {
+        banner.hidden = true;
+    }
+}
+
+function renderPartnerBanner() {
+    const banner = el('partnerBanner');
+    if (!banner) {
+        return;
+    }
+    if (!state.partner) {
+        banner.hidden = true;
+        return;
+    }
+    const name = state.partner.partnerName || state.partner.partnerId || '';
+    banner.textContent = '提携先「' + name + '」からお申込みいただいています。';
+    banner.hidden = false;
+}
+
+async function loadPartnerHandoff() {
+    const params = new URLSearchParams(window.location.search);
+    const urlToken = params.get('partnerToken');
+    const token = urlToken || state.partnerToken;
+    if (!token) {
+        renderPartnerBanner();
+        return;
+    }
+    try {
+        const data = await api('/ef/partner/handoffs/validate', {
+            method: 'POST',
+            auth: false,
+            body: {handoffToken: token}
+        });
+        state.partner = data;
+        state.partnerToken = token;
+        sessionStorage.setItem('ef_partner_token', token);
+        renderPartnerBanner();
+        if (urlToken) {
+            window.history.replaceState({}, document.title,
+                window.location.pathname + window.location.hash);
+        }
+    } catch (e) {
+        clearPartner();
+        if (urlToken) {
+            showFlash('提携先の連携情報が無効または期限切れです。通常のお申込みとして続行できます。', 'warn');
+        }
+    }
 }
 
 async function api(path, options) {
@@ -798,10 +854,14 @@ async function submitApplication(event) {
     const term = Number(el('applyTerm').value);
     const applicationTypeId = product.isLease ? 'LEASE' : 'LOAN';
     try {
-        const created = await post('/ef/applications/drafts', {
+        const draftRequest = {
             productId: product.productId,
             applicationTypeId: applicationTypeId
-        });
+        };
+        if (state.partnerToken) {
+            draftRequest.partnerToken = state.partnerToken;
+        }
+        const created = await post('/ef/applications/drafts', draftRequest);
         const draftId = created.draftId;
         state.draftId = draftId;
         sessionStorage.setItem('ef_draft_id', draftId);
@@ -847,8 +907,13 @@ async function submitApplication(event) {
         const box = el('applyResult');
         box.textContent = '申込を送信しました。\n下書きID: ' + draftId
             + '\n金融申込ID: ' + (result.financeApplicationId || '')
-            + '\n不正検知結果: ' + (result.fraudResult || '');
+            + '\n不正検知結果: ' + (result.fraudResult || '')
+            + (state.partner ? '\n提携先: ' + (state.partner.partnerName || state.partner.partnerId) : '');
         box.hidden = false;
+        if (state.partner && state.partner.returnUrl) {
+            el('partnerReturnLink').href = state.partner.returnUrl;
+            el('partnerReturn').hidden = false;
+        }
         showFlash('申込を送信しました。', 'ok');
         await loadMyPage();
     } catch (e) {
@@ -1210,6 +1275,7 @@ function bindEvents() {
 async function init() {
     bindEvents();
     setAuthState();
+    await loadPartnerHandoff();
     setContractActions(false, false);
     if (state.draftId) {
         el('contractDraftId').value = state.draftId;

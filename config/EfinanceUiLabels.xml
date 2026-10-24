@@ -837,4 +837,10 @@ under the License.
     <property key="EfinanceChatEscalated"><value xml:lang="en">A support agent has been assigned. Please continue in the support case.</value></property>
     <property key="EfinanceChatClosedMessage"><value xml:lang="en">This chat has been closed.</value></property>
 
+    <!-- W9 partner integration -->
+    <property key="EfinancePartnerInvalidCredentials"><value xml:lang="en">Invalid partner credentials.</value></property>
+    <property key="EfinancePartnerInvalidToken"><value xml:lang="en">The partner handoff token is invalid or has expired.</value></property>
+    <property key="EfinancePartnerReturnUrlInvalid"><value xml:lang="en">The partner return URL is not allowed.</value></property>
+    <property key="EfinancePartnerOperationFailed"><value xml:lang="en">The partner handoff operation could not be completed.</value></property>
+
 </resource>
