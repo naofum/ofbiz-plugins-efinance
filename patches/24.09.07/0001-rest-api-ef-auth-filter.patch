@@ -1,0 +1,145 @@
+diff --git a/plugins/rest-api/src/main/java/org/apache/ofbiz/ws/rs/security/auth/EfAuthFilter.java b/plugins/rest-api/src/main/java/org/apache/ofbiz/ws/rs/security/auth/EfAuthFilter.java
+new file mode 100644
+index 0000000..53d217e
+--- /dev/null
++++ b/plugins/rest-api/src/main/java/org/apache/ofbiz/ws/rs/security/auth/EfAuthFilter.java
+@@ -0,0 +1,139 @@
++/*******************************************************************************
++ * Licensed to the Apache Software Foundation (ASF) under one
++ * or more contributor license agreements.  See the NOTICE file
++ * distributed with this work for additional information
++ * regarding copyright ownership.  The ASF licenses this file
++ * to you under the Apache License, Version 2.0 (the
++ * "License"); you may not use this file except in compliance
++ * with the License.  You may obtain a copy of the License at
++ *
++ * http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing,
++ * software distributed under the License is distributed on an
++ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
++ * KIND, either express or implied.  See the License for the
++ * specific language governing permissions and limitations
++ * under the License.
++ *******************************************************************************/
++package org.apache.ofbiz.ws.rs.security.auth;
++
++import java.io.IOException;
++import java.lang.reflect.Method;
++import java.util.Locale;
++
++import javax.annotation.Priority;
++import javax.servlet.ServletContext;
++import javax.servlet.http.HttpServletRequest;
++import javax.ws.rs.Priorities;
++import javax.ws.rs.container.ContainerRequestContext;
++import javax.ws.rs.container.ContainerRequestFilter;
++import javax.ws.rs.core.Context;
++import javax.ws.rs.core.HttpHeaders;
++import javax.ws.rs.core.Response;
++import javax.ws.rs.core.UriInfo;
++import javax.ws.rs.ext.Provider;
++
++import org.apache.ofbiz.base.util.Debug;
++import org.apache.ofbiz.base.util.UtilValidate;
++import org.apache.ofbiz.entity.Delegator;
++import org.apache.ofbiz.entity.GenericValue;
++import org.apache.ofbiz.service.GenericServiceException;
++import org.apache.ofbiz.service.ModelService;
++import org.apache.ofbiz.webapp.WebAppUtil;
++import org.apache.ofbiz.webapp.control.JWTManager;
++import org.apache.ofbiz.ws.rs.ServiceNameContextHolder;
++import org.apache.ofbiz.ws.rs.util.RestApiUtil;
++
++/**
++ * Validates the efinance session on every {@code /ef/} REST request.
++ *
++ * <p>The generic JWT filter only verifies the signature. This filter adds the
++ * per-request checks that require current database state: the access token
++ * must still exist and not be revoked, and the member must not be locked.</p>
++ *
++ * <p>The efinance validator is loaded reflectively so that the rest-api
++ * component can be used without efinance installed.</p>
++ */
++@Provider
++@Priority(Priorities.USER + 10)
++public class EfAuthFilter implements ContainerRequestFilter {
++
++    private static final String MODULE = EfAuthFilter.class.getName();
++    private static final String EFINANCE_VALIDATOR = "org.apache.ofbiz.efinance.security.EfRequestValidator";
++
++    @Context
++    private UriInfo uriInfo;
++
++    @Context
++    private HttpServletRequest httpRequest;
++
++    @Context
++    private ServletContext servletContext;
++
++    @Override
++    public void filter(ContainerRequestContext requestContext) throws IOException {
++        if (!isEfinancePath(uriInfo.getPath())) {
++            return;
++        }
++        if (!isAuthenticatedService()) {
++            // Public efinance endpoints (login, registration, product catalog,
++            // simulations) must remain usable even when an old token is sent.
++            return;
++        }
++        String authorization = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
++        if (authorization == null) {
++            // auth=false endpoints are allowed without a token.
++            return;
++        }
++        String jwt = JWTManager.getHeaderAuthBearerToken(httpRequest);
++        if (UtilValidate.isEmpty(jwt)) {
++            return;
++        }
++        Delegator delegator = (Delegator) servletContext.getAttribute("delegator");
++        GenericValue userLogin = (GenericValue) httpRequest.getAttribute("userLogin");
++        String error = validate(delegator, userLogin, jwt, httpRequest.getLocale());
++        if (error != null) {
++            requestContext.abortWith(RestApiUtil.error(Response.Status.UNAUTHORIZED.getStatusCode(),
++                    Response.Status.UNAUTHORIZED.getReasonPhrase(), error));
++        }
++    }
++
++    private boolean isEfinancePath(String path) {
++        if (UtilValidate.isEmpty(path)) {
++            return false;
++        }
++        String normalized = path.startsWith("/") ? path.substring(1) : path;
++        return normalized.equals("ef") || normalized.startsWith("ef/");
++    }
++
++    private boolean isAuthenticatedService() {
++        String serviceName = ServiceNameContextHolder.get();
++        if (UtilValidate.isEmpty(serviceName)) {
++            return true;
++        }
++        try {
++            ModelService service = WebAppUtil.getDispatcher(servletContext).getDispatchContext()
++                    .getModelService(serviceName);
++            return service == null || service.isAuth();
++        } catch (GenericServiceException e) {
++            Debug.logWarning("Unable to resolve service " + serviceName + ": " + e.getMessage(), MODULE);
++            return true;
++        }
++    }
++
++    private String validate(Delegator delegator, GenericValue userLogin, String jwt, Locale locale) {
++        try {
++            Class<?> validatorClass = Class.forName(EFINANCE_VALIDATOR);
++            Method method = validatorClass.getMethod("validateRequest", Delegator.class,
++                    GenericValue.class, String.class, Locale.class);
++            return (String) method.invoke(null, delegator, userLogin, jwt, locale);
++        } catch (ClassNotFoundException e) {
++            // efinance is not installed in this deployment.
++            return null;
++        } catch (ReflectiveOperationException e) {
++            Debug.logError(e, "Unable to invoke the efinance request validator", MODULE);
++            return "The session could not be validated.";
++        }
++    }
++}

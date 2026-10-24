@@ -1,0 +1,53 @@
+{
+  "bundle": "efinance",
+  "version": "0.1.0",
+  "ofbiz": "24.09.07",
+  "description": "rest-api integration required by efinance",
+  "patches": [
+    {
+      "id": "0001-rest-api-ef-auth-filter",
+      "order": 10,
+      "mode": "diff",
+      "description": "Add the efinance /ef/ request filter to rest-api",
+      "patch": "0001-rest-api-ef-auth-filter.patch",
+      "reversible": true,
+      "files": [
+        {
+          "path": "plugins/rest-api/src/main/java/org/apache/ofbiz/ws/rs/security/auth/EfAuthFilter.java",
+          "sha256Before": "",
+          "sha256After": "9fbfce04e87e2285455ca8f04d774b01749dbed9bedb7a531e177e17931a9763"
+        }
+      ]
+    },
+    {
+      "id": "0002-rest-api-public-auth",
+      "order": 20,
+      "mode": "diff",
+      "description": "Allow public REST operations declared with auth=false",
+      "patch": "0002-rest-api-public-auth.patch",
+      "reversible": true,
+      "files": [
+        {
+          "path": "plugins/rest-api/src/main/java/org/apache/ofbiz/ws/rs/security/auth/APIAuthFilter.java",
+          "sha256Before": "fd673ad2d9b38b3e2333b9ee6da50fd719e699aa2946941d3aca77c6412fd1d9",
+          "sha256After": "282f020a942e82da76cf4044d77c1ecd56e0852e59fce95c9cd8d344f6ac6dd8"
+        }
+      ]
+    },
+    {
+      "id": "0003-rest-api-remote-ip",
+      "order": 30,
+      "mode": "diff",
+      "description": "Use the HTTP remote address for service ipAddress rate limiting",
+      "patch": "0003-rest-api-remote-ip.patch",
+      "reversible": true,
+      "files": [
+        {
+          "path": "plugins/rest-api/src/main/java/org/apache/ofbiz/ws/rs/process/ServiceRequestHandler.java",
+          "sha256Before": "d1edc48995f3ddf5467f8479b10f38c803d224e6c8e6ed9582d3aa37bc27b3db",
+          "sha256After": "2df1bdc9c5e8f5763756fc085151f55563b1c2569c099da9ede9009cab7a48f4"
+        }
+      ]
+    }
+  ]
+}

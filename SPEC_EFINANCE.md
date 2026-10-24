@@ -1256,7 +1256,7 @@ sequenceDiagram
 | core | なし | `JWTManager`・`Party`・`UserLogin`・`Content`・`CommunicationEvent` を利用 |
 | finance | なし | 公開サービスを呼ぶ。状態遷移は finance のサービスだけが行う |
 | support | なし | 顧客 API を呼ぶ。support の REST は `publish="false"` のまま |
-| rest-api | あり（`EfAuthFilter`） | `/ef/` の認証済みリクエストで `EfToken` の失効・`EfMember` のロックを検証する。efinance へはリフレクションで依存し、コンパイル依存はない |
+| rest-api | あり（3ファイル） | `EfAuthFilter.java`（新規、`/ef/` のトークン失効・会員ロック検証）、`APIAuthFilter.java`（`auth="false"` の公開 REST 操作を許可）、`ServiceRequestHandler.java`（公開 API のレート制限に HTTP remote address を使用）。efinance へはリフレクションで依存し、コンパイル依存はない。配布用パッチは `plugins/efinance/patches/24.09.07/`（manifest 同ディレクトリ）にあり、`installPlugin -PpluginId=efinance` または `:plugins:efinance:applyCorePatches` で適用する。適用後は `classes` で再ビルドする |
 
 - efinance は finance・support を参照するが、finance・support は efinance を参照しない。
 - core 変更が必要な場合は、理由・影響・代替・検証を本書に追記する。
@@ -1313,6 +1313,7 @@ sequenceDiagram
 | 2026-10-23（管理画面改善） | Main タブを管理ダッシュボードに変更し、件数・クイックリンク・最近の監査ログを表示。管理画面の画面・メニュー・フォームを日本語ラベル化し、会員一覧の PARTY ID 表示を修正。`demo-ef-admin` のロケールを `ja` に設定。**82 テスト成功** |
 | 2026-10-23（W9 チャット） | `EfChatConversation` / `EfChatMessage`、`ChatAdapter` と `RuleBasedChatAdapter`、`efStartChat` / `efListChats` / `efGetChat` / `efSendChatMessage` / `efEscalateChat` / `efCloseChat`、support ケースへのエスカレーションと担当者返信の取り込み、REST 5 本、`/portal#chat` を追加。**88 テスト成功** |
 | 2026-10-24（W9 提携先） | `EfPartnerServices`、HMAC署名付きハンドオフトークン、`efIssuePartnerHandoff` / `efValidatePartnerHandoff`、`EfApplicationDraft.partnerId` / `EfApplicationLink.partnerId`、提携先別設定、戻り先URL許可リスト、REST 2 本、`/portal` の提携先検証・バナー・申込属性引継ぎを追加。**94 テスト成功** |
+| 2026-10-24（rest-api パッチ化） | rest-api の3ファイル（`EfAuthFilter.java` 新規、`APIAuthFilter.java`、`ServiceRequestHandler.java`）を `plugins/efinance/patches/24.09.07/` のパッチバンドルとして管理。新規ファイル・diff・baseline テストを追加し、クリーン適用/ロールバックを確認。**94 テスト成功** |
 
 ---
 
@@ -1338,7 +1339,7 @@ sequenceDiagram
 - 代替案：
   - 各サービス先頭で `EfAccessGuard` を呼ぶ方式は修正漏れが多く、全 REST を一括で守れないため不採用。
   - `APIAuthFilter` に `/ef/auth/` をハードコードする方式は、公開 API の追加ごとに rest-api を修正する必要があるため不採用。
-- 配布：efinance プラグイン単体には含まれないため、rest-api の差分も同時にデプロイする。
+- 配布：rest-api の3ファイルは `plugins/efinance/patches/24.09.07/` のパッチとして管理し、`installPlugin -PpluginId=efinance` または `:plugins:efinance:applyCorePatches` で適用する。適用後は `.\gradlew.bat classes` で再ビルドする。
 - 検証：
   - `EfAuthTests` で `EfRequestValidator` の有効トークン・失効トークン・ロック会員判定と再認証トークンのワンタイム性を確認。
   - `compileJava compileGroovy` 成功、efinance 94 テスト成功。

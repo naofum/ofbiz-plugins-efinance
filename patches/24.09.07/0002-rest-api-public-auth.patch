@@ -1,0 +1,103 @@
+diff --git a/plugins/rest-api/src/main/java/org/apache/ofbiz/ws/rs/security/auth/APIAuthFilter.java b/plugins/rest-api/src/main/java/org/apache/ofbiz/ws/rs/security/auth/APIAuthFilter.java
+index 140c75f..ce38293 100644
+--- a/plugins/rest-api/src/main/java/org/apache/ofbiz/ws/rs/security/auth/APIAuthFilter.java
++++ b/plugins/rest-api/src/main/java/org/apache/ofbiz/ws/rs/security/auth/APIAuthFilter.java
+@@ -45,6 +45,10 @@ import org.apache.ofbiz.service.ModelService;
+ import org.apache.ofbiz.webapp.WebAppUtil;
+ import org.apache.ofbiz.webapp.control.JWTManager;
+ import org.apache.ofbiz.ws.rs.common.AuthenticationScheme;
++import org.apache.ofbiz.ws.rs.core.OFBizApiConfig;
++import org.apache.ofbiz.ws.rs.model.ModelApi;
++import org.apache.ofbiz.ws.rs.model.ModelOperation;
++import org.apache.ofbiz.ws.rs.model.ModelResource;
+ import org.apache.ofbiz.ws.rs.resources.OFBizServiceResource;
+ import org.apache.ofbiz.ws.rs.security.Secured;
+ import org.apache.ofbiz.ws.rs.util.RestApiUtil;
+@@ -75,6 +79,9 @@ public class APIAuthFilter implements ContainerRequestFilter {
+      */
+     @Override
+     public void filter(ContainerRequestContext requestContext) throws IOException {
++        if (isPublicApiRequest(requestContext)) {
++            return;
++        }
+         String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
+         if (isServiceResource()) {
+             String service = (String) RestApiUtil.extractParams(uriInfo.getPathParameters()).get("serviceName");
+@@ -154,4 +161,77 @@ public class APIAuthFilter implements ContainerRequestFilter {
+         return OFBizServiceResource.class.isAssignableFrom(resourceInfo.getResourceClass());
+     }
+ 
++    /**
++     * Returns true when the matched REST operation is declared with auth="false".
++     *
++     * <p>The generated custom REST resources are not represented by
++     * {@link OFBizServiceResource}, so the service-level auth exception above
++     * cannot see their definitions. Public operations such as login,
++     * registration and the product catalog are resolved from the same API model
++     * that registers the resources.</p>
++     */
++    private boolean isPublicApiRequest(ContainerRequestContext requestContext) {
++        String requestPath = normalizePath(uriInfo.getPath());
++        String requestMethod = requestContext.getMethod();
++        if (UtilValidate.isEmpty(requestPath) || UtilValidate.isEmpty(requestMethod)) {
++            return false;
++        }
++        for (ModelApi api : OFBizApiConfig.getModelApis().values()) {
++            if (!api.isPublish()) {
++                continue;
++            }
++            for (ModelResource resource : api.getResources()) {
++                if (!resource.isPublish()) {
++                    continue;
++                }
++                String resourcePath = normalizePath(resource.getPath());
++                for (ModelOperation operation : resource.getOperations()) {
++                    if (operation.isAuth() || !requestMethod.equalsIgnoreCase(operation.getVerb())) {
++                        continue;
++                    }
++                    String operationPath = normalizePath(operation.getPath());
++                    String template = UtilValidate.isEmpty(operationPath)
++                            ? resourcePath : resourcePath + "/" + operationPath;
++                    if (matchesPathTemplate(template, requestPath)) {
++                        return true;
++                    }
++                }
++            }
++        }
++        return false;
++    }
++
++    private String normalizePath(String path) {
++        if (UtilValidate.isEmpty(path)) {
++            return "";
++        }
++        String normalized = path.trim();
++        while (normalized.startsWith("/")) {
++            normalized = normalized.substring(1);
++        }
++        while (normalized.endsWith("/")) {
++            normalized = normalized.substring(0, normalized.length() - 1);
++        }
++        return normalized;
++    }
++
++    private boolean matchesPathTemplate(String template, String path) {
++        String[] templateParts = template.split("/");
++        String[] pathParts = path.split("/");
++        if (templateParts.length != pathParts.length) {
++            return false;
++        }
++        for (int i = 0; i < templateParts.length; i++) {
++            String templatePart = templateParts[i];
++            if (templatePart.startsWith("{") && templatePart.endsWith("}")) {
++                if (UtilValidate.isEmpty(pathParts[i])) {
++                    return false;
++                }
++            } else if (!templatePart.equals(pathParts[i])) {
++                return false;
++            }
++        }
++        return true;
++    }
++
+ }

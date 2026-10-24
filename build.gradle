@@ -21,3 +21,14 @@ dependencies {
     // core OFBiz components (party, accounting, content) and finance/support plugins
     // are provided by the running OFBiz instance.
 }
+
+// Core patch bundle for the rest-api integration required by efinance.
+// The shared patch manager lives under tools/patchmgr.
+ext.patchManifest = file("${projectDir}/patches/24.09.07/manifest.json")
+apply from: "${rootDir}/gradle/patchmgr.gradle"
+
+tasks.register('testEfinanceRestApiPatch') {
+    group = 'efinance'
+    description = 'Alias for testCorePatch'
+    dependsOn 'testCorePatch'
+}
